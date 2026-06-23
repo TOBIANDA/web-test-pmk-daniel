@@ -7,9 +7,9 @@ Teman teman bisa install package manager nodejs dan npm disini yaaa https://node
 
 ## Menjalankan aplikasi
 - Clone terlebih dahulu github repository <br/>
-``git clone https://github.com/PMK-Daniel``
+``git clone https://github.com/PMK-Daniel/pmkdaniel.git``
 - Buka folder project <br/>
-``cd hology-client``
+``cd pmkdaniel``
 - Install package untuk kebutuhan aplikasi <br/>
 ``npm install``
 - Selamat mengerjakan!!
@@ -26,15 +26,13 @@ Teman teman bisa install package manager nodejs dan npm disini yaaa https://node
 Untuk nama branch harus menggunakan standar seperti berikut :
 - ``(nama)-(tipe): (deskripsi)``
 
-contoh : ``nopal-feat/navbar``
-
-Setiap membuat fitur baru atau memperbaiki fitur harus menggunakan branch baru seperti SOP diatas dan melakukan pull request ke akuu (BangNopall) yaa
+contoh : ``jason-feat/navbar``
 
 ## Cara Commit / Push ke Github untuk Update Progresan
 ```c
 - git add .
 - git commit -m "feat: adding navbar section"
-- git push origin nopal-feat/navbar
+- git push origin jason-feat/navbar
 ```
 Harus menggunakan [`conventional commits`](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13)! <br/>
 dengan format ``tipe: deskripsi``
