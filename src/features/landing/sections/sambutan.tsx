@@ -29,7 +29,7 @@ export default function Sambutan() {
                     <div key={data.nama} className="w-full h-80 sm:h-96 lg:h-110 relative overflow-hidden rounded-[32px] sm:rounded-[48px] lg:rounded-[64px]">
                         <Image src={data.imgUrl} alt={data.nama} fill className="object-cover absolute" />
                         <h3 className={cn(
-                            "absolute bottom-14 sm:bottom-16 lg:bottom-20 left-4 sm:left-6 lg:left-10 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] lg:w-full z-10",
+                            "absolute bottom-14 sm:bottom-16 lg:bottom-20 left-4 sm:left-6 lg:left-10 z-10",
                             "font-plusJakarta font-bold text-white text-lg sm:text-xl lg:text-2xl xl:text-[40px]"
                         )}>
                             {data.nama}
