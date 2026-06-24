@@ -1,17 +1,10 @@
 import Link from "next/link";
 
 export default function Navbar() {
-<<<<<<< HEAD
-    return (
-        <nav className="">
-            <h1>Navbar</h1>
-        </nav>
-    );
-=======
   return (
-    
+
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between w-full max-w-5xl px-8 py-3 bg-white/70 backdrop-blur-md rounded-full shadow-sm border border-white/20">
-      
+
       {/* 1. Bagian Kiri: Logo */}
       <div className="flex items-center">
         {/* Logo PMK Daniel */}
@@ -37,5 +30,4 @@ export default function Navbar() {
 
     </nav>
   );
->>>>>>> 46faacbf813a754f3d9b945db5a4d73b036dc470
 }
