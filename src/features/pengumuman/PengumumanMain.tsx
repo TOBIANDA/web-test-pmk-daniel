@@ -1,21 +1,27 @@
 import { dataPengumuman } from "@/dataDummy/pengumuman";
 import { truncateByWords } from "@/utils/truncate";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 
-export default function Pengumuman() {
-    const previewPengumuman = dataPengumuman.slice(0, 3);
+
+export default function PengumumanMainPage() {
     return (
         <section className="py-38 px-4 sm:px-8 md:px-12 lg:px-16 w-full ">
-            <h1 className="font-plusJakarta font-bold text-primary text-2xl sm:text-3xl md:text-4xl xl:text-[64px]">
-                Pengumuman
+            <Link href="/">
+                <div className="flex items-center gap-2 cursor-pointer">
+                    <ArrowLeft size={24} />
+                    <h2 className="font-plusJakarta font-medium text-base sm:text-lg xl:text-2xl hover:underline">
+                        Back
+                    </h2>
+                </div>
+            </Link>
+            <h1 className="font-plusJakarta mt-2 font-extrabold text-2xl sm:text-3xl md:text-4xl xl:text-[64px]">
+                PENGUMUMAN
             </h1>
-            <h2 className="font-plusJakarta font-normal text-base sm:text-lg xl:text-2xl mt-2">
-                Simak informasi terbaru dari PMK Daniel!
-            </h2>
             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mt-6 md:mt-8 lg:mt-10 xl:mt-14 ">
-                {previewPengumuman.map((data) => (
+                {dataPengumuman.map((data) => (
                     <div key={data.id} className="flex flex-col items-center border border-black/10 p-6 rounded-[12px] md:rounded-[24px] lg:rounded-[30px] xl:rounded-[32px] w-full">
                         <div className="w-full">
                             <div className="rounded-2xl overflow-hidden aspect-5/3 w-full  relative">
