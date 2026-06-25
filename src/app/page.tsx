@@ -1,9 +1,13 @@
-import LandingPage from "@/features/landing/page";
+import Navbar from "@/components/navbar";
+import Hero from "@/features/landing/sections/hero";
+import About from "@/features/landing/sections/about";
 
 export default function Home() {
   return (
-    <>
-      <LandingPage />
-    </>
+    <main>
+      <Navbar />
+      <Hero />
+      <About />
+    </main>
   );
 }

@@ -1,8 +1,7 @@
 export default function Hero() {
   return (
     // REVISI 1: Mengubah arah gradasi dari kiri ke kanan (to-r) dengan warna ungu pudar ke oranye pudar
-    <section className="relative flex flex-col items-center justify-center min-h-[90vh] px-4 pt-20 pb-24 text-center bg-gradient-to-r from-[#E2E2EF] from-10% via-[#FFFFFF] via-50% to-[#FFEED0] to-90%">
-      {/* Sub-judul kecil */}
+    <section className="relative flex flex-col items-center justify-center min-h-[100vh] px-4 pt-24 pb-24 text-center bg-gradient-to-r from-[#E2E2EF] from-10% via-[#FFFFFF] via-50% to-[#FFEED0] to-90%">
       <p className="mb-6 text-lg font-bold tracking-widest text-black-500 uppercase">
         PMK Daniel FILKOM UB
       </p>
@@ -14,7 +13,7 @@ export default function Hero() {
       </h1>
 
       {/* padding vertikal (py-4)  */}
-      <div className="absolute bottom-0 left-0 flex w-full py-4 overflow-hidden bg-white border-t border-b border-gray-200">
+     <div className="absolute bottom-0 left-0 flex w-full py-4 overflow-hidden bg-white border-t border-b border-gray-200">
         <div className="flex items-center justify-center w-full whitespace-nowrap">
           
           <span className="text-sm font-medium text-gray-800 md:text-base">
