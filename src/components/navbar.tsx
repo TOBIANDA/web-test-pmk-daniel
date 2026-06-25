@@ -22,12 +22,12 @@ export default function Navbar() {
 
         }
         <div className="hidden md:flex items-center space-x-8 text-sm font-semibold text-gray-700">
-          <a href="#" className="hover:text-[#3E4095] transition-colors">Beranda</a>
-          <a href="#about" className="hover:text-[#3E4095] transition-colors">Tentang Kami</a>
-          <a href="#" className="hover:text-[#3E4095] transition-colors">Pengumuman</a>
-          <a href="#" className="hover:text-[#3E4095] transition-colors">Kepengurusan</a>
-          <a href="#" className="hover:text-[#3E4095] transition-colors">Form & Pendataan</a>
-          <a href="#" className="hover:text-[#3E4095] transition-colors">Kontak</a>
+          <a href="/" className="hover:text-[#3E4095] transition-colors">Beranda</a>
+          <a href="/tentang" className="hover:text-[#3E4095] transition-colors">Tentang Kami</a>
+          <a href="/pengumuman" className="hover:text-[#3E4095] transition-colors">Pengumuman</a>
+          <a href="/pengurus" className="hover:text-[#3E4095] transition-colors">Kepengurusan</a>
+          <a href="tentang" className="hover:text-[#3E4095] transition-colors">Form & Pendataan</a>
+          <a href="/kontak" className="hover:text-[#3E4095] transition-colors">Kontak</a>
         </div>
 
         {
