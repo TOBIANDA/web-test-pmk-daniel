@@ -52,36 +52,27 @@ export default function LandingPage() {
                         key="loader"
                         className="fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
                     >
-                        {/* THE SLIDING LOGO */}
-                        <motion.img
-                            src="/logo.png"
-                            alt="Logo PMK"
-                            className="fixed z-[110] object-contain bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.8)]"
-                            initial={{ 
-                                top: "50%", left: "50%", x: "-50%", y: "-50%", 
-                                width: "160px", height: "160px",
-                                opacity: 0,
-                                rotate: 0
-                            }}
-                            animate={{ 
-                                top: ["50%", "50%", "50%", "50%", "40px"], 
-                                left: ["50%", "50%", "50%", "50%", "calc(max(2.5vw, 50vw - 512px) + 28px)"],
-                                x: ["-50%", "-50%", "-50%", "-50%", "0%"],
-                                y: ["-50%", "-50%", "-50%", "-50%", "0%"],
-                                width: ["160px", "160px", "160px", "160px", "40px"],
-                                height: ["160px", "160px", "160px", "160px", "40px"],
-                                opacity: [0, 1, 1, 1, 1],
-                                rotate: [0, -90, 180, 180, 0] // Safe cracking effect
-                            }}
-                            transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7, 1], ease: "easeInOut" }}
-                        />
+
                         {/* TOP PANEL */}
                         <motion.div
-                            className="relative w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-top flex justify-center items-end"
+                            className="relative z-20 w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-top flex justify-center items-end"
                             initial={{ y: "0%" }}
                             animate={{ y: ["0%", "0%", "-100%"] }}
                             transition={{ duration: 2.6, times: [0, 0.7, 1], ease: "easeInOut" }}
                         >
+                            {/* Logo attached to the bottom edge of the top panel */}
+                            <motion.img 
+                                src="/logo.png" 
+                                alt="Logo PMK" 
+                                className="absolute z-[60] object-contain bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.8)]"
+                                style={{ width: "160px", height: "160px", bottom: "-80px", left: "50%", x: "-50%" }}
+                                initial={{ opacity: 0, rotate: 0 }}
+                                animate={{ 
+                                    opacity: [0, 1, 1, 1], 
+                                    rotate: [0, -90, 180, 0] // Safe cracking effect finishes exactly as panel splits
+                                }}
+                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7], ease: "easeInOut" }}
+                            />
                             {/* PMK Text */}
                             <motion.h1 
                                 className="absolute bottom-24 text-4xl sm:text-6xl font-extrabold text-primary font-plusJakarta tracking-[0.3em]"
