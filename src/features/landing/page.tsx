@@ -65,7 +65,7 @@ export default function LandingPage() {
                                 src="/logo.png" 
                                 alt="Logo PMK" 
                                 className="absolute z-[60] object-contain bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.8)]"
-                                style={{ width: "160px", height: "160px", bottom: "-80px", left: "50%", x: "-50%" }}
+                                style={{ width: "96px", height: "96px", bottom: "-48px", left: "50%", x: "-50%" }}
                                 initial={{ opacity: 0, rotate: 0 }}
                                 animate={{ 
                                     opacity: [0, 1, 1, 1], 
