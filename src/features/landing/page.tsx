@@ -52,82 +52,125 @@ export default function LandingPage() {
                         key="loader"
                         className="fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
                     >
+                        {/* THE SLIDING LOGO */}
+                        <motion.div
+                            className="fixed z-[110] flex items-center justify-center p-2"
+                            initial={{ 
+                                top: "50%", left: "50%", x: "-50%", y: "-50%", 
+                                width: "160px", height: "160px",
+                                opacity: 0,
+                                filter: "blur(10px)"
+                            }}
+                            animate={{ 
+                                top: ["50%", "50%", "50%", "50%", "36px", "36px"], 
+                                left: ["50%", "50%", "50%", "50%", "calc(max(2.5vw, 50vw - 512px) + 24px)", "calc(max(2.5vw, 50vw - 512px) + 24px)"],
+                                x: ["-50%", "-50%", "-50%", "-50%", "0%", "0%"],
+                                y: ["-50%", "-50%", "-50%", "-50%", "0%", "0%"],
+                                width: ["160px", "160px", "160px", "160px", "48px", "48px"],
+                                height: ["160px", "160px", "160px", "160px", "48px", "48px"],
+                                opacity: [0, 0, 1, 1, 1, 0],
+                                filter: ["blur(10px)", "blur(10px)", "blur(0px)", "blur(0px)", "blur(0px)", "blur(0px)"]
+                            }}
+                            transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7, 0.99, 1], ease: "easeInOut" }}
+                        >
+                            {/* Spinning Dashed Border */}
+                            <motion.div 
+                                className="absolute inset-0 rounded-full border-2 sm:border-4 border-dashed border-[#3E4095]"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                            />
+                            {/* Logo Image */}
+                            <img src="/logo.png" alt="Logo PMK" className="w-[80%] h-[80%] object-contain relative z-10 bg-white rounded-full" />
+                        </motion.div>
                         {/* TOP PANEL */}
                         <motion.div
-                            className="absolute inset-x-0 top-0 h-[50vh] bg-white flex items-end justify-center overflow-hidden"
+                            className="relative w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-top flex justify-center items-end"
                             initial={{ y: "0%" }}
                             animate={{ y: ["0%", "0%", "-100%"] }}
                             transition={{ duration: 2.6, times: [0, 0.7, 1], ease: "easeInOut" }}
                         >
-                            {/* Top glowing split line */}
+                            {/* PMK Text */}
+                            <motion.h1 
+                                className="absolute bottom-8 text-4xl sm:text-6xl font-extrabold text-primary font-plusJakarta tracking-[0.3em]"
+                                initial={{ opacity: 0, y: 15, scale: 0.8, filter: "blur(10px)" }}
+                                animate={{ 
+                                    opacity: [0, 0, 1, 1], 
+                                    y: [15, 15, 0, 0],
+                                    scale: [0.8, 0.8, 1, 1],
+                                    filter: ["blur(10px)", "blur(10px)", "blur(0px)", "blur(0px)"]
+                                }}
+                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeOut" }}
+                            >
+                                PMK
+                            </motion.h1>
+
+                            {/* Top Half of the Split Line */}
                             <motion.div 
-                                className="w-[80%] h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent"
-                                initial={{ scaleX: 0, opacity: 0 }}
-                                animate={{ scaleX: [0, 1, 1], opacity: [0, 1, 0] }}
-                                transition={{ duration: 2.6, times: [0, 0.4, 0.7], ease: "easeInOut" }}
+                                className="absolute bottom-0 h-[2px] bg-gradient-to-r from-primary to-secondary"
+                                style={{ left: "50%", x: "-50%" }}
+                                initial={{ width: "0%" }}
+                                animate={{ width: ["0%", "0%", "100%", "100%"] }}
+                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeInOut" }}
+                            />
+                            
+                            {/* Blue Dot (Left) */}
+                            <motion.div
+                                className="absolute w-6 h-6 rounded-full bg-primary z-10"
+                                style={{ left: "50%", marginLeft: "-12px", bottom: "-12px" }}
+                                initial={{ x: -100, opacity: 0 }}
+                                animate={{ 
+                                    x: [-100, 0, 0, 0], 
+                                    scale: [1, 1, 0, 0],
+                                    opacity: [0, 1, 1, 0]
+                                }}
+                                transition={{ duration: 2.6, times: [0, 0.1, 0.25, 0.35], ease: "easeInOut" }}
                             />
                         </motion.div>
 
                         {/* BOTTOM PANEL */}
                         <motion.div
-                            className="absolute inset-x-0 bottom-0 h-[50vh] bg-white flex items-start justify-center overflow-hidden"
+                            className="relative w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-bottom flex justify-center items-start"
                             initial={{ y: "0%" }}
                             animate={{ y: ["0%", "0%", "100%"] }}
                             transition={{ duration: 2.6, times: [0, 0.7, 1], ease: "easeInOut" }}
                         >
-                            {/* Bottom glowing split line */}
-                            <motion.div 
-                                className="w-[80%] h-[2px] bg-gradient-to-r from-transparent via-secondary to-transparent"
-                                initial={{ scaleX: 0, opacity: 0 }}
-                                animate={{ scaleX: [0, 1, 1], opacity: [0, 1, 0] }}
-                                transition={{ duration: 2.6, times: [0, 0.4, 0.7], ease: "easeInOut" }}
-                            />
-                        </motion.div>
-
-                        {/* LOGO AND BRANDING CONTAINER (Front Layer) */}
-                        <motion.div 
-                            className="relative z-[110] flex flex-col items-center justify-center gap-8"
-                            initial={{ opacity: 1, scale: 1 }}
-                            animate={{ opacity: [1, 1, 0], scale: [1, 1, 1.5] }} // Zoom in and fade out right before split
-                            transition={{ duration: 2.6, times: [0, 0.6, 0.7], ease: "easeInOut" }}
-                        >
-                            {/* Glowing Aura Behind Logo */}
-                            <motion.div 
-                                className="absolute w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-primary/30 to-secondary/30 blur-[60px]"
-                                animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                            />
-
-                            {/* Center Logo */}
-                            <motion.img 
-                                src="/logo.svg" 
-                                alt="Logo PMK Daniel" 
-                                className="w-32 h-32 md:w-44 md:h-44 relative z-10 drop-shadow-xl"
-                                initial={{ opacity: 0, y: 30, filter: "blur(15px)" }}
+                            {/* DANIEL Text */}
+                            <motion.h1 
+                                className="absolute top-8 text-4xl sm:text-6xl font-extrabold text-secondary font-plusJakarta tracking-[0.3em]"
+                                initial={{ opacity: 0, y: -15, scale: 0.8, filter: "blur(10px)" }}
                                 animate={{ 
-                                    opacity: [0, 1, 1], 
-                                    y: [30, 0, 0], 
-                                    filter: ["blur(15px)", "blur(0px)", "blur(0px)"] 
+                                    opacity: [0, 0, 1, 1], 
+                                    y: [-15, -15, 0, 0],
+                                    scale: [0.8, 0.8, 1, 1],
+                                    filter: ["blur(10px)", "blur(10px)", "blur(0px)", "blur(0px)"]
                                 }}
-                                transition={{ duration: 2.6, times: [0, 0.3, 1], ease: "easeOut" }}
-                            />
-
-                            {/* Organization Name */}
-                            <motion.div 
-                                className="flex flex-col items-center relative z-10"
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: [0, 1, 1], y: [15, 0, 0] }}
-                                transition={{ duration: 2.6, times: [0, 0.4, 1], ease: "easeOut" }}
+                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeOut" }}
                             >
-                                <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary tracking-[0.25em] uppercase font-plusJakarta">
-                                    PMK Daniel
-                                </h1>
-                                <p className="text-gray-500 font-semibold tracking-[0.3em] text-xs md:text-sm mt-3 uppercase">
-                                    FILKOM UB
-                                </p>
-                            </motion.div>
-                        </motion.div>
+                                DANIEL
+                            </motion.h1>
 
+                            {/* Bottom Half of the Split Line */}
+                            <motion.div 
+                                className="absolute top-0 h-[2px] bg-gradient-to-r from-primary to-secondary"
+                                style={{ left: "50%", x: "-50%" }}
+                                initial={{ width: "0%" }}
+                                animate={{ width: ["0%", "0%", "100%", "100%"] }}
+                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeInOut" }}
+                            />
+                            
+                            {/* Orange Dot (Right) */}
+                            <motion.div
+                                className="absolute w-6 h-6 rounded-full bg-secondary z-10"
+                                style={{ left: "50%", marginLeft: "-12px", top: "-12px" }}
+                                initial={{ x: 100, opacity: 0 }}
+                                animate={{ 
+                                    x: [100, 0, 0, 0], 
+                                    scale: [1, 1, 0, 0],
+                                    opacity: [0, 1, 1, 0]
+                                }}
+                                transition={{ duration: 2.6, times: [0, 0.1, 0.25, 0.35], ease: "easeInOut" }}
+                            />
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

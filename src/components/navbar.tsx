@@ -14,8 +14,10 @@ export default function Navbar() {
       <div className="bg-white/90 backdrop-blur-md rounded-full shadow-sm px-6 py-3 flex items-center justify-between">
         
         {/* Kiri: Logo */}
-        <div className="flex items-center cursor-pointer">
-          <img src="/logo.png" alt="Logo PMK" className="h-10 w-auto" />
+        <div className="flex items-center cursor-pointer relative group p-1">
+          {/* Dashed Spinning Border */}
+          <div className="absolute inset-0 rounded-full border-2 border-dashed border-[#3E4095] group-hover:rotate-180 transition-transform duration-700 animate-[spin_10s_linear_infinite]" />
+          <img src="/logo.png" alt="Logo PMK" className="h-10 w-10 object-contain relative z-10 bg-white rounded-full" />
         </div>
 
         {
