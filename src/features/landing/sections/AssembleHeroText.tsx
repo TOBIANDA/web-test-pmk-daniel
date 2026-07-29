@@ -80,7 +80,7 @@ export default function AssembleHeroText() {
       
       <svg 
         viewBox="0 0 1000 300" 
-        className="w-full h-auto max-w-[1000px] animate-float-hero" 
+        className="w-full h-auto max-w-[1000px] animate-float-hero scale-[1.3] sm:scale-100" 
         aria-hidden="true"
         style={{ overflow: "visible" }}
       >
