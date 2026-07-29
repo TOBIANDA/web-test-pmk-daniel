@@ -1,6 +1,6 @@
-"use client"; 
-
+"use client";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function Navbar() {
 
@@ -15,8 +15,16 @@ export default function Navbar() {
         
         {/* Kiri: Logo */}
         <div className="flex items-center cursor-pointer relative group p-1">
-          {/* Dashed Spinning Border */}
-          <div className="absolute inset-0 rounded-full border-2 border-dashed border-[#3E4095] group-hover:rotate-180 transition-transform duration-700 animate-[spin_10s_linear_infinite]" />
+          {/* Dashed Spinning Border (Delayed until hero text finishes) */}
+          <motion.div 
+            className="absolute inset-0 rounded-full border-2 border-dashed border-[#3E4095] group-hover:scale-110"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, rotate: 360 }}
+            transition={{
+              opacity: { delay: 6.0, duration: 1 },
+              rotate: { duration: 10, repeat: Infinity, ease: "linear" }
+            }}
+          />
           <img src="/logo.png" alt="Logo PMK" className="h-10 w-10 object-contain relative z-10 bg-white rounded-full" />
         </div>
 

@@ -73,12 +73,6 @@ export default function LandingPage() {
                             }}
                             transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7, 0.99, 1], ease: "easeInOut" }}
                         >
-                            {/* Spinning Dashed Border */}
-                            <motion.div 
-                                className="absolute inset-0 rounded-full border-2 sm:border-4 border-dashed border-[#3E4095]"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                            />
                             {/* Logo Image */}
                             <img src="/logo.png" alt="Logo PMK" className="w-[80%] h-[80%] object-contain relative z-10 bg-white rounded-full" />
                         </motion.div>
