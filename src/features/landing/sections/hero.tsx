@@ -17,7 +17,7 @@ export default function Hero() {
       />
 
       {/* Abstract Animated Lines */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-60 z-0" viewBox="0 0 1440 800" preserveAspectRatio="none">
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-60 z-0" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="lineGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3E4095" stopOpacity="0.1" />
