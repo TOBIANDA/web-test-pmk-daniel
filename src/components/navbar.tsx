@@ -25,7 +25,14 @@ export default function Navbar() {
               rotate: { duration: 10, repeat: Infinity, ease: "linear" }
             }}
           />
-          <img src="/logo.png" alt="Logo PMK" className="h-10 w-10 object-contain relative z-10 bg-white rounded-full" />
+          <motion.img 
+            src="/logo.png" 
+            alt="Logo PMK" 
+            className="h-10 w-10 object-contain relative z-10 bg-white rounded-full" 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.6, duration: 0 }}
+          />
         </div>
 
         {

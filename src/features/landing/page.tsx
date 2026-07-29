@@ -53,29 +53,28 @@ export default function LandingPage() {
                         className="fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
                     >
                         {/* THE SLIDING LOGO */}
-                        <motion.div
-                            className="fixed z-[110] flex items-center justify-center p-2"
+                        <motion.img
+                            src="/logo.png"
+                            alt="Logo PMK"
+                            className="fixed z-[110] object-contain bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.8)]"
                             initial={{ 
                                 top: "50%", left: "50%", x: "-50%", y: "-50%", 
                                 width: "160px", height: "160px",
                                 opacity: 0,
-                                filter: "blur(10px)"
+                                rotate: 0
                             }}
                             animate={{ 
-                                top: ["50%", "50%", "50%", "50%", "36px", "36px"], 
-                                left: ["50%", "50%", "50%", "50%", "calc(max(2.5vw, 50vw - 512px) + 24px)", "calc(max(2.5vw, 50vw - 512px) + 24px)"],
-                                x: ["-50%", "-50%", "-50%", "-50%", "0%", "0%"],
-                                y: ["-50%", "-50%", "-50%", "-50%", "0%", "0%"],
-                                width: ["160px", "160px", "160px", "160px", "48px", "48px"],
-                                height: ["160px", "160px", "160px", "160px", "48px", "48px"],
-                                opacity: [0, 0, 1, 1, 1, 0],
-                                filter: ["blur(10px)", "blur(10px)", "blur(0px)", "blur(0px)", "blur(0px)", "blur(0px)"]
+                                top: ["50%", "50%", "50%", "50%", "40px"], 
+                                left: ["50%", "50%", "50%", "50%", "calc(max(2.5vw, 50vw - 512px) + 28px)"],
+                                x: ["-50%", "-50%", "-50%", "-50%", "0%"],
+                                y: ["-50%", "-50%", "-50%", "-50%", "0%"],
+                                width: ["160px", "160px", "160px", "160px", "40px"],
+                                height: ["160px", "160px", "160px", "160px", "40px"],
+                                opacity: [0, 1, 1, 1, 1],
+                                rotate: [0, -90, 180, 180, 0] // Safe cracking effect
                             }}
-                            transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7, 0.99, 1], ease: "easeInOut" }}
-                        >
-                            {/* Logo Image */}
-                            <img src="/logo.png" alt="Logo PMK" className="w-[80%] h-[80%] object-contain relative z-10 bg-white rounded-full" />
-                        </motion.div>
+                            transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7, 1], ease: "easeInOut" }}
+                        />
                         {/* TOP PANEL */}
                         <motion.div
                             className="relative w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-top flex justify-center items-end"
@@ -85,7 +84,7 @@ export default function LandingPage() {
                         >
                             {/* PMK Text */}
                             <motion.h1 
-                                className="absolute bottom-8 text-4xl sm:text-6xl font-extrabold text-primary font-plusJakarta tracking-[0.3em]"
+                                className="absolute bottom-24 text-4xl sm:text-6xl font-extrabold text-primary font-plusJakarta tracking-[0.3em]"
                                 initial={{ opacity: 0, y: 15, scale: 0.8, filter: "blur(10px)" }}
                                 animate={{ 
                                     opacity: [0, 0, 1, 1], 
@@ -130,7 +129,7 @@ export default function LandingPage() {
                         >
                             {/* DANIEL Text */}
                             <motion.h1 
-                                className="absolute top-8 text-4xl sm:text-6xl font-extrabold text-secondary font-plusJakarta tracking-[0.3em]"
+                                className="absolute top-24 text-4xl sm:text-6xl font-extrabold text-secondary font-plusJakarta tracking-[0.3em]"
                                 initial={{ opacity: 0, y: -15, scale: 0.8, filter: "blur(10px)" }}
                                 animate={{ 
                                     opacity: [0, 0, 1, 1], 
