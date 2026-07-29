@@ -34,9 +34,14 @@ export default function Footer() {
                 <div className="grid grid-cols-2 gap-4 w-full h-full">
                     <div className="flex flex-col items-start gap-8">
                         <Image src="/logo.svg" alt="Logo PMK Daniel" width={109} height={106} className="size-15 md:size-20 lg:size-25" />
-                        <p className="text-white font-light text-md lg:text-lg">
-                            © 2026 PMK Daniel. Managed by Komisi 4 PMK Daniel.
-                        </p>
+                        <div className="flex flex-col gap-1">
+                            <p className="text-white font-light text-md lg:text-lg">
+                                © 2026 PMK Daniel. Managed by Komisi 4 PMK Daniel.
+                            </p>
+                            <Link href="/credit" className="text-white/40 font-light text-xs lg:text-sm hover:text-white transition-colors duration-300">
+                                Designed & Developed by Developer Team PMK Daniel
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 w-full h-full text-white">
