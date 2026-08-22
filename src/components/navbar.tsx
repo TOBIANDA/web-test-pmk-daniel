@@ -100,12 +100,12 @@ export default function Navbar() {
 
         {/* Tengah: Links Desktop */}
         <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-gray-800">
-          <a ref={addLinkRef} href="/" className="hover:text-[#3E4095] transition-colors">Beranda</a>
-          <a ref={addLinkRef} href="/tentang" className="hover:text-[#3E4095] transition-colors">Tentang Kami</a>
-          <a ref={addLinkRef} href="/pengumuman" className="hover:text-[#3E4095] transition-colors">Pengumuman</a>
-          <a ref={addLinkRef} href="/pengurus" className="hover:text-[#3E4095] transition-colors">Kepengurusan</a>
-          <a ref={addLinkRef} href="/join" className="hover:text-[#3E4095] transition-colors">Form & Pendataan</a>
-          <a ref={addLinkRef} href="/kontak" className="hover:text-[#3E4095] transition-colors">Kontak</a>
+          <a ref={addLinkRef} href="/" className="hover:text-primary transition-colors">Beranda</a>
+          <a ref={addLinkRef} href="/tentang" className="hover:text-primary transition-colors">Tentang Kami</a>
+          <a ref={addLinkRef} href="/pengumuman" className="hover:text-primary transition-colors">Pengumuman</a>
+          <a ref={addLinkRef} href="/pengurus" className="hover:text-primary transition-colors">Kepengurusan</a>
+          <a ref={addLinkRef} href="/join" className="hover:text-primary transition-colors">Form & Pendataan</a>
+          <a ref={addLinkRef} href="/kontak" className="hover:text-primary transition-colors">Kontak</a>
         </div>
 
         {/* Kanan: Button & Mobile Toggle */}
@@ -136,12 +136,12 @@ export default function Navbar() {
         ref={mobileMenuRef}
         className="lg:hidden absolute top-full left-0 w-full mt-4 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-6 flex flex-col space-y-4 text-center text-sm font-semibold text-gray-800 invisible opacity-0 translate-y-[-20px]"
       >
-        <a href="/" className="hover:text-[#3E4095]">Beranda</a>
-        <a href="/tentang" className="hover:text-[#3E4095]">Tentang Kami</a>
-        <a href="/pengumuman" className="hover:text-[#3E4095]">Pengumuman</a>
-        <a href="/pengurus" className="hover:text-[#3E4095]">Kepengurusan</a>
-        <a href="/join" className="hover:text-[#3E4095]">Form & Pendataan</a>
-        <a href="/kontak" className="hover:text-[#3E4095]">Kontak</a>
+        <a href="/" className="hover:text-primary">Beranda</a>
+        <a href="/tentang" className="hover:text-primary">Tentang Kami</a>
+        <a href="/pengumuman" className="hover:text-primary">Pengumuman</a>
+        <a href="/pengurus" className="hover:text-primary">Kepengurusan</a>
+        <a href="/join" className="hover:text-primary">Form & Pendataan</a>
+        <a href="/kontak" className="hover:text-primary">Kontak</a>
         <Button className="w-full mt-4" onClick={() => window.location.href = '/join'}>
           Join Us!
         </Button>

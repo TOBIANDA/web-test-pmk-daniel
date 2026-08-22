@@ -11,7 +11,7 @@ export default function JoinPage() {
         <main className="min-h-screen pt-32 pb-16 w-[85%] lg:w-[80%] mx-auto">
             <div className="max-w-2xl mx-auto">
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#3E4095] mb-4 font-plusJakarta">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary mb-4 font-plusJakarta">
                         Form & Pendataan
                     </h1>
                     <p className="text-sm sm:text-base font-medium text-gray-700">

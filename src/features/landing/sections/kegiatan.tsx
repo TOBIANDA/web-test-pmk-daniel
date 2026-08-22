@@ -116,7 +116,7 @@ export default function Kegiatan() {
             <div className="flex flex-col items-center text-center mb-16 md:mb-24">
                 <h2
                     ref={titleRef}
-                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#3E4095] mb-4 sm:mb-6 font-plusJakarta leading-tight"
+                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-primary mb-4 sm:mb-6 font-plusJakarta leading-tight"
                 >
                     Kegiatan Kami
                 </h2>
@@ -163,14 +163,14 @@ export default function Kegiatan() {
                                 isEven ? "items-start text-left md:pl-4 lg:pl-10" : "items-start md:items-end text-left md:text-right md:pr-4 lg:pr-10"
                             )}>
                                 {/* Number Badge */}
-                                <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gradient-to-br from-[#3E4095] to-[#F58732] shadow-md mb-6 md:mb-8">
+                                <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gradient-to-br from-primary to-secondary shadow-md mb-6 md:mb-8">
                                     <span className="font-plusJakarta font-bold text-white text-lg lg:text-xl">
                                         {data.number}
                                     </span>
                                 </div>
 
                                 {/* Title */}
-                                <h3 className="font-plusJakarta font-bold text-2xl sm:text-3xl lg:text-4xl text-[#3E4095] mb-4">
+                                <h3 className="font-plusJakarta font-bold text-2xl sm:text-3xl lg:text-4xl text-primary mb-4">
                                     {data.title}
                                 </h3>
 

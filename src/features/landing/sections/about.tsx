@@ -106,14 +106,14 @@ export default function About() {
           {/* Title */}
           <h2 
             ref={titleRef}
-            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#3E4095] mb-8 font-plusJakarta leading-tight"
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-primary mb-8 font-plusJakarta leading-tight"
           >
             Tentang PMK <br className="hidden lg:block" /> Daniel
           </h2>
 
           {/* Description with Left Border Accent */}
           <div className="relative pl-6 sm:pl-8">
-            <div ref={lineRef} className="absolute left-0 top-0 w-1 sm:w-1.5 bg-gradient-to-b from-[#F58732] to-[#3E4095] rounded-full"></div>
+            <div ref={lineRef} className="absolute left-0 top-0 w-1 sm:w-1.5 bg-gradient-to-b from-secondary to-primary rounded-full"></div>
             <p 
               ref={descRef}
               className="text-sm sm:text-base font-medium leading-relaxed text-gray-700 text-justify"

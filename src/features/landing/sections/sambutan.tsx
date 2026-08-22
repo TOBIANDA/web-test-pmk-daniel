@@ -83,7 +83,7 @@ export default function Sambutan() {
                 {/* Consistent Typography Title */}
                 <h2 
                     ref={titleRef}
-                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#3E4095] mb-6 font-plusJakarta leading-tight"
+                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-primary mb-6 font-plusJakarta leading-tight"
                 >
                     Kata Sambutan
                 </h2>

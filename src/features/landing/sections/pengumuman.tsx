@@ -69,7 +69,7 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
             <div className="flex flex-col items-center text-center mb-16">
                 <h2 
                     ref={titleRef}
-                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#3E4095] mb-4 font-plusJakarta leading-tight"
+                    className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-primary mb-4 font-plusJakarta leading-tight"
                 >
                     Pengumuman
                 </h2>
@@ -101,7 +101,7 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
                             
                             {/* Date Badge Overlay */}
                             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-                                <p className="font-plusJakarta font-bold text-xs text-[#3E4095]">
+                                <p className="font-plusJakarta font-bold text-xs text-primary">
                                     {item.datePublished}
                                 </p>
                             </div>
@@ -109,7 +109,7 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
 
                         {/* Content */}
                         <div className="flex flex-col flex-grow px-2">
-                            <Link href={`/pengumuman/${item.id}`} className="group-hover:text-[#3E4095] transition-colors duration-300">
+                            <Link href={`/pengumuman/${item.id}`} className="group-hover:text-primary transition-colors duration-300">
                                 <h3 className="font-plusJakarta font-bold text-xl lg:text-2xl leading-snug line-clamp-2">
                                     {item.title}
                                 </h3>
@@ -123,7 +123,7 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
                             <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                                 <Link 
                                     href={`/pengumuman/${item.id}`} 
-                                    className="inline-flex items-center gap-2 font-plusJakarta font-bold text-sm text-[#F58732] hover:text-[#3E4095] transition-colors duration-300"
+                                    className="inline-flex items-center gap-2 font-plusJakarta font-bold text-sm text-secondary hover:text-primary transition-colors duration-300"
                                 >
                                     Baca Selengkapnya
                                     <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
