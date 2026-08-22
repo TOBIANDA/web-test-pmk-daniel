@@ -104,7 +104,7 @@ export default function Navbar() {
           <a ref={addLinkRef} href="/tentang" className="hover:text-[#3E4095] transition-colors">Tentang Kami</a>
           <a ref={addLinkRef} href="/pengumuman" className="hover:text-[#3E4095] transition-colors">Pengumuman</a>
           <a ref={addLinkRef} href="/pengurus" className="hover:text-[#3E4095] transition-colors">Kepengurusan</a>
-          <a ref={addLinkRef} href="tentang" className="hover:text-[#3E4095] transition-colors">Form & Pendataan</a>
+          <a ref={addLinkRef} href="/join" className="hover:text-[#3E4095] transition-colors">Form & Pendataan</a>
           <a ref={addLinkRef} href="/kontak" className="hover:text-[#3E4095] transition-colors">Kontak</a>
         </div>
 
@@ -113,6 +113,7 @@ export default function Navbar() {
           <Button 
             ref={buttonRef}
             className="hidden lg:flex shadow-lg"
+            onClick={() => window.location.href = '/join'}
           >
             Join Us!
           </Button>
@@ -139,9 +140,9 @@ export default function Navbar() {
         <a href="/tentang" className="hover:text-[#3E4095]">Tentang Kami</a>
         <a href="/pengumuman" className="hover:text-[#3E4095]">Pengumuman</a>
         <a href="/pengurus" className="hover:text-[#3E4095]">Kepengurusan</a>
-        <a href="/tentang" className="hover:text-[#3E4095]">Form & Pendataan</a>
+        <a href="/join" className="hover:text-[#3E4095]">Form & Pendataan</a>
         <a href="/kontak" className="hover:text-[#3E4095]">Kontak</a>
-        <Button className="w-full mt-4">
+        <Button className="w-full mt-4" onClick={() => window.location.href = '/join'}>
           Join Us!
         </Button>
       </div>

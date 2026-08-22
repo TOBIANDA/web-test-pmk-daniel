@@ -1,10 +1,10 @@
 export const dataPengumuman = [
     {
         id: "1",
-        imageUrl: "/images/joshua.webp",
-        title: "Joshua Bertemu Benjamin Netanyahu",
-        datePublished: "25/06/2026",
-        description: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore numquam, consectetur, ex error aut sint quia excepturi delectus maxime minima earum quibusdam, sequi quaerat. Vitae repudiandae error beatae molestias est atque unde incidunt, quis repellendus, ipsum ab! Numquam, sint deleniti ipsa consequuntur earum labore cupiditate ullam quibusdam. Mollitia, est possimus. Enim odit vero rem est harum, quas, ad itaque similique ducimus labore fugiat quidem dolores ipsum cupiditate possimus a modi optio repellat! Possimus, provident molestias consectetur praesentium, atque, in voluptatibus eos mollitia doloremque non commodi aperiam expedita consequatur tempora obcaecati minus iure nisi cupiditate rerum numquam esse nesciunt! Iure laboriosam rerum sit perspiciatis maiores ipsam! Rem, repudiandae voluptatibus! Corrupti, quibusdam voluptatem dignissimos tempore ratione dolore quia et aperiam. Expedita, minus perspiciatis? Magni itaque vitae ex facilis unde asperiores qui, officia atque eos? Quisquam, saepe odio suscipit nemo sequi consequuntur minus incidunt ex expedita ullam neque dolor? Adipisci labore libero dolore delectus asperiores obcaecati ea fugit! Qui doloremque optio molestiae nemo sit voluptatibus ullam cumque, ea nihil quae soluta laboriosam. Quis sequi vitae molestiae perspiciatis. Tempore, eos. Sint neque cupiditate, animi error maxime ipsa nobis exercitationem delectus minus corporis ducimus omnis, nulla deleniti officia natus cum reiciendis explicabo saepe. Quos, facilis."
+        imageUrl: "/pengumuman/persekutuan-doa-1-2026.jpg",
+        title: "Persekutuan Doa Rutin: Hikmat dalam Setiap Tindakan",
+        datePublished: "21/08/2026",
+        description: "Mari bergabung dalam Persekutuan Doa rutin kita yang akan membahas tentang Yakobus 1:5, 'Hikmat dalam Setiap Tindakan'. Ibadah akan dilaksanakan pada hari Jumat, 21 Agustus 2026 di GKM 4.2 pada pukul 10.30 WIB. Jangan lewatkan waktu bersekutu bersama!"
     },
     {
         id: "2",
