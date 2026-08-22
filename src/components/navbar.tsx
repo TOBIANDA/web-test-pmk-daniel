@@ -1,68 +1,127 @@
 "use client";
-import { useState } from "react";
-import { motion } from "framer-motion";
+
+import { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { Button } from "@/components/ui/button";
+
+gsap.registerPlugin(useGSAP);
 
 export default function Navbar() {
-
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const linksRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const logoImgRef = useRef<HTMLImageElement>(null);
+
+  useGSAP(() => {
+    const tl = gsap.timeline();
+
+    // Initial state setup for Navbar container (slide down and fade in)
+    tl.from(containerRef.current, {
+      y: -30,
+      opacity: 0,
+      duration: 1,
+      ease: "power4.out",
+      delay: 2.6 // Wait for initial loader panels to open (based on landing page timing)
+    });
+
+    // Stagger in the links
+    tl.from(linksRef.current, {
+      y: 15,
+      opacity: 0,
+      duration: 0.6,
+      stagger: 0.1,
+      ease: "power3.out"
+    }, "-=0.6");
+
+    // Fade in the button
+    tl.from(buttonRef.current, {
+      scale: 0.8,
+      opacity: 0,
+      duration: 0.6,
+      ease: "back.out(1.5)"
+    }, "-=0.4");
+
+    // Logo image instant appear
+    gsap.set(logoImgRef.current, { opacity: 0 });
+    gsap.to(logoImgRef.current, {
+      opacity: 1,
+      duration: 0,
+      delay: 2.6
+    });
+
+  });
+
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (isOpen) {
+      gsap.to(mobileMenuRef.current, {
+        y: 0,
+        autoAlpha: 1, // handles opacity and visibility
+        duration: 0.4,
+        ease: "power3.out",
+      });
+    } else {
+      gsap.to(mobileMenuRef.current, {
+        y: -20,
+        autoAlpha: 0,
+        duration: 0.3,
+        ease: "power2.in"
+      });
+    }
+  }, { dependencies: [isOpen] });
+
+  const addLinkRef = (el: HTMLAnchorElement | null) => {
+    if (el && !linksRef.current.includes(el)) {
+      linksRef.current.push(el);
+    }
+  };
 
   return (
-
-    <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[95%] max-w-5xl">
+    <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[85%] lg:w-[80%]">
       
-      {}
-      <div className="bg-white/90 backdrop-blur-md rounded-full shadow-sm px-6 py-3 flex items-center justify-between">
+      <div 
+        ref={containerRef}
+        className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] px-6 py-5 flex items-center justify-between"
+      >
         
         {/* Kiri: Logo */}
         <div className="flex items-center cursor-pointer relative group p-1">
-          {/* Dashed Spinning Border (Delayed until hero text finishes) */}
-          <motion.div 
-            className="absolute inset-0 rounded-full border-2 border-dashed border-[#3E4095] group-hover:scale-110"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, rotate: 360 }}
-            transition={{
-              opacity: { delay: 6.0, duration: 1 },
-              rotate: { duration: 10, repeat: Infinity, ease: "linear" }
-            }}
-          />
-          <motion.img 
+          <img 
+            draggable="false"
+            ref={logoImgRef}
             src="/logo.png" 
             alt="Logo PMK" 
-            className="h-10 w-10 object-contain relative z-10 bg-white rounded-full" 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2.6, duration: 0 }}
+            className="select-none size-12 lg:size-14 object-contain relative z-10 bg-white rounded-full" 
           />
         </div>
 
-        {
-
-        }
-        <div className="hidden md:flex items-center space-x-8 text-sm font-semibold text-gray-700">
-          <a href="/" className="hover:text-[#3E4095] transition-colors">Beranda</a>
-          <a href="/tentang" className="hover:text-[#3E4095] transition-colors">Tentang Kami</a>
-          <a href="/pengumuman" className="hover:text-[#3E4095] transition-colors">Pengumuman</a>
-          <a href="/pengurus" className="hover:text-[#3E4095] transition-colors">Kepengurusan</a>
-          <a href="tentang" className="hover:text-[#3E4095] transition-colors">Form & Pendataan</a>
-          <a href="/kontak" className="hover:text-[#3E4095] transition-colors">Kontak</a>
+        {/* Tengah: Links Desktop */}
+        <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-gray-800">
+          <a ref={addLinkRef} href="/" className="hover:text-primary transition-colors">Beranda</a>
+          <a ref={addLinkRef} href="/tentang" className="hover:text-primary transition-colors">Tentang Kami</a>
+          <a ref={addLinkRef} href="/pengumuman" className="hover:text-primary transition-colors">Pengumuman</a>
+          <a ref={addLinkRef} href="/pengurus" className="hover:text-primary transition-colors">Kepengurusan</a>
+          <a ref={addLinkRef} href="/join" className="hover:text-primary transition-colors">Form & Pendataan</a>
+          <a ref={addLinkRef} href="/kontak" className="hover:text-primary transition-colors">Kontak</a>
         </div>
 
-        {
-
-        }
+        {/* Kanan: Button & Mobile Toggle */}
         <div className="flex items-center space-x-4">
-          <button className="hidden md:block px-6 py-2 text-sm font-bold text-white transition-all bg-gradient-to-r from-[#3E4095] to-[#F58732] rounded-full hover:opacity-90 shadow-md">
+          <Button 
+            ref={buttonRef}
+            className="hidden lg:flex shadow-lg"
+            onClick={() => window.location.href = '/join'}
+          >
             Join Us!
-          </button>
+          </Button>
 
-          {
-        }
           <button 
             onClick={() => setIsOpen(!isOpen)} 
-            
-            className="md:hidden p-2 text-gray-700 focus:outline-none"
+            className="lg:hidden p-2 text-gray-800 focus:outline-none"
           >
-            {    }
             {isOpen ? (
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             ) : (
@@ -72,22 +131,21 @@ export default function Navbar() {
         </div>
       </div>
 
-      {}
-      {}
-      {isOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full mt-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-lg p-6 flex flex-col space-y-4 text-center text-sm font-semibold text-gray-700">
-          <a href="#" className="hover:text-[#3E4095]">Beranda</a>
-          <a href="#about" className="hover:text-[#3E4095]">Tentang Kami</a>
-          <a href="#" className="hover:text-[#3E4095]">Pengumuman</a>
-          <a href="#" className="hover:text-[#3E4095]">Kepengurusan</a>
-          <a href="#" className="hover:text-[#3E4095]">Form & Pendataan</a>
-          <a href="#" className="hover:text-[#3E4095]">Kontak</a>
-          <button className="w-full px-6 py-3 mt-4 text-white font-bold bg-gradient-to-r from-[#3E4095] to-[#F58732] rounded-full">
-            Join Us!
-          </button>
-        </div>
-      )}
-
+      {/* Mobile Menu */}
+      <div 
+        ref={mobileMenuRef}
+        className="lg:hidden absolute top-full left-0 w-full mt-4 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-6 flex flex-col space-y-4 text-center text-sm font-semibold text-gray-800 invisible opacity-0 translate-y-[-20px]"
+      >
+        <a href="/" className="hover:text-primary">Beranda</a>
+        <a href="/tentang" className="hover:text-primary">Tentang Kami</a>
+        <a href="/pengumuman" className="hover:text-primary">Pengumuman</a>
+        <a href="/pengurus" className="hover:text-primary">Kepengurusan</a>
+        <a href="/join" className="hover:text-primary">Form & Pendataan</a>
+        <a href="/kontak" className="hover:text-primary">Kontak</a>
+        <Button className="w-full mt-4" onClick={() => window.location.href = '/join'}>
+          Join Us!
+        </Button>
+      </div>
     </nav>
   );
 }

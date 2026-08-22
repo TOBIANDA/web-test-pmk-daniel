@@ -1,0 +1,70 @@
+
+> pmk-daniel@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./src/features/landing/sections/pengumuman.tsx
+Error evaluating Node.js code
+TypeError: Duplicate declaration "Pengumuman"
+[0m [90m  8 |[39m }
+ [90m  9 |[39m
+[31m[1m>[22m[39m[90m 10 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mPengumuman[39m({ data }[33m:[39m [33mPengumumanSectionProps[39m) {
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 11 |[39m     [36mconst[39m previewPengumuman [33m=[39m data[33m.[39mslice([35m0[39m[33m,[39m [35m3[39m)[33m;[39m
+ [90m 12 |[39m     [36mreturn[39m (
+ [90m 13 |[39m         [33m<[39m[33msection[39m className[33m=[39m[32m"py-38 px-4 sm:px-8 md:px-12 lg:px-16 w-full "[39m[33m>[39m[0m
+    [at File.buildCodeFrameError (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:13:8186)]
+    [at Scope.checkBlockScopedCollisions (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:65946)]
+    [at Scope.registerBinding (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:68059)]
+    [at Scope.registerDeclaration (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:66687)]
+    [at Object.BlockScoped (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:63589)]
+    [at Object.newFn (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:82348)]
+    [at NodePath._call (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:23116)]
+    [at NodePath.call (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:22875)]
+    [at NodePath.visit (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:24052)]
+    [at TraversalContext.visitQueue (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:16989)]
+    [at TraversalContext.visitSingle (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:16622)]
+    [at TraversalContext.visit (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:17310)]
+    [at traverseNode (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:78753)]
+    [at NodePath.visit (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:24206)]
+    [at TraversalContext.visitQueue (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:16989)]
+    [at TraversalContext.visitMultiple (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:16552)]
+    [at TraversalContext.visit (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:17272)]
+    [at traverseNode (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:78753)]
+    [at traverse (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:18602)]
+    [at NodePath.traverse (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:14049)]
+    [at Scope.crawl (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:70770)]
+    [at Scope.init (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:227:70314)]
+    [at NodePath.setScope (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:24885)]
+    [at NodePath.setContext (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:215:25044)]
+    [at new File (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:13:6043)]
+    [at normalizeFile (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\compiled\babel\bundle.js:13:13900)]
+    [at <anonymous>]
+    [at consumeIterator (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\build\babel\loader\util.js:13:38)]
+    [at transform (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\build\babel\loader\transform.js:89:44)]
+    [at async (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\build\babel\loader\index.js:36:108)]
+    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:115:12) [D:\UB\PMK Daniel\WEBPMK\.next\build\chunks\[root-of-the-server]__0x8m--0._.js:126:16]
+    [at async nextBabelLoader (D:\UB\PMK Daniel\WEBPMK\node_modules\next\dist\build\babel\loader\index.js:36:63)]
+    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:115:12) [D:\UB\PMK Daniel\WEBPMK\.next\build\chunks\[root-of-the-server]__0x8m--0._.js:126:16]
+
+Import traces:
+  Client Component Browser:
+    ./src/features/landing/sections/pengumuman.tsx [Client Component Browser]
+    ./src/features/landing/page.tsx [Client Component Browser]
+    ./src/features/landing/page.tsx [Server Component]
+    ./src/app/(landing-page)/home/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/features/landing/sections/pengumuman.tsx [Client Component SSR]
+    ./src/features/landing/page.tsx [Client Component SSR]
+    ./src/features/landing/page.tsx [Server Component]
+    ./src/app/(landing-page)/home/page.tsx [Server Component]
+
+
+    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:115:12) [D:\UB\PMK Daniel\WEBPMK\.next\build\chunks\[root-of-the-server]__0x8m--0._.js:126:16])
+    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:115:12) [D:\UB\PMK Daniel\WEBPMK\.next\build\chunks\[root-of-the-server]__0x8m--0._.js:126:16])
