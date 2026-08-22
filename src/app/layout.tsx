@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "PMK Daniel",
 };
 
+import { SmoothScroll } from "@/components/SmoothScroll";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,9 +24,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", plusJakarta.variable)}
+      className={cn("antialiased", plusJakarta.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="selection:bg-primary selection:text-secondary">
+        <SmoothScroll>
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+        </SmoothScroll>
+      </body>
     </html>
   );
 }

@@ -29,11 +29,11 @@ export default function Footer() {
 
 
     return (
-        <footer className="w-full h-[641px] px-4 sm:px-8 md:px-12 lg:px-16 pt-12 lg:pt-16">
-            <div className="bg-primary overflow-hidden h-full flex flex-col justify-between items-center gap-8 rounded-t-2xl px-6 lg:px-16 pt-12 lg:pt-16 lg:rounded-t-[64px]">
-                <div className="grid grid-cols-2 gap-4 w-full h-full">
+        <footer className="w-full h-[641px] pt-12 lg:pt-16">
+            <div className="bg-primary w-full overflow-hidden h-full flex flex-col justify-between items-center gap-8 rounded-t-2xl lg:rounded-t-[64px] pt-12 lg:pt-16">
+                <div className="grid grid-cols-2 gap-4 w-[85%] lg:w-[80%] mx-auto h-full">
                     <div className="flex flex-col items-start gap-8">
-                        <Image src="/logo.svg" alt="Logo PMK Daniel" width={109} height={106} className="size-15 md:size-20 lg:size-25" />
+                        <Image draggable={false} src="/logo.svg" alt="Logo PMK Daniel" width={109} height={106} className="select-none size-15 md:size-20 lg:size-25" />
                         <div className="flex flex-col gap-1">
                             <p className="text-white font-light text-md lg:text-lg">
                                 © 2026 PMK Daniel. Managed by Komisi 4 PMK Daniel.

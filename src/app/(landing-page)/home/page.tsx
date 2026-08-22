@@ -1,9 +1,12 @@
 import LandingPage from "@/features/landing/page";
+import { pengumumanService } from "@/services/pengumumanService";
 
-export default function HomePage() {
+export default async function HomePage() {
+    const pengumumanData = await pengumumanService.getPengumumanList();
+    
     return (
         <main>
-            <LandingPage />
+            <LandingPage pengumumanData={pengumumanData} />
         </main>
     )
 }

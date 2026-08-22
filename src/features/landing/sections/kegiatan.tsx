@@ -36,7 +36,7 @@ const dataKegiatan = [
 
 export default function Kegiatan() {
     return (
-        <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16">
+        <section className="w-[85%] lg:w-[80%] mx-auto mt-16 lg:mt-32">
             <h1 className="font-plusJakarta font-bold text-primary text-2xl sm:text-3xl md:text-4xl xl:text-[64px]">
                 Kegiatan Kami
             </h1>
@@ -49,11 +49,12 @@ export default function Kegiatan() {
                     <div key={data.number} className="overflow-hidden w-full flex flex-col ">
                         <div className="relative w-full h-64 sm:h-80 lg:h-98 2xl:h-130 overflow-hidden rounded-[12px] md:rounded-[16px] lg:rounded-[24px] xl:rounded-[32px]">
                             <Image
+                                draggable={false}
                                 src={data.imageUrl}
                                 alt={data.desc}
                                 fill
                                 sizes="(max-width: 1024px) 100vw, 50vw"
-                                className="object-cover"
+                                className="select-none object-cover"
                             />
                         </div>
 

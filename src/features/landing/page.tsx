@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { Pengumuman as PengumumanType } from "@/types/pengumuman";
 import About from "./sections/about";
 import CTA from "./sections/cta";
 import Hero from "./sections/hero";
@@ -9,16 +11,33 @@ import Kegiatan from "./sections/kegiatan";
 import Pengumuman from "./sections/pengumuman";
 import Sambutan from "./sections/sambutan";
 
-export default function LandingPage() {
+gsap.registerPlugin(useGSAP);
+
+interface LandingPageProps {
+    pengumumanData: PengumumanType[];
+}
+
+export default function LandingPage({ pengumumanData }: LandingPageProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [isContentVisible, setIsContentVisible] = useState(false);
+
+    const loaderRef = useRef<HTMLDivElement>(null);
+    const topPanelRef = useRef<HTMLDivElement>(null);
+    const bottomPanelRef = useRef<HTMLDivElement>(null);
+    const logoRef = useRef<HTMLImageElement>(null);
+    const pmkTextRef = useRef<HTMLHeadingElement>(null);
+    const danielTextRef = useRef<HTMLHeadingElement>(null);
+    const topSplitRef = useRef<HTMLDivElement>(null);
+    const bottomSplitRef = useRef<HTMLDivElement>(null);
+    const blueDotRef = useRef<HTMLDivElement>(null);
+    const orangeDotRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         // Prevent scrolling and force window to top
         document.body.style.overflow = "hidden";
         window.scrollTo(0, 0);
         
-        // Panels start opening at 1.82s (0.7 * 2.6s). We mount the page exactly then!
+        // Panels start opening at 1.82s
         const contentTimer = setTimeout(() => {
             setIsContentVisible(true);
             window.scrollTo(0, 0);
@@ -26,138 +45,134 @@ export default function LandingPage() {
 
         const timer = setTimeout(() => {
             setIsLoading(false);
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = "";
             window.scrollTo(0, 0);
         }, 2600); 
 
         return () => {
             clearTimeout(contentTimer);
             clearTimeout(timer);
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = "";
         };
     }, []);
 
-    // Normalized Timings (Total: 2.6s)
-    // 0.0 - 0.25: Dots slide in
-    // 0.25 - 0.35: Dots squish to 0
-    // 0.35 - 0.45: Line spreads 0% -> 100%, Text fades in
-    // 0.45 - 0.70: Hold and read text
-    // 0.70 - 1.00: Panels slide apart revealing homepage
+    useGSAP(() => {
+        if (!isLoading) return;
+
+        const tl = gsap.timeline();
+
+        // Setup initial states
+        gsap.set([topSplitRef.current, bottomSplitRef.current], { width: "0%" });
+        gsap.set(logoRef.current, { opacity: 0, rotate: 0 });
+        gsap.set([pmkTextRef.current, danielTextRef.current], { opacity: 0, scale: 0.8, filter: "blur(10px)" });
+        gsap.set(pmkTextRef.current, { y: 15 });
+        gsap.set(danielTextRef.current, { y: -15 });
+        gsap.set(blueDotRef.current, { x: -100, opacity: 0, scale: 1 });
+        gsap.set(orangeDotRef.current, { x: 100, opacity: 0, scale: 1 });
+
+        // Phase 1: Dots slide in (0s -> 0.65s)
+        tl.to(blueDotRef.current, { x: 0, opacity: 1, duration: 0.65, ease: "power2.out" }, 0);
+        tl.to(orangeDotRef.current, { x: 0, opacity: 1, duration: 0.65, ease: "power2.out" }, 0);
+
+        // Phase 2: Dots squish out (0.65s -> 0.91s)
+        tl.to([blueDotRef.current, orangeDotRef.current], { scale: 0, opacity: 0, duration: 0.26, ease: "power1.in" }, 0.65);
+
+        // Phase 3: Lines spread, Text & Logo fades in (0.91s -> 1.17s)
+        tl.to([topSplitRef.current, bottomSplitRef.current], { width: "100%", duration: 0.26, ease: "power2.out" }, 0.91);
+        tl.to(logoRef.current, { opacity: 1, rotate: -90, duration: 0.26, ease: "power2.out" }, 0.91);
+        
+        tl.to([pmkTextRef.current, danielTextRef.current], { 
+            opacity: 1, 
+            y: 0, 
+            scale: 1, 
+            filter: "blur(0px)",
+            duration: 0.26, 
+            ease: "power2.out" 
+        }, 0.91);
+
+        // Phase 4: Hold and read text (1.17s -> 1.82s) - Animate logo to 180
+        tl.to(logoRef.current, { rotate: 180, duration: 0.65, ease: "power1.inOut" }, 1.17);
+
+        // Phase 5: Panels slide apart (1.82s -> 2.6s)
+        tl.to(topPanelRef.current, { yPercent: -100, duration: 0.78, ease: "power2.inOut" }, 1.82);
+        tl.to(bottomPanelRef.current, { yPercent: 100, duration: 0.78, ease: "power2.inOut" }, 1.82);
+        tl.to(logoRef.current, { rotate: 0, duration: 0.78, ease: "power2.inOut" }, 1.82);
+
+    }, { scope: loaderRef, dependencies: [isLoading] });
 
     return (
         <>
-            <AnimatePresence>
-                {isLoading && (
-                    <motion.div
-                        key="loader"
-                        className="fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
+            {isLoading && (
+                <div
+                    ref={loaderRef}
+                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
+                >
+                    {/* TOP PANEL */}
+                    <div
+                        ref={topPanelRef}
+                        className="relative z-20 w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-top flex justify-center items-end"
                     >
-
-                        {/* TOP PANEL */}
-                        <motion.div
-                            className="relative z-20 w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-top flex justify-center items-end"
-                            initial={{ y: "0%" }}
-                            animate={{ y: ["0%", "0%", "-100%"] }}
-                            transition={{ duration: 2.6, times: [0, 0.7, 1], ease: "easeInOut" }}
+                        {/* Logo attached to the bottom edge of the top panel */}
+                        <img 
+                            draggable="false"
+                            ref={logoRef}
+                            src="/logo.png" 
+                            alt="Logo PMK" 
+                            className="select-none absolute z-[60] object-contain bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.8)]"
+                            style={{ width: "96px", height: "96px", bottom: "-48px", left: "50%", transform: "translate(-50%, 0)" }}
+                        />
+                        {/* PMK Text */}
+                        <h1 
+                            ref={pmkTextRef}
+                            className="absolute bottom-24 text-4xl sm:text-6xl font-extrabold text-primary font-plusJakarta tracking-[0.3em]"
                         >
-                            {/* Logo attached to the bottom edge of the top panel */}
-                            <motion.img 
-                                src="/logo.png" 
-                                alt="Logo PMK" 
-                                className="absolute z-[60] object-contain bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.8)]"
-                                style={{ width: "96px", height: "96px", bottom: "-48px", left: "50%", x: "-50%" }}
-                                initial={{ opacity: 0, rotate: 0 }}
-                                animate={{ 
-                                    opacity: [0, 1, 1, 1], 
-                                    rotate: [0, -90, 180, 0] // Safe cracking effect finishes exactly as panel splits
-                                }}
-                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 0.7], ease: "easeInOut" }}
-                            />
-                            {/* PMK Text */}
-                            <motion.h1 
-                                className="absolute bottom-24 text-4xl sm:text-6xl font-extrabold text-primary font-plusJakarta tracking-[0.3em]"
-                                initial={{ opacity: 0, y: 15, scale: 0.8, filter: "blur(10px)" }}
-                                animate={{ 
-                                    opacity: [0, 0, 1, 1], 
-                                    y: [15, 15, 0, 0],
-                                    scale: [0.8, 0.8, 1, 1],
-                                    filter: ["blur(10px)", "blur(10px)", "blur(0px)", "blur(0px)"]
-                                }}
-                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeOut" }}
-                            >
-                                PMK
-                            </motion.h1>
+                            PMK
+                        </h1>
 
-                            {/* Top Half of the Split Line */}
-                            <motion.div 
-                                className="absolute bottom-0 h-[2px] bg-gradient-to-r from-primary to-secondary"
-                                style={{ left: "50%", x: "-50%" }}
-                                initial={{ width: "0%" }}
-                                animate={{ width: ["0%", "0%", "100%", "100%"] }}
-                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeInOut" }}
-                            />
-                            
-                            {/* Blue Dot (Left) */}
-                            <motion.div
-                                className="absolute w-6 h-6 rounded-full bg-primary z-10"
-                                style={{ left: "50%", marginLeft: "-12px", bottom: "-12px" }}
-                                initial={{ x: -100, opacity: 0 }}
-                                animate={{ 
-                                    x: [-100, 0, 0, 0], 
-                                    scale: [1, 1, 0, 0],
-                                    opacity: [0, 1, 1, 0]
-                                }}
-                                transition={{ duration: 2.6, times: [0, 0.1, 0.25, 0.35], ease: "easeInOut" }}
-                            />
-                        </motion.div>
+                        {/* Top Half of the Split Line */}
+                        <div 
+                            ref={topSplitRef}
+                            className="absolute bottom-0 h-[2px] bg-gradient-to-r from-primary to-secondary"
+                            style={{ left: "50%", transform: "translate(-50%, 0)" }}
+                        />
+                        
+                        {/* Blue Dot (Left) */}
+                        <div
+                            ref={blueDotRef}
+                            className="absolute w-6 h-6 rounded-full bg-primary z-10"
+                            style={{ left: "50%", marginLeft: "-12px", bottom: "-12px" }}
+                        />
+                    </div>
 
-                        {/* BOTTOM PANEL */}
-                        <motion.div
-                            className="relative w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-bottom flex justify-center items-start"
-                            initial={{ y: "0%" }}
-                            animate={{ y: ["0%", "0%", "100%"] }}
-                            transition={{ duration: 2.6, times: [0, 0.7, 1], ease: "easeInOut" }}
+                    {/* BOTTOM PANEL */}
+                    <div
+                        ref={bottomPanelRef}
+                        className="relative w-full h-[50vh] bg-background bg-gradient-to-b from-secondary/30 to-primary/30 bg-[length:100%_100vh] bg-bottom flex justify-center items-start"
+                    >
+                        {/* DANIEL Text */}
+                        <h1 
+                            ref={danielTextRef}
+                            className="absolute top-24 text-4xl sm:text-6xl font-extrabold text-secondary font-plusJakarta tracking-[0.3em]"
                         >
-                            {/* DANIEL Text */}
-                            <motion.h1 
-                                className="absolute top-24 text-4xl sm:text-6xl font-extrabold text-secondary font-plusJakarta tracking-[0.3em]"
-                                initial={{ opacity: 0, y: -15, scale: 0.8, filter: "blur(10px)" }}
-                                animate={{ 
-                                    opacity: [0, 0, 1, 1], 
-                                    y: [-15, -15, 0, 0],
-                                    scale: [0.8, 0.8, 1, 1],
-                                    filter: ["blur(10px)", "blur(10px)", "blur(0px)", "blur(0px)"]
-                                }}
-                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeOut" }}
-                            >
-                                DANIEL
-                            </motion.h1>
+                            DANIEL
+                        </h1>
 
-                            {/* Bottom Half of the Split Line */}
-                            <motion.div 
-                                className="absolute top-0 h-[2px] bg-gradient-to-r from-primary to-secondary"
-                                style={{ left: "50%", x: "-50%" }}
-                                initial={{ width: "0%" }}
-                                animate={{ width: ["0%", "0%", "100%", "100%"] }}
-                                transition={{ duration: 2.6, times: [0, 0.35, 0.45, 1], ease: "easeInOut" }}
-                            />
-                            
-                            {/* Orange Dot (Right) */}
-                            <motion.div
-                                className="absolute w-6 h-6 rounded-full bg-secondary z-10"
-                                style={{ left: "50%", marginLeft: "-12px", top: "-12px" }}
-                                initial={{ x: 100, opacity: 0 }}
-                                animate={{ 
-                                    x: [100, 0, 0, 0], 
-                                    scale: [1, 1, 0, 0],
-                                    opacity: [0, 1, 1, 0]
-                                }}
-                                transition={{ duration: 2.6, times: [0, 0.1, 0.25, 0.35], ease: "easeInOut" }}
-                            />
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        {/* Bottom Half of the Split Line */}
+                        <div 
+                            ref={bottomSplitRef}
+                            className="absolute top-0 h-[2px] bg-gradient-to-r from-primary to-secondary"
+                            style={{ left: "50%", transform: "translate(-50%, 0)" }}
+                        />
+                        
+                        {/* Orange Dot (Right) */}
+                        <div
+                            ref={orangeDotRef}
+                            className="absolute w-6 h-6 rounded-full bg-secondary z-10"
+                            style={{ left: "50%", marginLeft: "-12px", top: "-12px" }}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Page Content */}
             {isContentVisible ? (
@@ -166,7 +181,7 @@ export default function LandingPage() {
                     <About />
                     <Sambutan />
                     <Kegiatan />
-                    <Pengumuman />
+                    <Pengumuman data={pengumumanData} />
                     <CTA />
                 </div>
             ) : (

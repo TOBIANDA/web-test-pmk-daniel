@@ -1,21 +1,18 @@
 import EmptyPage from "@/components/emptyState";
-import { dataPengumuman } from "@/dataDummy/pengumuman";
+import { Pengumuman } from "@/types/pengumuman";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 interface PengumumanDetailPageProps {
-    id: string;
+    data: Pengumuman | undefined;
 }
 
-
-export default function PengumumanDetailPage({ id }: PengumumanDetailPageProps) {
-    const blog = dataPengumuman.find((item) => item.id === id);
-
+export default function PengumumanDetailPage({ data: blog }: PengumumanDetailPageProps) {
     if (!blog) return <EmptyPage />
 
     return (
-        <section className="py-38 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-dvh">
+        <section className="py-38 w-[85%] lg:w-[80%] mx-auto min-h-dvh">
             <Link href="/pengumuman">
                 <div className="flex items-center gap-2 cursor-pointer">
                     <ArrowLeft size={24} />
@@ -37,12 +34,13 @@ export default function PengumumanDetailPage({ id }: PengumumanDetailPageProps) 
 
                 <div className="w-full h-[40vh] sm:h-[55vh] md:h-[65vh] lg:h-[80vh] rounded-xl relative mt-8 md:mt-12 lg:mt-16 overflow-hidden">
                     <Image
+                        draggable={false}
                         src={blog.imageUrl}
                         alt={blog.title}
                         sizes="100vw"
                         fill
                         unoptimized
-                        className="object-cover"
+                        className="select-none object-cover"
                         priority={true} 
                     />
                 </div>

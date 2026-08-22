@@ -17,9 +17,8 @@ const dataKetua = [
 export default function Sambutan() {
     return (
         <section className={cn(
-            "w-full",
-            "py-16 sm:py-24 md:py-32 lg:py-38",
-            "px-4 sm:px-8 md:px-12 lg:px-16"
+            "w-[85%] lg:w-[80%] mx-auto",
+            "py-16 sm:py-24 md:py-32 lg:py-38"
         )}>
             <h1 className={cn(
                 "font-plusJakarta font-bold text-primary",
@@ -46,7 +45,7 @@ export default function Sambutan() {
                         "h-80 sm:h-96 lg:h-110",
                         "rounded-[32px] sm:rounded-[48px] lg:rounded-[64px]"
                     )}>
-                        <Image src={data.imgUrl} alt={data.nama} fill className="object-cover absolute" />
+                        <Image draggable={false} src={data.imgUrl} alt={data.nama} fill className="select-none object-cover absolute" />
                         <h3 className={cn(
                             "absolute z-10",
                             "bottom-14 sm:bottom-16 lg:bottom-20",
