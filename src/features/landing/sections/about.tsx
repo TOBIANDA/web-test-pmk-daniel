@@ -116,7 +116,7 @@ export default function About() {
             <div ref={lineRef} className="absolute left-0 top-0 w-1 sm:w-1.5 bg-gradient-to-b from-[#F58732] to-[#3E4095] rounded-full"></div>
             <p 
               ref={descRef}
-              className="text-base sm:text-lg lg:text-xl font-medium leading-relaxed text-gray-700 text-justify"
+              className="text-sm sm:text-base font-medium leading-relaxed text-gray-700 text-justify"
             >
               Persekutuan Mahasiswa Kristen Daniel Fakultas Ilmu Komputer Universitas Brawijaya (PMK Daniel FILKOM UB), yang berdiri sejak tahun 2013, bertujuan untuk membentuk mahasiswa Kristen di FILKOM UB agar memiliki karakter Kristus, unggul dibidangnya, serta mampu menjadi berkat dan memberi dampak positif bagi lingkungan sekitarnya.
             </p>

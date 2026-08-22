@@ -12,7 +12,6 @@ export default function Navbar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([]);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const logoBorderRef = useRef<HTMLDivElement>(null);
   const logoImgRef = useRef<HTMLImageElement>(null);
 
   useGSAP(() => {
@@ -43,25 +42,6 @@ export default function Navbar() {
       duration: 0.6,
       ease: "back.out(1.5)"
     }, "-=0.4");
-
-    // Logo border fade in and spin
-    gsap.fromTo(logoBorderRef.current, 
-      { opacity: 0, rotate: 0 }, 
-      {
-        opacity: 1,
-        duration: 1,
-        delay: 6.0,
-        ease: "power2.inOut",
-        onComplete: () => {
-          gsap.to(logoBorderRef.current, {
-            rotate: 360,
-            duration: 10,
-            repeat: -1,
-            ease: "none"
-          });
-        }
-      }
-    );
 
     // Logo image instant appear
     gsap.set(logoImgRef.current, { opacity: 0 });
@@ -109,17 +89,12 @@ export default function Navbar() {
         
         {/* Kiri: Logo */}
         <div className="flex items-center cursor-pointer relative group p-1">
-          {/* Dashed Spinning Border */}
-          <div 
-            ref={logoBorderRef}
-            className="absolute inset-0 rounded-full border-2 border-dashed border-[#3E4095] group-hover:scale-110 transition-transform"
-          />
           <img 
             draggable="false"
             ref={logoImgRef}
             src="/logo.png" 
             alt="Logo PMK" 
-            className="select-none h-10 w-10 object-contain relative z-10 bg-white rounded-full" 
+            className="select-none size-12 lg:size-14 object-contain relative z-10 bg-white rounded-full" 
           />
         </div>
 
