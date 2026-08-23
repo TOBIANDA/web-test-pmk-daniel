@@ -125,6 +125,22 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@utility bg-wavy-gradient {
+  background-color: #2D2E6F !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(245, 135, 50, 0.5) 0px, transparent 55%),
+    radial-gradient(at 100% 0%, rgba(62, 64, 149, 0.95) 0px, transparent 60%),
+    radial-gradient(at 100% 100%, rgba(245, 135, 50, 0.4) 0px, transparent 55%),
+    radial-gradient(at 0% 100%, rgba(62, 64, 149, 0.95) 0px, transparent 60%) !important;
+}
+
+@utility bg-wavy-gradient-light {
+  background-color: #F8FAFC !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(62, 64, 149, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(245, 135, 50, 0.1) 0px, transparent 50%) !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
