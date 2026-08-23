@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Pengumuman as PengumumanType } from "@/types/pengumuman";
-import About from "./sections/about";
-import CTA from "./sections/cta";
-import Hero from "./sections/hero";
-import Kegiatan from "./sections/kegiatan";
-import Pengumuman from "./sections/pengumuman";
-import Sambutan from "./sections/sambutan";
+import About from "./sections/About";
+import CTA from "./sections/CTA";
+import Hero from "./sections/Hero";
+import Kegiatan from "./sections/Kegiatan";
+import Pengumuman from "./sections/Pengumuman";
+import Sambutan from "./sections/Sambutan";
 
 gsap.registerPlugin(useGSAP);
 
@@ -33,7 +33,17 @@ export default function LandingPage({ pengumumanData }: LandingPageProps) {
     const blueDotRef = useRef<HTMLDivElement>(null);
     const orangeDotRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+    useIsomorphicLayoutEffect(() => {
+        if (sessionStorage.getItem("hasVisitedPMK")) {
+            setIsLoading(false);
+            setIsContentVisible(true);
+            return;
+        }
+
+        sessionStorage.setItem("hasVisitedPMK", "true");
+
         // Prevent scrolling and force window to top
         document.body.style.overflow = "hidden";
         window.scrollTo(0, 0);

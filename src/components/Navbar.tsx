@@ -15,15 +15,24 @@ export default function Navbar() {
   const logoImgRef = useRef<HTMLImageElement>(null);
 
   useGSAP(() => {
+    const isFirstVisit = !sessionStorage.getItem("hasVisitedPMK_navbar");
+    if (isFirstVisit) {
+      sessionStorage.setItem("hasVisitedPMK_navbar", "true");
+    }
+    
+    // Only delay if it's the first visit AND we are on the landing page
+    const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/home';
+    const delayTime = (isFirstVisit && isLandingPage) ? 2.6 : 0;
+
     const tl = gsap.timeline();
 
     // Initial state setup for Navbar container (slide down and fade in)
     tl.from(containerRef.current, {
       y: -30,
       opacity: 0,
-      duration: 1,
+      duration: 0.6,
       ease: "power4.out",
-      delay: 2.6 // Wait for initial loader panels to open (based on landing page timing)
+      delay: delayTime
     });
 
     // Stagger in the links
@@ -48,7 +57,7 @@ export default function Navbar() {
     gsap.to(logoImgRef.current, {
       opacity: 1,
       duration: 0,
-      delay: 2.6
+      delay: delayTime
     });
 
   });
@@ -81,20 +90,20 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[85%] lg:w-[80%]">
-      
-      <div 
+
+      <div
         ref={containerRef}
         className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] px-6 py-5 flex items-center justify-between"
       >
-        
+
         {/* Kiri: Logo */}
         <div className="flex items-center cursor-pointer relative group p-1">
-          <img 
+          <img
             draggable="false"
             ref={logoImgRef}
-            src="/logo.png" 
-            alt="Logo PMK" 
-            className="select-none size-12 lg:size-14 object-contain relative z-10 bg-white rounded-full" 
+            src="/logo.png"
+            alt="Logo PMK"
+            className="select-none size-12 lg:size-14 object-contain relative z-10 bg-white rounded-full"
           />
         </div>
 
@@ -110,7 +119,7 @@ export default function Navbar() {
 
         {/* Kanan: Button & Mobile Toggle */}
         <div className="flex items-center space-x-4">
-          <Button 
+          <Button
             ref={buttonRef}
             className="hidden lg:flex shadow-lg"
             onClick={() => window.location.href = '/join'}
@@ -118,8 +127,8 @@ export default function Navbar() {
             Join Us!
           </Button>
 
-          <button 
-            onClick={() => setIsOpen(!isOpen)} 
+          <button
+            onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden p-2 text-gray-800 focus:outline-none"
           >
             {isOpen ? (
@@ -132,7 +141,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      <div 
+      <div
         ref={mobileMenuRef}
         className="lg:hidden absolute top-full left-0 w-full mt-4 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-6 flex flex-col space-y-4 text-center text-sm font-semibold text-gray-800 invisible opacity-0 translate-y-[-20px]"
       >

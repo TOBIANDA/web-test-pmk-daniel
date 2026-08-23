@@ -1,4 +1,4 @@
-import PengumumanDetailPage from "@/features/pengumuman/pengumumanDetail";
+import PengumumanDetailPage from "@/features/pengumuman/PengumumanDetail";
 import { pengumumanService } from "@/services/pengumumanService";
 
 interface PengumumanDetailPageProps {

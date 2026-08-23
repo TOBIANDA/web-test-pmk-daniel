@@ -1,4 +1,4 @@
-import EmptyPage from "@/components/emptyState";
+import EmptyPage from "@/components/EmptyState";
 import { Pengumuman } from "@/types/pengumuman";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";

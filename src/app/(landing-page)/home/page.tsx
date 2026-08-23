@@ -1,4 +1,4 @@
-import LandingPage from "@/features/landing/page";
+import LandingPage from "@/features/landing/LandingPage";
 import { pengumumanService } from "@/services/pengumumanService";
 
 export default async function HomePage() {

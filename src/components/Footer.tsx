@@ -10,20 +10,24 @@ export default function Footer() {
             href: "/"
         },
         {
-            title: "Pengumuman",
-            href: "/pengumuman"
-        },
-        {
             title: "Tentang Kami",
             href: "/tentang"
         },
         {
+            title: "Pengumuman",
+            href: "/pengumuman"
+        },
+        {
             title: "Kepengurusan",
-            href: "/kepengurusan"
+            href: "/pengurus"
         },
         {
             title: "Form & Pendataan",
             href: "/join"
+        },
+        {
+            title: "Kontak",
+            href: "/kontak"
         }
     ]
 
