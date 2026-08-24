@@ -12,7 +12,6 @@ import {
   ExternalLink, 
   FileSpreadsheet,
   CheckCircle2,
-  Calendar,
   AlertCircle
 } from "lucide-react";
 
@@ -31,6 +30,21 @@ export default function FormResponsesModal({
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.setAttribute("data-lenis-prevent", "true");
+    } else {
+      document.body.style.overflow = "";
+      document.body.removeAttribute("data-lenis-prevent");
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.removeAttribute("data-lenis-prevent");
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && form) {
@@ -80,11 +94,17 @@ export default function FormResponsesModal({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp">
+    <div 
+      data-lenis-prevent="true"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain"
+    >
+      <div 
+        data-lenis-prevent="true"
+        className="relative w-full max-w-5xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[88vh] my-auto animate-scaleUp"
+      >
         
         {/* Header Modal */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-8 py-5 border-b border-gray-100 bg-slate-50/90">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-8 py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <FileSpreadsheet size={20} />
@@ -121,7 +141,7 @@ export default function FormResponsesModal({
         </div>
 
         {/* Filter & Search Toolbar */}
-        <div className="p-4 px-8 border-b border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-4 px-8 border-b border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
             <input
@@ -139,7 +159,10 @@ export default function FormResponsesModal({
         </div>
 
         {/* Submissions Table / View */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto p-6 bg-slate-50/50">
+        <div 
+          data-lenis-prevent="true"
+          className="flex-1 overflow-x-auto overflow-y-auto overscroll-contain p-6 bg-slate-50/50"
+        >
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
               <Loader2 className="h-9 w-9 animate-spin text-primary mb-2" />
@@ -255,7 +278,7 @@ export default function FormResponsesModal({
         </div>
 
         {/* Footer info */}
-        <div className="px-8 py-4 bg-slate-50 border-t border-gray-100 flex items-center justify-between text-xs text-slate-500 font-plusJakarta">
+        <div className="px-8 py-4 bg-slate-50 border-t border-gray-100 flex items-center justify-between text-xs text-slate-500 font-plusJakarta shrink-0">
           <span className="flex items-center gap-1.5">
             <CheckCircle2 size={14} className="text-emerald-500" /> Format CSV menggunakan UTF-8 BOM sehingga aman dibuka langsung di Microsoft Excel
           </span>

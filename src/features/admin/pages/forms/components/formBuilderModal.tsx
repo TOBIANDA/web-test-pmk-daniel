@@ -7,14 +7,12 @@ import {
   X, 
   Plus, 
   Trash2, 
-  GripVertical, 
   Check, 
   ArrowUp, 
   ArrowDown, 
   Loader2, 
   Sparkles,
   Layers,
-  HelpCircle,
   Settings2
 } from "lucide-react";
 
@@ -51,6 +49,21 @@ export default function FormBuilderModal({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.setAttribute("data-lenis-prevent", "true");
+    } else {
+      document.body.style.overflow = "";
+      document.body.removeAttribute("data-lenis-prevent");
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.removeAttribute("data-lenis-prevent");
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (initialForm) {
       setTitle(initialForm.title || "");
@@ -75,7 +88,7 @@ export default function FormBuilderModal({
           id: "nim",
           label: "NIM (Nomor Induk Mahasiswa)",
           type: "text",
-          placeholder: "Contoh: 245150200111001",
+          placeholder: "Contoh: 265150200111001",
           required: true,
         },
         {
@@ -197,18 +210,24 @@ export default function FormBuilderModal({
       onClose();
     } catch (err: any) {
       console.error("Failed to save form:", err);
-      setErrorMsg(err.message || "Gagal menyimpan formulir. Pastikan slug belum digunakan.");
+      setErrorMsg(err.message || "Gagal menyimpan formulir.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp">
+    <div 
+      data-lenis-prevent="true"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain"
+    >
+      <div 
+        data-lenis-prevent="true"
+        className="relative w-full max-w-4xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[88vh] my-auto animate-scaleUp"
+      >
         
         {/* Header Modal */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-slate-50/80 backdrop-blur-md">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
               <Settings2 size={20} />
@@ -233,7 +252,11 @@ export default function FormBuilderModal({
         </div>
 
         {/* Modal Body Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6">
+        <form 
+          data-lenis-prevent="true"
+          onSubmit={handleSubmit} 
+          className="flex-1 overflow-y-auto overscroll-contain p-6 sm:p-8 flex flex-col gap-6"
+        >
           {errorMsg && (
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm font-plusJakarta flex items-center gap-2">
               <span>⚠️</span>
@@ -318,9 +341,9 @@ export default function FormBuilderModal({
                 <button
                   type="button"
                   onClick={() => handleAddField("text")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-plusJakarta font-bold text-xs rounded-xl transition-all"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-plusJakarta font-bold text-xs rounded-xl transition-all"
                 >
-                  <Plus size={14} /> Tambah Pertanyaan
+                  <Plus size={15} /> Tambah Pertanyaan
                 </button>
               </div>
             </div>
@@ -482,7 +505,7 @@ export default function FormBuilderModal({
           </div>
 
           {/* Bottom Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-2 shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -493,7 +516,7 @@ export default function FormBuilderModal({
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white font-plusJakarta font-bold text-xs rounded-full shadow-lg shadow-primary/20 hover:opacity-95 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white font-plusJakarta font-extrabold text-xs rounded-full shadow-lg shadow-primary/20 hover:opacity-95 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <>

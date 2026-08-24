@@ -59,7 +59,17 @@ export default function FormManagementPage() {
   const handleCopyLink = (slug: string) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/form/${slug}`;
-    navigator.clipboard.writeText(url);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).catch(() => {
+          prompt("Salin tautan formulir berikut:", url);
+        });
+      } else {
+        prompt("Salin tautan formulir berikut:", url);
+      }
+    } catch (e) {
+      prompt("Salin tautan formulir berikut:", url);
+    }
     setCopiedSlug(slug);
     setTimeout(() => setCopiedSlug(null), 2500);
   };
