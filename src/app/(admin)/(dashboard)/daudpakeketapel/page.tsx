@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, LogOut, Plus, Users, Eye, Layers } from "lucide-react";
+import { Megaphone, Plus, Users, Eye, Layers, FileSpreadsheet } from "lucide-react";
 
 interface StatsData {
   totalPengumuman: number;
@@ -56,166 +55,142 @@ export default function DashboardPage() {
       ];
 
   return (
-    <div className="flex min-h-screen bg-[#fafafa] font-plusJakarta">
-      
-      {/* Sidebar Navigasi Kiri */}
-      <aside className="fixed left-0 top-0 z-50 flex h-full w-[219px] flex-col bg-white shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
-        <div className="relative flex h-[257px] w-[219px] flex-col items-center justify-center bg-primary">
-          <div className="relative h-[84px] w-[87px]">
-            <Image
-              src="/logo.png"
-              alt="Logo PMK Daniel"
-              fill
-              className="object-contain"
-            />
-          </div>
-          {/* Teks Judul */}
-          <h2 className="mt-[20px] font-plusJakarta text-[24px] font-[800] leading-[30px] text-white">
-            PMK Daniel
-          </h2>
-        </div>
-
-        {/* Menu Navigasi Tengah */}
-        <nav className="mt-[39px] flex w-full flex-col">
-          {/* Menu: Dashboard */}
-          <Link href="/daudpakeketapel" className="flex h-[44px] w-full items-center gap-[8px] bg-primary/10 py-[8px] pl-[32px] pr-[12px] border-l-4 border-primary">
-            <LayoutDashboard className="h-[24px] w-[24px] text-primary" />
-            <span className="font-['Nunito_Sans'] text-[16px] font-[600] leading-[22px] text-primary">
-              Dashboard
-            </span>
-          </Link>
-          {/* Menu: Pengumuman */}
-          <Link href="/limarotiduaikan" className="flex h-[44px] w-full items-center gap-[8px] py-[8px] pl-[32px] pr-[12px] cursor-pointer hover:bg-gray-50 transition-colors">
-            <Megaphone className="h-[24px] w-[24px] text-black" />
-            <span className="font-['Nunito_Sans'] text-[16px] font-[600] leading-[22px] text-black">
-              Pengumuman
-            </span>
-          </Link>
-        </nav>
-
-        {/* Menu Navigasi Bawah - Logout */}
-        <div className="absolute bottom-[44px] left-0 flex w-full flex-col">
-          <Link href="/pausmakanyunus" onClick={() => localStorage.removeItem("admin_token")} className="flex h-[44px] w-full items-center gap-[8px] py-[8px] pl-[32px] pr-[12px] cursor-pointer hover:bg-red-50 text-red-600 transition-colors">
-            <LogOut className="h-[24px] w-[24px]" />
-            <span className="font-['Nunito_Sans'] text-[16px] font-[600] leading-[22px]">
-              Keluar
-            </span>
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-[219px] flex flex-1 flex-col px-8 py-12 lg:px-[69px] lg:py-[75px]">
-        <div className="mx-auto flex w-full max-w-[1088px] flex-col">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <h1 className="font-plusJakarta text-[32px] md:text-[40px] font-[700] leading-tight text-primary">
-              Dashboard
+    <div className="w-full min-h-screen py-10 px-8 lg:px-14 font-plusJakarta text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="font-plusJakarta text-3xl sm:text-4xl font-extrabold text-primary tracking-tight">
+              Dashboard Admin
             </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              Selamat datang di Panel Manajemen PMK Daniel FILKOM UB
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/bahteranabinuh"
+              className="flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-all shadow-sm"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>Kelola Formulir</span>
+            </Link>
             <Link
               href="/limarotiduaikan"
-              className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm"
+              className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-white hover:bg-primary/90 transition-all shadow-sm"
             >
               <Plus className="h-4 w-4" />
               <span>Kelola Pengumuman</span>
             </Link>
           </div>
+        </div>
 
-          {/* Stat Cards Grid */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">Total Pengumuman</span>
-                <Megaphone className="h-5 w-5 text-amber-500" />
+        {/* Stat Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pengumuman</span>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
+                <Megaphone className="h-5 w-5" />
               </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">{stats?.totalPengumuman ?? 3}</p>
             </div>
-
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">Total Views</span>
-                <Eye className="h-5 w-5 text-blue-500" />
-              </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">{stats?.totalViews ?? 0}</p>
-            </div>
-
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">Total Pengurus</span>
-                <Users className="h-5 w-5 text-green-500" />
-              </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">{stats?.totalPengurus ?? 3}</p>
-            </div>
-
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">Total Divisi</span>
-                <Layers className="h-5 w-5 text-purple-500" />
-              </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">{stats?.totalDivisi ?? 5}</p>
-            </div>
+            <p className="mt-3 text-3xl font-extrabold text-slate-900">{stats?.totalPengumuman ?? 3}</p>
+            <span className="text-xs text-slate-500 mt-1 block">Telah dipublikasikan</span>
           </div>
 
-          {/* Seksi: Pengumuman Terbaru */}
-          <section className="mt-12 flex w-full flex-col gap-6">
-            <h2 className="w-full font-plusJakarta text-[24px] md:text-[32px] font-[700] leading-tight text-primary">
-              Pengumuman Terbaru
-            </h2>
-            
-            <div className="flex w-full flex-col bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              {latestItems.map((item: any, index: number) => (
-                <Link
-                  key={index}
-                  href={`/limarotiduaikan/${item.id}`}
-                  className="flex min-h-[76px] w-full flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 px-6 py-4 hover:bg-gray-50 transition-colors last:border-b-0 gap-2"
-                >
-                  <span className="font-plusJakarta text-[16px] font-[700] leading-[20px] text-gray-900 hover:text-primary">
-                    {item.title}
-                  </span>
-                  <span className="font-plusJakarta text-[14px] font-[400] text-gray-500">
-                    {item.date_published}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* Seksi: Aktivitas Terakhir */}
-          <section className="mt-10 flex w-full flex-col gap-6">
-            <h2 className="w-full font-plusJakarta text-[24px] md:text-[32px] font-[700] leading-tight text-primary">
-              Aktivitas Terakhir
-            </h2>
-            
-            <div className="flex w-full flex-col gap-3">
-              <div className="flex min-h-[64px] w-full flex-col sm:flex-row sm:items-center justify-between rounded-xl bg-primary/10 px-6 py-4 gap-2">
-                <div className="flex items-center gap-4">
-                  <Plus className="h-5 w-5 shrink-0 text-primary" />
-                  <span className="font-plusJakarta text-[15px] font-[600] text-gray-900">
-                    Server Backend Cloudflare R2 & Database Aktif
-                  </span>
-                </div>
-                <span className="font-plusJakarta text-[13px] text-gray-500">
-                  Hari ini
-                </span>
-              </div>
-              <div className="flex min-h-[64px] w-full flex-col sm:flex-row sm:items-center justify-between rounded-xl bg-primary/10 px-6 py-4 gap-2">
-                <div className="flex items-center gap-4">
-                  <Plus className="h-5 w-5 shrink-0 text-primary" />
-                  <span className="font-plusJakarta text-[15px] font-[600] text-gray-900">
-                    Pengumuman Persekutuan Jumat Perdana diterbitkan
-                  </span>
-                </div>
-                <span className="font-plusJakarta text-[13px] text-gray-500">
-                  28 Agustus 2026
-                </span>
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Views</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
+                <Eye className="h-5 w-5" />
               </div>
             </div>
-          </section>
+            <p className="mt-3 text-3xl font-extrabold text-slate-900">{stats?.totalViews ?? 0}</p>
+            <span className="text-xs text-slate-500 mt-1 block">Kunjungan pembaca</span>
+          </div>
 
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pengurus</span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                <Users className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="mt-3 text-3xl font-extrabold text-slate-900">{stats?.totalPengurus ?? 3}</p>
+            <span className="text-xs text-slate-500 mt-1 block">Anggota terdaftar</span>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Divisi</span>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
+                <Layers className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="mt-3 text-3xl font-extrabold text-slate-900">{stats?.totalDivisi ?? 5}</p>
+            <span className="text-xs text-slate-500 mt-1 block">Bidang pelayanan</span>
+          </div>
         </div>
-      </main>
 
+        {/* Seksi: Pengumuman Terbaru */}
+        <section className="flex w-full flex-col gap-4">
+          <h2 className="font-plusJakarta text-xl sm:text-2xl font-bold text-slate-900">
+            Pengumuman Terbaru
+          </h2>
+          
+          <div className="flex w-full flex-col bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+            {latestItems.map((item: any, index: number) => (
+              <Link
+                key={index}
+                href={`/limarotiduaikan/${item.id}`}
+                className="flex min-h-[70px] w-full flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 px-6 py-4 hover:bg-slate-50 transition-colors last:border-b-0 gap-2 group"
+              >
+                <span className="font-plusJakarta text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">
+                  {item.title}
+                </span>
+                <span className="font-plusJakarta text-xs text-slate-400 font-mono">
+                  {item.date_published}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Seksi: Aktivitas Terakhir */}
+        <section className="flex w-full flex-col gap-4">
+          <h2 className="font-plusJakarta text-xl sm:text-2xl font-bold text-slate-900">
+            Aktivitas Terakhir
+          </h2>
+          
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex min-h-[58px] w-full flex-col sm:flex-row sm:items-center justify-between rounded-2xl bg-white border border-slate-200/80 px-6 py-3.5 gap-2 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-plusJakarta text-xs sm:text-sm font-semibold text-slate-800">
+                  Server Backend Cloudflare R2 & Database Aktif
+                </span>
+              </div>
+              <span className="font-plusJakarta text-xs text-slate-400 font-mono">
+                Hari ini
+              </span>
+            </div>
+            <div className="flex min-h-[58px] w-full flex-col sm:flex-row sm:items-center justify-between rounded-2xl bg-white border border-slate-200/80 px-6 py-3.5 gap-2 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                <span className="font-plusJakarta text-xs sm:text-sm font-semibold text-slate-800">
+                  Pengumuman Persekutuan Jumat Perdana diterbitkan
+                </span>
+              </div>
+              <span className="font-plusJakarta text-xs text-slate-400 font-mono">
+                28 Agustus 2026
+              </span>
+            </div>
+          </div>
+        </section>
+
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { SmoothScroll } from "@/components/SmoothScroll";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plusJakarta",
@@ -60,10 +61,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { SmoothScroll } from "@/components/SmoothScroll";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -76,11 +73,9 @@ export default function RootLayout({
     >
       <body className="selection:bg-primary selection:text-secondary">
         <SmoothScroll>
-            <main className="flex-1 flex flex-col">
-              <Navbar />
-              {children}
-              <Footer />
-            </main>
+          <div className="flex min-h-screen flex-col">
+            {children}
+          </div>
         </SmoothScroll>
       </body>
     </html>
