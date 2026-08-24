@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Megaphone, FileSpreadsheet, LogOut } from "lucide-react";
+import { LayoutDashboard, Megaphone, FileSpreadsheet, Users, LogOut } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -62,6 +62,17 @@ export default function Sidebar() {
         >
           <FileSpreadsheet size={19} />
           <span>Formulir</span>
+        </Link>
+        <Link
+          href="/rumahtanggaallah"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
+            pathname?.startsWith("/rumahtanggaallah")
+              ? "bg-primary/10 text-primary font-bold shadow-sm"
+              : "text-slate-600 hover:bg-slate-50 hover:text-primary"
+          }`}
+        >
+          <Users size={19} />
+          <span>Kepengurusan</span>
         </Link>
       </nav>
 
