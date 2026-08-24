@@ -1,20 +1,39 @@
 import axios from "axios";
 
-// Create an Axios instance for server-side (and optionally client-side) fetching
-export const api = axios.create({
-    // baseURL: process.env.NEXT_PUBLIC_API_URL || "https://api.example.com",
-    baseURL: "", // Set to empty string for now, replace with actual API URL later
-    timeout: 10000,
-    headers: {
-        "Content-Type": "application/json",
-    },
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 15000,
 });
 
-// Optional: Add interceptors here if needed (e.g., for logging or auth tokens)
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        console.error("API Error:", error?.response?.data || error.message);
-        return Promise.reject(error);
+// Request interceptor to attach JWT token
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token =
+        localStorage.getItem("pmk_admin_token") ||
+        localStorage.getItem("admin_token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
+
+// Response interceptor
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export const api = apiClient;
+export default apiClient;
