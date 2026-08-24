@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import EmptyPage from "@/components/emptyState";
+import EmptyPage from "@/components/EmptyState";
 import { ArrowLeft, Loader2, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
