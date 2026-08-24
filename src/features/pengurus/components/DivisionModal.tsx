@@ -3,20 +3,9 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { Divisi } from "@/types/pengurus";
+import DivisionLogo from "./DivisionLogo";
 import { 
   X, 
-  Crown, 
-  PenTool, 
-  ShieldCheck, 
-  Wallet, 
-  BookOpen, 
-  HeartHandshake, 
-  Sparkles, 
-  Video, 
-  Settings, 
-  Calendar, 
-  Music, 
-  Camera, 
   Users,
   Award,
   ChevronRight
@@ -26,39 +15,6 @@ interface DivisionModalProps {
   isOpen: boolean;
   onClose: () => void;
   division: Divisi | null;
-}
-
-export function getDivisionIcon(iconName?: string, className: string = "size-5") {
-  switch (iconName) {
-    case "crown":
-      return <Crown className={className} />;
-    case "pen":
-      return <PenTool className={className} />;
-    case "shield":
-      return <ShieldCheck className={className} />;
-    case "wallet":
-      return <Wallet className={className} />;
-    case "book":
-      return <BookOpen className={className} />;
-    case "heart":
-      return <HeartHandshake className={className} />;
-    case "sparkles":
-      return <Sparkles className={className} />;
-    case "video":
-      return <Video className={className} />;
-    case "settings":
-      return <Settings className={className} />;
-    case "calendar":
-      return <Calendar className={className} />;
-    case "music":
-      return <Music className={className} />;
-    case "camera":
-      return <Camera className={className} />;
-    case "users":
-      return <Users className={className} />;
-    default:
-      return <Sparkles className={className} />;
-  }
 }
 
 export default function DivisionModal({
@@ -104,10 +60,10 @@ export default function DivisionModal({
     >
       <div
         data-lenis-prevent="true"
-        className="relative w-full max-w-md bg-white rounded-[28px] border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp"
+        className="relative w-full max-w-md bg-white rounded-[28px] border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp font-plusJakarta text-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Blue Header with Centered Icon Badge */}
+        {/* Top Blue Header with Centered Official Logo Badge */}
         <div className="relative h-20 bg-primary flex items-center justify-center shrink-0">
           {/* Close button */}
           <button
@@ -118,19 +74,19 @@ export default function DivisionModal({
             <X size={18} />
           </button>
 
-          {/* Centered Icon Badge */}
-          <div className="w-12 h-12 rounded-2xl bg-white text-primary flex items-center justify-center shadow-lg border-2 border-white/80 transform translate-y-1">
-            {getDivisionIcon(division.icon_name, "size-6 text-primary")}
+          {/* Centered Icon Badge with official PNG logo */}
+          <div className="w-14 h-14 rounded-2xl bg-white text-primary flex items-center justify-center shadow-lg border-2 border-white/90 transform translate-y-2 p-2">
+            <DivisionLogo divisionId={division.id} variant="light" size={36} />
           </div>
         </div>
 
         {/* Scrollable Modal Content */}
         <div 
           data-lenis-prevent="true"
-          className="flex-1 overflow-y-auto overscroll-contain p-6 flex flex-col gap-5 text-center font-plusJakarta"
+          className="flex-1 overflow-y-auto overscroll-contain p-6 pt-5 flex flex-col gap-5 text-center font-plusJakarta"
         >
           {/* Photo Section */}
-          <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-50">
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-50 mt-1">
             {isSingleLeader && mainLeader ? (
               <div className="relative w-full h-56 sm:h-64 bg-gradient-to-t from-slate-900/60 to-transparent">
                 <Image

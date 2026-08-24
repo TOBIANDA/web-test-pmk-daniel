@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Divisi, DivisiInput } from "@/types/pengurus";
 import { pengurusService } from "@/services/pengurusService";
-import { getDivisionIcon } from "@/features/pengurus/components/DivisionModal";
 import { 
   X, 
   Upload, 

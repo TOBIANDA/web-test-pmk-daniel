@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { Divisi } from "@/types/pengurus";
-import { getDivisionIcon } from "./DivisionModal";
-import { ChevronRight, Layers, LayoutGrid, Network } from "lucide-react";
+import DivisionLogo from "./DivisionLogo";
+import { ChevronRight, Layers, Network } from "lucide-react";
 
 interface OrgChartTreeProps {
   divisions: Divisi[];
@@ -14,7 +14,7 @@ export default function OrgChartTree({
   divisions,
   onSelectDivision,
 }: OrgChartTreeProps) {
-  // Mode switcher for mobile: "list" (hierarchical flow) or "tree" (full diagram pan)
+  // Mode switcher for mobile: "flow" (hierarchical flow) or "tree" (full diagram pan)
   const [mobileViewMode, setMobileViewMode] = useState<"flow" | "tree">("flow");
 
   // Helper to find division by id or name
@@ -58,21 +58,15 @@ export default function OrgChartTree({
     return (
       <button
         onClick={() => onSelectDivision(div)}
-        className={`group relative flex items-center gap-3 h-[48px] px-3.5 w-full rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left ${
+        className={`group relative flex items-center gap-3 h-[50px] px-3.5 w-full rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left ${
           isSubDivision
-            ? "bg-white/95 hover:bg-primary text-slate-800 hover:text-white border-2 border-dashed border-primary/40 hover:border-solid hover:border-primary"
+            ? "bg-white hover:bg-primary text-slate-800 hover:text-white border-2 border-dashed border-primary/40 hover:border-solid hover:border-primary"
             : "bg-white hover:bg-primary text-slate-900 hover:text-white border-2 border-primary/40 hover:border-primary"
         }`}
         title={`Klik untuk melihat profil & anggota ${displayName}`}
       >
-        <div
-          className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
-            isSubDivision
-              ? "bg-slate-100 group-hover:bg-white/20 text-primary group-hover:text-white"
-              : "bg-primary/10 group-hover:bg-white/20 text-primary group-hover:text-white"
-          }`}
-        >
-          {getDivisionIcon(div.icon_name, "size-4")}
+        <div className="w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-white/20 flex items-center justify-center p-1 transition-colors shrink-0">
+          <DivisionLogo divisionId={div.id} variant="auto" size={24} />
         </div>
         <span className="font-plusJakarta font-bold text-xs sm:text-sm truncate tracking-tight">
           {displayName}
@@ -99,8 +93,8 @@ export default function OrgChartTree({
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 group-hover:bg-white/20 text-primary group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-            {getDivisionIcon(div.icon_name, "size-5")}
+          <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-white/20 flex items-center justify-center p-1.5 shrink-0 transition-colors border border-slate-100">
+            <DivisionLogo divisionId={div.id} variant="auto" size={26} />
           </div>
           <div className="min-w-0">
             <h3 className="font-plusJakarta font-extrabold text-sm truncate leading-tight group-hover:text-white">
