@@ -1,16 +1,14 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 
-interface DivisionLogoProps {
+interface DivisionButtonProps {
   divisionId?: string;
-  variant?: "auto" | "light" | "dark"; // light = for white background (blue graphic), dark = for blue background (white graphic)
+  onClick?: () => void;
   className?: string;
-  size?: number;
 }
 
-const LOGO_MAP: Record<string, { light: string; dark: string }> = {
+const BUTTON_IMAGE_MAP: Record<string, { light: string; dark: string }> = {
   ketua_umum: {
     light: "/images/logos/ketua umum bg putih.png",
     dark: "/images/logos/ketua umum bg biru.png",
@@ -65,7 +63,7 @@ const LOGO_MAP: Record<string, { light: string; dark: string }> = {
   },
 };
 
-export function getLogoPaths(divisionId?: string) {
+export function getDivisionButtonImages(divisionId?: string) {
   if (!divisionId) {
     return {
       light: "/images/logos/ketua umum bg putih.png",
@@ -74,80 +72,54 @@ export function getLogoPaths(divisionId?: string) {
   }
 
   const key = divisionId.toLowerCase();
-  for (const mapKey of Object.keys(LOGO_MAP)) {
-    if (key.includes(mapKey) || mapKey.includes(key)) {
-      return LOGO_MAP[mapKey];
+  for (const mapKey of Object.keys(BUTTON_IMAGE_MAP)) {
+    if (key === mapKey) {
+      return BUTTON_IMAGE_MAP[mapKey];
     }
   }
 
   // Fallbacks by partial keywords
-  if (key.includes("ketua") && !key.includes("wakil")) return LOGO_MAP.ketua_umum;
-  if (key.includes("wakil") || key.includes("waketum")) return LOGO_MAP.wakil_ketua_umum;
-  if (key.includes("sekretaris")) return LOGO_MAP.sekretaris;
-  if (key.includes("bendahara")) return LOGO_MAP.bendahara;
-  if (key.includes("pembinaan")) return LOGO_MAP.pembinaan;
-  if (key.includes("pemerhati")) return LOGO_MAP.pemerhati;
-  if (key.includes("inventaris") || key.includes("teknis")) return LOGO_MAP.teknis_inventaris;
-  if (key.includes("bakat") || key.includes("mitkatpel")) return LOGO_MAP.minat_bakat;
-  if (key.includes("media") && key.includes("relasi")) return LOGO_MAP.media_relasi;
-  if (key.includes("media")) return LOGO_MAP.media;
-  if (key.includes("relasi")) return LOGO_MAP.relasi;
-  if (key.includes("acara")) return LOGO_MAP.acara;
+  if (key.includes("ketua") && !key.includes("wakil")) return BUTTON_IMAGE_MAP.ketua_umum;
+  if (key.includes("wakil") || key.includes("waketum")) return BUTTON_IMAGE_MAP.wakil_ketua_umum;
+  if (key.includes("sekretaris")) return BUTTON_IMAGE_MAP.sekretaris;
+  if (key.includes("bendahara")) return BUTTON_IMAGE_MAP.bendahara;
+  if (key.includes("pembinaan")) return BUTTON_IMAGE_MAP.pembinaan;
+  if (key.includes("pemerhati")) return BUTTON_IMAGE_MAP.pemerhati;
+  if (key.includes("inventaris") || key.includes("teknis")) return BUTTON_IMAGE_MAP.teknis_inventaris;
+  if (key.includes("bakat") || key.includes("mitkatpel")) return BUTTON_IMAGE_MAP.minat_bakat;
+  if (key.includes("media") && key.includes("relasi")) return BUTTON_IMAGE_MAP.media_relasi;
+  if (key.includes("media")) return BUTTON_IMAGE_MAP.media;
+  if (key.includes("relasi")) return BUTTON_IMAGE_MAP.relasi;
+  if (key.includes("acara")) return BUTTON_IMAGE_MAP.acara;
 
-  return LOGO_MAP.ketua_umum;
+  return BUTTON_IMAGE_MAP.ketua_umum;
 }
 
-export default function DivisionLogo({
+export default function DivisionButtonCard({
   divisionId,
-  variant = "auto",
+  onClick,
   className = "",
-  size = 28,
-}: DivisionLogoProps) {
-  const paths = getLogoPaths(divisionId);
+}: DivisionButtonProps) {
+  const images = getDivisionButtonImages(divisionId);
 
-  if (variant === "light") {
-    return (
-      <div className={`relative shrink-0 flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-        <Image
-          src={paths.light}
-          alt="Division Logo"
-          fill
-          className="object-contain"
-        />
-      </div>
-    );
-  }
-
-  if (variant === "dark") {
-    return (
-      <div className={`relative shrink-0 flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-        <Image
-          src={paths.dark}
-          alt="Division Logo"
-          fill
-          className="object-contain"
-        />
-      </div>
-    );
-  }
-
-  // Auto switch on hover with group class
   return (
-    <div className={`relative shrink-0 flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-      {/* Light version (visible on default white button, hidden on hover) */}
-      <Image
-        src={paths.light}
-        alt="Division Logo Light"
-        fill
-        className="object-contain group-hover:opacity-0 transition-opacity"
+    <button
+      onClick={onClick}
+      className={`group relative inline-block cursor-pointer transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 filter drop-shadow-sm hover:drop-shadow-md select-none ${className}`}
+      title="Klik untuk melihat detail & anggota"
+    >
+      {/* Light state (White background button) */}
+      <img
+        src={images.light}
+        alt="Button Card"
+        className="w-full h-auto object-contain block group-hover:hidden transition-all duration-150"
       />
-      {/* Dark version (hidden on default, visible on hover blue background) */}
-      <Image
-        src={paths.dark}
-        alt="Division Logo Dark"
-        fill
-        className="object-contain opacity-0 group-hover:opacity-100 transition-opacity"
+      {/* Dark state on hover (Blue background button) */}
+      <img
+        src={images.dark}
+        alt="Button Card Active"
+        className="w-full h-auto object-contain hidden group-hover:block transition-all duration-150"
       />
-    </div>
+    </button>
   );
 }

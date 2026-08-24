@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { Divisi } from "@/types/pengurus";
-import DivisionLogo from "./DivisionLogo";
-import { ChevronRight, Layers, Network } from "lucide-react";
+import DivisionButtonCard from "./DivisionLogo";
+import { Layers, Network } from "lucide-react";
 
 interface OrgChartTreeProps {
   divisions: Divisi[];
@@ -49,70 +49,6 @@ export default function OrgChartTree({
   const media = findDiv("media", "Media");
   const relasi = findDiv("relasi", "Relasi");
 
-  const renderDesktopButton = (
-    div: Divisi,
-    labelOverride?: string,
-    isSubDivision: boolean = false
-  ) => {
-    const displayName = labelOverride || div.name;
-    return (
-      <button
-        onClick={() => onSelectDivision(div)}
-        className={`group relative flex items-center gap-3 h-[50px] px-3.5 w-full rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer text-left ${
-          isSubDivision
-            ? "bg-white hover:bg-primary text-slate-800 hover:text-white border-2 border-dashed border-primary/40 hover:border-solid hover:border-primary"
-            : "bg-white hover:bg-primary text-slate-900 hover:text-white border-2 border-primary/40 hover:border-primary"
-        }`}
-        title={`Klik untuk melihat profil & anggota ${displayName}`}
-      >
-        <div className="w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-white/20 flex items-center justify-center p-1 transition-colors shrink-0">
-          <DivisionLogo divisionId={div.id} variant="auto" size={24} />
-        </div>
-        <span className="font-plusJakarta font-bold text-xs sm:text-sm truncate tracking-tight">
-          {displayName}
-        </span>
-      </button>
-    );
-  };
-
-  const renderMobileCard = (
-    div: Divisi,
-    labelOverride?: string,
-    subtitle?: string,
-    isSub: boolean = false
-  ) => {
-    const displayName = labelOverride || div.name;
-    const count = div.members?.length || 0;
-    return (
-      <button
-        onClick={() => onSelectDivision(div)}
-        className={`group flex items-center justify-between w-full p-3.5 rounded-2xl transition-all active:scale-[0.98] text-left shadow-sm ${
-          isSub
-            ? "bg-white hover:bg-primary text-slate-800 hover:text-white border border-dashed border-primary/40 hover:border-solid hover:border-primary"
-            : "bg-white hover:bg-primary text-slate-900 hover:text-white border border-primary/30 hover:border-primary"
-        }`}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-white/20 flex items-center justify-center p-1.5 shrink-0 transition-colors border border-slate-100">
-            <DivisionLogo divisionId={div.id} variant="auto" size={26} />
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-plusJakarta font-extrabold text-sm truncate leading-tight group-hover:text-white">
-              {displayName}
-            </h3>
-            <p className="font-plusJakarta text-[11px] text-slate-500 group-hover:text-white/80 font-medium truncate mt-0.5">
-              {subtitle || (div.komisi ? `${div.komisi} • ${count} Anggota` : `${count} Anggota`)}
-            </p>
-          </div>
-        </div>
-
-        <div className="p-1.5 rounded-full bg-slate-100 group-hover:bg-white/20 text-slate-400 group-hover:text-white shrink-0 ml-2">
-          <ChevronRight size={14} />
-        </div>
-      </button>
-    );
-  };
-
   return (
     <div className="w-full flex flex-col items-center">
       
@@ -145,11 +81,11 @@ export default function OrgChartTree({
       {/* ========================================================================= */}
       {/* 📱 MOBILE VIEW: HIERARCHICAL VERTICAL FLOW (Active on Mobile if mode is "flow") */}
       {/* ========================================================================= */}
-      <div className={`w-full flex-col gap-6 ${mobileViewMode === "flow" ? "flex md:hidden" : "hidden"}`}>
+      <div className={`w-full flex-col gap-6 max-w-md mx-auto ${mobileViewMode === "flow" ? "flex md:hidden" : "hidden"}`}>
         
         {/* Section 1: Badan Pengurus Harian (BPH) */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 px-1">
+        <div className="flex flex-col items-center gap-3 w-full">
+          <div className="flex items-center gap-2 self-start px-1">
             <span className="w-2 h-2 rounded-full bg-primary" />
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-primary">
               Badan Pengurus Harian (BPH)
@@ -157,26 +93,46 @@ export default function OrgChartTree({
           </div>
 
           {/* Ketua Umum */}
-          {renderMobileCard(ketuaUmum, "Ketua Umum", "Bastian Nevan Baruch • Pemimpin Utama")}
+          <div className="w-full max-w-[240px]">
+            <DivisionButtonCard
+              divisionId={ketuaUmum.id}
+              onClick={() => onSelectDivision(ketuaUmum)}
+              className="w-full"
+            />
+          </div>
 
           {/* Line connector down */}
-          <div className="w-0.5 h-3 bg-primary/40 mx-auto" />
+          <div className="w-0.5 h-3 bg-primary/40" />
 
           {/* Wakil Ketua Umum */}
-          {renderMobileCard(wakilKetuaUmum, "Wakil Ketua Umum", "Christo Emmanuel • Koordinasi Internal")}
+          <div className="w-full max-w-[240px]">
+            <DivisionButtonCard
+              divisionId={wakilKetuaUmum.id}
+              onClick={() => onSelectDivision(wakilKetuaUmum)}
+              className="w-full"
+            />
+          </div>
 
           {/* Line connector down */}
-          <div className="w-0.5 h-3 bg-primary/40 mx-auto" />
+          <div className="w-0.5 h-3 bg-primary/40" />
 
           {/* Sekretaris & Bendahara Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {renderMobileCard(sekretaris, "Sekretaris", "Tata Kelola Administrasi")}
-            {renderMobileCard(bendahara, "Bendahara", "Pengelolaan Keuangan")}
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <DivisionButtonCard
+              divisionId={sekretaris.id}
+              onClick={() => onSelectDivision(sekretaris)}
+              className="w-full"
+            />
+            <DivisionButtonCard
+              divisionId={bendahara.id}
+              onClick={() => onSelectDivision(bendahara)}
+              className="w-full"
+            />
           </div>
         </div>
 
         {/* Section 2: 4 Komisi Utama & Sub-Divisi */}
-        <div className="flex flex-col gap-4 mt-2 pt-5 border-t border-slate-100">
+        <div className="flex flex-col gap-4 mt-2 pt-5 border-t border-slate-100 w-full">
           <div className="flex items-center gap-2 px-1">
             <span className="w-2 h-2 rounded-full bg-secondary" />
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">
@@ -185,41 +141,77 @@ export default function OrgChartTree({
           </div>
 
           {/* Komisi 1: Pembinaan */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80">
-            {renderMobileCard(pembinaan, "Komisi 1: Pembinaan", "Pembinaan Rohani & Karakter")}
+          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 w-full">
+            <DivisionButtonCard
+              divisionId={pembinaan.id}
+              onClick={() => onSelectDivision(pembinaan)}
+              className="w-full max-w-[240px] mx-auto block"
+            />
           </div>
 
           {/* Komisi 2: Pemerhati */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80">
-            {renderMobileCard(pemerhati, "Komisi 2: Pemerhati", "Doa, Kasih & Konseling")}
+          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 w-full">
+            <DivisionButtonCard
+              divisionId={pemerhati.id}
+              onClick={() => onSelectDivision(pemerhati)}
+              className="w-full max-w-[240px] mx-auto block"
+            />
           </div>
 
           {/* Komisi 3: Acara (with nested sub-divisions) */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 flex flex-col gap-3">
-            {renderMobileCard(acara, "Komisi 3: Acara", "Konsep Liturgi & Ibadah")}
+          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 flex flex-col gap-3 w-full">
+            <DivisionButtonCard
+              divisionId={acara.id}
+              onClick={() => onSelectDivision(acara)}
+              className="w-full max-w-[240px] mx-auto block"
+            />
 
             {/* Sub-Divisions Branch */}
             <div className="relative flex flex-col gap-2 pl-4 ml-3 border-l-2 border-dashed border-primary/40">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Sub-Divisi Acara:
               </span>
-              {renderMobileCard(teknisInventaris, "Teknis & Inventaris", "Sound System & Logistik", true)}
-              {renderMobileCard(acaraSub, "Acara (Pelaksana)", "Rundown & Tata Acara", true)}
-              {renderMobileCard(minatBakat, "Minat Bakat & Misi", "Musik, Vokal & Baksos", true)}
+              <DivisionButtonCard
+                divisionId={teknisInventaris.id}
+                onClick={() => onSelectDivision(teknisInventaris)}
+                className="w-full max-w-[220px]"
+              />
+              <DivisionButtonCard
+                divisionId={acaraSub.id}
+                onClick={() => onSelectDivision(acaraSub)}
+                className="w-full max-w-[220px]"
+              />
+              <DivisionButtonCard
+                divisionId={minatBakat.id}
+                onClick={() => onSelectDivision(minatBakat)}
+                className="w-full max-w-[220px]"
+              />
             </div>
           </div>
 
           {/* Komisi 4: Media & Relasi (with nested sub-divisions) */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 flex flex-col gap-3">
-            {renderMobileCard(mediaRelasi, "Komisi 4: Media & Relasi", "Publikasi & Kemitraan")}
+          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 flex flex-col gap-3 w-full">
+            <DivisionButtonCard
+              divisionId={mediaRelasi.id}
+              onClick={() => onSelectDivision(mediaRelasi)}
+              className="w-full max-w-[240px] mx-auto block"
+            />
 
             {/* Sub-Divisions Branch */}
             <div className="relative flex flex-col gap-2 pl-4 ml-3 border-l-2 border-dashed border-primary/40">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Sub-Divisi Media & Relasi:
               </span>
-              {renderMobileCard(media, "Media Visual", "Foto, Video & Website", true)}
-              {renderMobileCard(relasi, "Relasi Eksternal", "Gereja & Alumni", true)}
+              <DivisionButtonCard
+                divisionId={media.id}
+                onClick={() => onSelectDivision(media)}
+                className="w-full max-w-[220px]"
+              />
+              <DivisionButtonCard
+                divisionId={relasi.id}
+                onClick={() => onSelectDivision(relasi)}
+                className="w-full max-w-[220px]"
+              />
             </div>
           </div>
 
@@ -236,25 +228,41 @@ export default function OrgChartTree({
           {/* LEVEL 1: KETUA UMUM */}
           <div className="flex flex-col items-center">
             <div className="w-[210px]">
-              {renderDesktopButton(ketuaUmum, "Ketua Umum")}
+              <DivisionButtonCard
+                divisionId={ketuaUmum.id}
+                onClick={() => onSelectDivision(ketuaUmum)}
+                className="w-[210px]"
+              />
             </div>
             <div className="w-0.5 h-8 bg-primary/50" />
           </div>
 
           {/* LEVEL 2: BPH */}
-          <div className="relative flex items-center justify-center gap-8 w-full max-w-[760px]">
+          <div className="relative flex items-center justify-center gap-8 w-full max-w-[780px]">
             <div className="absolute top-1/2 left-[90px] right-[90px] h-0.5 bg-primary/50 -translate-y-1/2 -z-0" />
 
-            <div className="relative z-10 w-[190px]">
-              {renderDesktopButton(sekretaris, "Sekretaris")}
+            <div className="relative z-10 w-[200px]">
+              <DivisionButtonCard
+                divisionId={sekretaris.id}
+                onClick={() => onSelectDivision(sekretaris)}
+                className="w-[200px]"
+              />
             </div>
 
             <div className="relative z-10 w-[220px]">
-              {renderDesktopButton(wakilKetuaUmum, "Wakil Ketua Umum")}
+              <DivisionButtonCard
+                divisionId={wakilKetuaUmum.id}
+                onClick={() => onSelectDivision(wakilKetuaUmum)}
+                className="w-[220px]"
+              />
             </div>
 
-            <div className="relative z-10 w-[190px]">
-              {renderDesktopButton(bendahara, "Bendahara")}
+            <div className="relative z-10 w-[200px]">
+              <DivisionButtonCard
+                divisionId={bendahara.id}
+                onClick={() => onSelectDivision(bendahara)}
+                className="w-[200px]"
+              />
             </div>
           </div>
 
@@ -272,42 +280,66 @@ export default function OrgChartTree({
               {/* COLUMN 1: Pembinaan */}
               <div className="flex flex-col items-center relative">
                 <div className="absolute -top-6 left-1/2 w-0.5 h-6 bg-primary/50 -translate-x-1/2" />
-                <div className="w-full">
-                  {renderDesktopButton(pembinaan, "Pembinaan")}
+                <div className="w-[210px]">
+                  <DivisionButtonCard
+                    divisionId={pembinaan.id}
+                    onClick={() => onSelectDivision(pembinaan)}
+                    className="w-[210px]"
+                  />
                 </div>
               </div>
 
               {/* COLUMN 2: Pemerhati */}
               <div className="flex flex-col items-center relative">
                 <div className="absolute -top-6 left-1/2 w-0.5 h-6 bg-primary/50 -translate-x-1/2" />
-                <div className="w-full">
-                  {renderDesktopButton(pemerhati, "Pemerhati")}
+                <div className="w-[210px]">
+                  <DivisionButtonCard
+                    divisionId={pemerhati.id}
+                    onClick={() => onSelectDivision(pemerhati)}
+                    className="w-[210px]"
+                  />
                 </div>
               </div>
 
               {/* COLUMN 3: Acara & Sub-Divisi Vertikal */}
               <div className="flex flex-col items-center relative">
                 <div className="absolute -top-6 left-1/2 w-0.5 h-6 bg-primary/50 -translate-x-1/2" />
-                <div className="w-full">
-                  {renderDesktopButton(acara, "Acara")}
+                <div className="w-[210px]">
+                  <DivisionButtonCard
+                    divisionId={acara.id}
+                    onClick={() => onSelectDivision(acara)}
+                    className="w-[210px]"
+                  />
                 </div>
 
-                <div className="relative w-full flex flex-col gap-3 pt-6 pl-5 mt-1">
+                <div className="relative w-full flex flex-col gap-3 pt-6 pl-5 mt-1 items-center">
                   <div className="absolute top-0 bottom-6 left-3 w-0.5 border-l-2 border-dashed border-primary/50" />
 
-                  <div className="relative flex items-center w-full">
+                  <div className="relative flex items-center w-full max-w-[200px]">
                     <div className="absolute -left-2 w-2 h-0.5 border-t-2 border-dashed border-primary/50" />
-                    {renderDesktopButton(teknisInventaris, "Teknis & Inventaris", true)}
+                    <DivisionButtonCard
+                      divisionId={teknisInventaris.id}
+                      onClick={() => onSelectDivision(teknisInventaris)}
+                      className="w-full"
+                    />
                   </div>
 
-                  <div className="relative flex items-center w-full">
+                  <div className="relative flex items-center w-full max-w-[200px]">
                     <div className="absolute -left-2 w-2 h-0.5 border-t-2 border-dashed border-primary/50" />
-                    {renderDesktopButton(acaraSub, "Acara (Pelaksana)", true)}
+                    <DivisionButtonCard
+                      divisionId={acaraSub.id}
+                      onClick={() => onSelectDivision(acaraSub)}
+                      className="w-full"
+                    />
                   </div>
 
-                  <div className="relative flex items-center w-full">
+                  <div className="relative flex items-center w-full max-w-[200px]">
                     <div className="absolute -left-2 w-2 h-0.5 border-t-2 border-dashed border-primary/50" />
-                    {renderDesktopButton(minatBakat, "Minat Bakat & Misi", true)}
+                    <DivisionButtonCard
+                      divisionId={minatBakat.id}
+                      onClick={() => onSelectDivision(minatBakat)}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               </div>
@@ -315,21 +347,33 @@ export default function OrgChartTree({
               {/* COLUMN 4: Media & Relasi & Sub-Divisi Vertikal */}
               <div className="flex flex-col items-center relative">
                 <div className="absolute -top-6 left-1/2 w-0.5 h-6 bg-primary/50 -translate-x-1/2" />
-                <div className="w-full">
-                  {renderDesktopButton(mediaRelasi, "Media & Relasi")}
+                <div className="w-[210px]">
+                  <DivisionButtonCard
+                    divisionId={mediaRelasi.id}
+                    onClick={() => onSelectDivision(mediaRelasi)}
+                    className="w-[210px]"
+                  />
                 </div>
 
-                <div className="relative w-full flex flex-col gap-3 pt-6 pl-5 mt-1">
+                <div className="relative w-full flex flex-col gap-3 pt-6 pl-5 mt-1 items-center">
                   <div className="absolute top-0 bottom-6 left-3 w-0.5 border-l-2 border-dashed border-primary/50" />
 
-                  <div className="relative flex items-center w-full">
+                  <div className="relative flex items-center w-full max-w-[200px]">
                     <div className="absolute -left-2 w-2 h-0.5 border-t-2 border-dashed border-primary/50" />
-                    {renderDesktopButton(media, "Media", true)}
+                    <DivisionButtonCard
+                      divisionId={media.id}
+                      onClick={() => onSelectDivision(media)}
+                      className="w-full"
+                    />
                   </div>
 
-                  <div className="relative flex items-center w-full">
+                  <div className="relative flex items-center w-full max-w-[200px]">
                     <div className="absolute -left-2 w-2 h-0.5 border-t-2 border-dashed border-primary/50" />
-                    {renderDesktopButton(relasi, "Relasi", true)}
+                    <DivisionButtonCard
+                      divisionId={relasi.id}
+                      onClick={() => onSelectDivision(relasi)}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               </div>

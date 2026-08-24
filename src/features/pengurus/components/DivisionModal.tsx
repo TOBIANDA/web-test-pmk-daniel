@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { Divisi } from "@/types/pengurus";
-import DivisionLogo from "./DivisionLogo";
+import DivisionButtonCard from "./DivisionLogo";
 import { 
   X, 
   Users,
@@ -74,9 +74,9 @@ export default function DivisionModal({
             <X size={18} />
           </button>
 
-          {/* Centered Icon Badge with official PNG logo */}
-          <div className="w-14 h-14 rounded-2xl bg-white text-primary flex items-center justify-center shadow-lg border-2 border-white/90 transform translate-y-2 p-2">
-            <DivisionLogo divisionId={division.id} variant="light" size={36} />
+          {/* Centered Icon Badge with official button image */}
+          <div className="w-auto h-12 max-w-[200px] flex items-center justify-center transform translate-y-3 drop-shadow-lg">
+            <DivisionButtonCard divisionId={division.id} className="w-[180px]" />
           </div>
         </div>
 

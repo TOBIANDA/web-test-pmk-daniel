@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Divisi, PengurusMember } from "@/types/pengurus";
 import { pengurusService } from "@/services/pengurusService";
-import DivisionLogo from "@/features/pengurus/components/DivisionLogo";
+import DivisionButtonCard from "@/features/pengurus/components/DivisionLogo";
 import EditDivisionModal from "./components/editDivisionModal";
 import MemberModal from "./components/memberModal";
 import { 
@@ -200,8 +200,8 @@ export default function PengurusManagementPage() {
                 {/* Division Card Header */}
                 <div className="p-6 pb-4 flex items-start justify-between gap-4 border-b border-slate-100">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center p-1.5 shrink-0 border border-slate-200">
-                      <DivisionLogo divisionId={div.id} variant="light" size={32} />
+                    <div className="w-auto h-10 max-w-[170px] flex items-center justify-center shrink-0">
+                      <DivisionButtonCard divisionId={div.id} className="w-[150px]" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
