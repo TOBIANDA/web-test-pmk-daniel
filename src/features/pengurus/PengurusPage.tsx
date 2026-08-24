@@ -60,12 +60,6 @@ export default function PengurusPage() {
         {/* ========================================================================= */}
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-12 sm:mb-16">
           
-          {/* Top Royal Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-primary/20 shadow-[0_4px_20px_rgba(30,58,138,0.08)] backdrop-blur-md text-primary text-xs font-black uppercase tracking-widest mb-4 animate-fadeIn">
-            <Sparkles size={14} className="text-amber-500 animate-pulse" />
-            <span>Keluarga Besar Pelayanan • Periode 2025/2026</span>
-          </div>
-
           {/* Majestic Main Headline */}
           <h1 className="font-plusJakarta text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight uppercase leading-[1.08] drop-shadow-sm">
             <span className="bg-gradient-to-r from-[#172554] via-[#1e3a8a] to-[#2563eb] bg-clip-text text-transparent">
@@ -73,6 +67,9 @@ export default function PengurusPage() {
             </span>{" "}
             <span className="bg-gradient-to-r from-amber-500 via-amber-600 to-primary bg-clip-text text-transparent">
               PMK DANIEL
+            </span>{" "}
+            <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent whitespace-nowrap">
+              2025/2026
             </span>
           </h1>
 
