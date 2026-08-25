@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { DynamicForm } from "@/types/form";
 import { formService } from "@/services/formService";
+import { exportSubmissionsToExcel, exportSubmissionsToCsv } from "@/utils/formExport";
 import FormBuilderModal from "./components/formBuilderModal";
 import FormResponsesModal from "./components/formResponsesModal";
 import { 
@@ -35,6 +36,7 @@ export default function FormManagementPage() {
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   const fetchForms = async () => {
     try {
@@ -102,9 +104,36 @@ export default function FormManagementPage() {
     }
   };
 
-  const handleDirectExportCsv = (formId: string) => {
-    const csvUrl = formService.getExportCsvUrl(formId);
-    window.open(csvUrl, "_blank");
+  const handleDirectExportExcel = async (form: DynamicForm) => {
+    try {
+      setExportingId(form.id);
+      const subs = await formService.getSubmissions(form.id);
+      if (subs.length === 0) {
+        alert(`Belum ada respon masuk untuk formulir "${form.title}".`);
+        return;
+      }
+      exportSubmissionsToExcel(form, subs);
+    } catch (err: any) {
+      alert("Gagal mengunduh respon: " + (err.message || "Terjadi kesalahan"));
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  const handleDirectExportCsv = async (form: DynamicForm) => {
+    try {
+      setExportingId(form.id);
+      const subs = await formService.getSubmissions(form.id);
+      if (subs.length === 0) {
+        alert(`Belum ada respon masuk untuk formulir "${form.title}".`);
+        return;
+      }
+      exportSubmissionsToCsv(form, subs);
+    } catch (err: any) {
+      alert("Gagal mengunduh respon: " + (err.message || "Terjadi kesalahan"));
+    } finally {
+      setExportingId(null);
+    }
   };
 
   const filteredForms = forms.filter((f) => {
@@ -343,14 +372,19 @@ export default function FormManagementPage() {
                     <span>{form.submission_count || 0} Responden</span>
                   </button>
 
-                  {/* Direct Export CSV Button */}
+                  {/* Direct Export Excel Button */}
                   <button
-                    onClick={() => handleDirectExportCsv(form.id)}
-                    className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-plusJakarta font-bold text-xs rounded-2xl shadow-md shadow-emerald-600/20 transition-all"
-                    title="Download langsung file spreadsheet CSV"
+                    onClick={() => handleDirectExportExcel(form)}
+                    disabled={exportingId === form.id}
+                    className="inline-flex items-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-plusJakarta font-bold text-xs rounded-2xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                    title="Unduh langsung data tanggapan dalam format Microsoft Excel (.xlsx)"
                   >
-                    <Download size={15} />
-                    <span>Unduh CSV</span>
+                    {exportingId === form.id ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <Download size={15} />
+                    )}
+                    <span>Unduh Excel</span>
                   </button>
 
                   {/* Edit Form */}

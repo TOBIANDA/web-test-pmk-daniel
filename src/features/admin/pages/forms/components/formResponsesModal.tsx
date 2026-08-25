@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { DynamicForm, FormSubmission } from "@/types/form";
 import { formService } from "@/services/formService";
+import { exportSubmissionsToExcel, exportSubmissionsToCsv } from "@/utils/formExport";
 import { 
   X, 
   Download, 
@@ -81,8 +82,11 @@ export default function FormResponsesModal({
   };
 
   const handleDownloadCsv = () => {
-    const csvUrl = formService.getExportCsvUrl(form.id);
-    window.open(csvUrl, "_blank");
+    exportSubmissionsToCsv(form, submissions);
+  };
+
+  const handleDownloadExcel = () => {
+    exportSubmissionsToExcel(form, submissions);
   };
 
   // Filter submissions by any field answer
@@ -114,20 +118,30 @@ export default function FormResponsesModal({
                 Rekap Tanggapan: {form.title}
               </h2>
               <p className="font-plusJakarta text-xs text-slate-500 mt-0.5">
-                Total {submissions.length} responden terdata • Ekspor langsung ke format CSV spreadsheet
+                Total {submissions.length} responden terdata • Ekspor langsung ke Excel (.xlsx) atau CSV
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadExcel}
+              disabled={submissions.length === 0}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-plusJakarta font-bold text-xs rounded-full shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              title="Unduh format spreadsheet Microsoft Excel (.xlsx)"
+            >
+              <Download size={14} />
+              <span>Unduh Excel (.xlsx)</span>
+            </button>
+
             <button
               onClick={handleDownloadCsv}
               disabled={submissions.length === 0}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-plusJakarta font-bold text-xs rounded-full shadow-md shadow-emerald-600/20 transition-all"
-              title="Unduh seluruh data dalam format CSV untuk Microsoft Excel / Google Sheets"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-plusJakarta font-bold text-xs rounded-full border border-slate-300 transition-all cursor-pointer"
+              title="Unduh format CSV standar"
             >
               <Download size={14} />
-              <span>Unduh CSV</span>
+              <span>CSV</span>
             </button>
 
             <button
