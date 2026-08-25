@@ -18,7 +18,7 @@ const DEFAULT_SEEDED_FORMS: DynamicForm[] = [
     slug: "pendataan-maba-2026",
     description: "Shalom Mahasiswa Baru FILKOM UB! Selamat datang di keluarga besar PMK Daniel. Silakan isi form ini untuk mempermudah komunikasi dan pendampingan kakak tingkat.",
     is_active: 1,
-    submission_count: 1,
+    submission_count: 0,
     created_at: new Date().toISOString(),
     fields_schema: [
       { id: "nama_lengkap", label: "Nama Lengkap", type: "text", placeholder: "Contoh: Jonathan Christopher", required: true },

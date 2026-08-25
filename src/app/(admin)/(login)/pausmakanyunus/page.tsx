@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2 } from "lucide-react";
+import apiClient from "@/lib/axios";
 
 export default function Login() {
   const router = useRouter();
@@ -26,38 +27,30 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username.trim(),
-          password: password,
-        }),
+      const res = await apiClient.post<{
+        success: boolean;
+        data?: { token: string; user: any };
+        message?: string;
+        error?: string;
+      }>("/auth/login", {
+        username: username.trim(),
+        password: password,
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.success && data.data?.token) {
-        localStorage.setItem("admin_token", data.data.token);
-        localStorage.setItem("admin_user", JSON.stringify(data.data.user));
-        router.push("/daudpakeketapel");
-      } else if (username.trim() === "admin" && password === "admin123") {
-        // Fallback for seamless local testing
-        localStorage.setItem("admin_token", "mock_token_admin_2026");
+      if (res.data?.success && res.data.data?.token) {
+        localStorage.setItem("admin_token", res.data.data.token);
+        localStorage.setItem("pmk_admin_token", res.data.data.token);
+        if (res.data.data.user) {
+          localStorage.setItem("admin_user", JSON.stringify(res.data.data.user));
+        }
         router.push("/daudpakeketapel");
       } else {
-        setError(data.message || data.error || "Username atau kata sandi salah");
+        setError(res.data?.message || res.data?.error || "Username atau kata sandi salah");
       }
     } catch (err: any) {
-      // In case network error or direct offline dev check
-      if (username.trim() === "admin" && password === "admin123") {
-        localStorage.setItem("admin_token", "mock_token_admin_2026");
-        router.push("/daudpakeketapel");
-      } else {
-        setError("Gagal menghubungi server. Periksa koneksi Anda.");
-      }
+      console.error("Login error:", err);
+      const msg = err.response?.data?.detail || err.response?.data?.message || "Gagal login. Pastikan server backend aktif.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
