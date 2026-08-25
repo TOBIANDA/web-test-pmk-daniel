@@ -438,6 +438,11 @@ export default function FormManagementPage() {
           setSelectedForm(null);
         }}
         form={selectedForm}
+        onSubmissionsUpdated={(formId, newCount) => {
+          setForms((prev) =>
+            prev.map((f) => (f.id === formId ? { ...f, submission_count: newCount } : f))
+          );
+        }}
       />
     </div>
   );

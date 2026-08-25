@@ -264,10 +264,36 @@ export const formService = {
   /**
    * Delete a single submission (Admin only)
    */
-  async deleteSubmission(submissionId: string): Promise<void> {
-    try {
-      await apiClient.delete<ApiResponse<null>>(`/dynamic-forms/submissions/${submissionId}`, { timeout: 5000 });
-    } catch (err) {}
+  async deleteSubmission(submissionId: string, formId?: string): Promise<void> {
+    // 1. Clean from localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith(LOCAL_STORAGE_SUBMISSIONS_KEY));
+        keys.forEach(k => {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const list: FormSubmission[] = JSON.parse(raw);
+            const filtered = list.filter(s => s.id !== submissionId);
+            localStorage.setItem(k, JSON.stringify(filtered));
+          }
+        });
+
+        if (formId) {
+          const locals = getLocalForms();
+          const fIdx = locals.findIndex(f => f.id === formId || f.slug === formId);
+          if (fIdx > -1) {
+            locals[fIdx].submission_count = Math.max((locals[fIdx].submission_count || 1) - 1, 0);
+            saveLocalForms(locals);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Call Backend API
+    const res = await apiClient.delete<ApiResponse<null>>(`/dynamic-forms/submissions/${submissionId}`, { timeout: 6000 });
+    if (!res.data?.success && res.data?.message) {
+      throw new Error(res.data.message);
+    }
   },
 
   /**

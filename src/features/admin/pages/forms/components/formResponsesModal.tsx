@@ -13,19 +13,22 @@ import {
   ExternalLink, 
   FileSpreadsheet,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ArrowRightLeft
 } from "lucide-react";
 
 interface FormResponsesModalProps {
   isOpen: boolean;
   onClose: () => void;
   form: DynamicForm | null;
+  onSubmissionsUpdated?: (formId: string, newCount: number) => void;
 }
 
 export default function FormResponsesModal({
   isOpen,
   onClose,
   form,
+  onSubmissionsUpdated,
 }: FormResponsesModalProps) {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,6 +62,9 @@ export default function FormResponsesModal({
     try {
       const data = await formService.getSubmissions(form.id);
       setSubmissions(data);
+      if (data.length !== form.submission_count) {
+        onSubmissionsUpdated?.(form.id, data.length);
+      }
     } catch (err) {
       console.error("Failed to load submissions:", err);
     } finally {
@@ -69,11 +75,13 @@ export default function FormResponsesModal({
   if (!isOpen || !form) return null;
 
   const handleDeleteSubmission = async (submissionId: string) => {
-    if (!window.confirm("Hapus respon responden ini secara permanen?")) return;
+    if (!window.confirm("Hapus respon responden ini secara permanen? Data yang sudah dihapus tidak dapat dipulihkan.")) return;
     setDeletingId(submissionId);
     try {
-      await formService.deleteSubmission(submissionId);
-      setSubmissions((prev) => prev.filter((s) => s.id !== submissionId));
+      await formService.deleteSubmission(submissionId, form.id);
+      const updated = submissions.filter((s) => s.id !== submissionId);
+      setSubmissions(updated);
+      onSubmissionsUpdated?.(form.id, updated.length);
     } catch (err: any) {
       alert(err.message || "Gagal menghapus respon");
     } finally {
@@ -100,17 +108,17 @@ export default function FormResponsesModal({
   return (
     <div 
       data-lenis-prevent="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto overscroll-contain"
     >
       <div 
         data-lenis-prevent="true"
-        className="relative w-full max-w-5xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[88vh] my-auto animate-scaleUp"
+        className="relative w-full max-w-6xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp"
       >
         
         {/* Header Modal */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-8 py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-8 py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
               <FileSpreadsheet size={20} />
             </div>
             <div>
@@ -118,7 +126,7 @@ export default function FormResponsesModal({
                 Rekap Tanggapan: {form.title}
               </h2>
               <p className="font-plusJakarta text-xs text-slate-500 mt-0.5">
-                Total {submissions.length} responden terdata • Ekspor langsung ke Excel (.xlsx) atau CSV
+                Total <span className="font-bold text-slate-800">{submissions.length}</span> responden terdata • Ekspor langsung ke Excel (.xlsx) atau CSV
               </p>
             </div>
           </div>
@@ -147,7 +155,7 @@ export default function FormResponsesModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-200/60 transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-200/60 transition-colors ml-1"
             >
               <X size={20} />
             </button>
@@ -155,7 +163,7 @@ export default function FormResponsesModal({
         </div>
 
         {/* Filter & Search Toolbar */}
-        <div className="p-4 px-8 border-b border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+        <div className="p-4 px-6 sm:px-8 border-b border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
             <input
@@ -167,15 +175,20 @@ export default function FormResponsesModal({
             />
           </div>
 
-          <span className="text-xs text-slate-500 font-semibold">
-            Menampilkan {filteredSubmissions.length} dari {submissions.length} respon
-          </span>
+          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+            <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+              <ArrowRightLeft size={12} /> Geser tabel ke samping untuk melihat seluruh kolom
+            </span>
+            <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full text-[11px]">
+              {filteredSubmissions.length} dari {submissions.length} respon
+            </span>
+          </div>
         </div>
 
         {/* Submissions Table / View */}
         <div 
           data-lenis-prevent="true"
-          className="flex-1 overflow-x-auto overflow-y-auto overscroll-contain p-6 bg-slate-50/50"
+          className="flex-1 overflow-x-auto overflow-y-auto overscroll-contain p-4 sm:p-6 bg-slate-50/50"
         >
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
@@ -193,26 +206,35 @@ export default function FormResponsesModal({
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse text-xs">
+            <div className="w-full overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <table className="w-max min-w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/80 border-b border-gray-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
-                    <th className="p-3.5 pl-4 w-12 text-center">No</th>
-                    <th className="p-3.5 whitespace-nowrap">Waktu Submit</th>
+                  <tr className="bg-slate-100/90 border-b border-gray-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                    <th className="sticky left-0 z-30 bg-slate-100 p-3.5 pl-4 w-12 text-center border-r border-slate-200 shadow-[2px_0_6px_rgba(0,0,0,0.03)]">
+                      No
+                    </th>
+                    <th className="p-3.5 whitespace-nowrap min-w-[140px]">
+                      Waktu Submit
+                    </th>
                     {form.fields_schema.map((field) => (
-                      <th key={field.id} className="p-3.5 whitespace-nowrap max-w-xs truncate">
+                      <th key={field.id} className="p-3.5 whitespace-nowrap min-w-[200px] max-w-xs">
                         {field.label}
                       </th>
                     ))}
-                    <th className="p-3.5 pr-4 text-center w-16">Aksi</th>
+                    <th className="sticky right-0 z-30 bg-slate-100 p-3.5 pr-4 text-center w-20 min-w-[80px] border-l border-slate-200 shadow-[-3px_0_8px_rgba(0,0,0,0.04)]">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 font-plusJakarta text-slate-800">
                   {filteredSubmissions.map((sub, idx) => (
-                    <tr key={sub.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3.5 pl-4 text-center font-mono text-slate-400 font-semibold">
+                    <tr key={sub.id} className="group hover:bg-slate-50/80 transition-colors">
+                      {/* Sticky Left: No */}
+                      <td className="sticky left-0 z-20 bg-white group-hover:bg-slate-50 p-3.5 pl-4 text-center font-mono text-slate-400 font-semibold border-r border-slate-100 shadow-[2px_0_6px_rgba(0,0,0,0.03)]">
                         {idx + 1}
                       </td>
+
+                      {/* Waktu Submit */}
                       <td className="p-3.5 whitespace-nowrap text-slate-500 font-mono text-[11px]">
                         {new Date(sub.submitted_at).toLocaleString("id-ID", {
                           dateStyle: "short",
@@ -226,12 +248,12 @@ export default function FormResponsesModal({
 
                         if (field.type === "file" && typeof val === "string" && val.startsWith("http")) {
                           return (
-                            <td key={field.id} className="p-3.5">
+                            <td key={field.id} className="p-3.5 min-w-[200px]">
                               <a
                                 href={val}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-primary hover:underline font-bold text-xs"
+                                className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg font-bold text-xs transition-colors"
                               >
                                 <span>Lihat Berkas</span>
                                 <ExternalLink size={12} />
@@ -242,12 +264,12 @@ export default function FormResponsesModal({
 
                         if (Array.isArray(val)) {
                           return (
-                            <td key={field.id} className="p-3.5">
+                            <td key={field.id} className="p-3.5 min-w-[200px]">
                               <div className="flex flex-wrap gap-1">
                                 {val.map((item, i) => (
                                   <span
                                     key={i}
-                                    className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px]"
+                                    className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px] font-medium"
                                   >
                                     {item}
                                   </span>
@@ -258,7 +280,11 @@ export default function FormResponsesModal({
                         }
 
                         return (
-                          <td key={field.id} className="p-3.5 max-w-xs truncate" title={String(val || "")}>
+                          <td 
+                            key={field.id} 
+                            className="p-3.5 min-w-[200px] max-w-sm whitespace-normal break-words leading-relaxed text-slate-700" 
+                            title={String(val || "")}
+                          >
                             {val !== undefined && val !== null && val !== "" ? (
                               String(val)
                             ) : (
@@ -268,18 +294,19 @@ export default function FormResponsesModal({
                         );
                       })}
 
-                      {/* Actions */}
-                      <td className="p-3.5 pr-4 text-center">
+                      {/* Sticky Right: Actions / Delete Button */}
+                      <td className="sticky right-0 z-20 bg-white group-hover:bg-slate-50 p-3.5 pr-4 text-center border-l border-slate-100 shadow-[-3px_0_8px_rgba(0,0,0,0.04)]">
                         <button
+                          type="button"
                           onClick={() => handleDeleteSubmission(sub.id)}
                           disabled={deletingId === sub.id}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="inline-flex items-center justify-center p-2 text-rose-500 hover:text-white hover:bg-rose-600 rounded-xl transition-all border border-rose-100 hover:border-rose-600 shadow-xs cursor-pointer"
                           title="Hapus baris tanggapan ini"
                         >
                           {deletingId === sub.id ? (
-                            <Loader2 size={14} className="animate-spin" />
+                            <Loader2 size={15} className="animate-spin text-rose-500" />
                           ) : (
-                            <Trash2 size={14} />
+                            <Trash2 size={15} />
                           )}
                         </button>
                       </td>
@@ -292,14 +319,14 @@ export default function FormResponsesModal({
         </div>
 
         {/* Footer info */}
-        <div className="px-8 py-4 bg-slate-50 border-t border-gray-100 flex items-center justify-between text-xs text-slate-500 font-plusJakarta shrink-0">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={14} className="text-emerald-500" /> Format CSV menggunakan UTF-8 BOM sehingga aman dibuka langsung di Microsoft Excel
+        <div className="px-6 sm:px-8 py-4 bg-slate-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-plusJakarta shrink-0">
+          <span className="flex items-center gap-1.5 text-center sm:text-left">
+            <CheckCircle2 size={14} className="text-emerald-500 shrink-0" /> Format CSV & Excel aman dibuka langsung dengan karakter dan penataan kolom otomatis
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-full bg-white border border-gray-200 text-slate-700 font-bold hover:bg-slate-100 transition-colors"
+            className="px-6 py-2 rounded-full bg-white border border-gray-200 text-slate-700 font-bold hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Tutup
           </button>
@@ -309,3 +336,4 @@ export default function FormResponsesModal({
     </div>
   );
 }
+
