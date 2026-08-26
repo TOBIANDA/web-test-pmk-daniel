@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { X, ZoomIn, ZoomOut, RotateCw, Check, Move } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCw, Check, Move, RefreshCw } from "lucide-react";
 
 interface ImageCropModalProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface ImageCropModalProps {
   onClose: () => void;
   onCropComplete: (croppedFile: File, previewUrl: string) => void;
   cropShape?: "circle" | "rect";
-  aspectRatio?: number; // width / height, default 1
+  aspectRatio?: number; // width / height, e.g. 1 for circle, 1.6 for division photo
   title?: string;
 }
 
@@ -20,7 +20,7 @@ export default function ImageCropModal({
   onCropComplete,
   cropShape = "circle",
   aspectRatio = 1,
-  title = "Sesuaikan Foto Profil",
+  title = "Sesuaikan Foto",
 }: ImageCropModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -30,18 +30,20 @@ export default function ImageCropModal({
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
-  // Lock background scroll
+  // Viewfinder dimensions
+  const isRect = cropShape === "rect";
+  const boxWidth = isRect ? 340 : 250;
+  const boxHeight = isRect ? Math.round(340 / (aspectRatio || 1.6)) : 250;
+
+  // Reset controls when opened or imageSrc changed
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
       document.body.setAttribute("data-lenis-prevent", "true");
-      // Reset controls
       setZoom(1);
       setRotation(0);
       setPosition({ x: 0, y: 0 });
-      setImageLoaded(false);
     } else {
       document.body.style.overflow = "";
       document.body.removeAttribute("data-lenis-prevent");
@@ -108,8 +110,8 @@ export default function ImageCropModal({
   // Wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY * -0.001;
-    setZoom((prev) => Math.min(Math.max(0.8, prev + delta), 3));
+    const delta = e.deltaY * -0.0012;
+    setZoom((prev) => Math.min(Math.max(0.5, prev + delta), 4));
   };
 
   // Rotate 90 degrees clockwise
@@ -117,15 +119,25 @@ export default function ImageCropModal({
     setRotation((prev) => (prev + 90) % 360);
   };
 
-  // Crop & Export
+  // Reset position & zoom
+  const handleReset = () => {
+    setZoom(1);
+    setRotation(0);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  // Crop & Export via HTML5 Canvas
   const handleApply = async () => {
     if (!imageRef.current) return;
 
     const img = imageRef.current;
     const canvas = document.createElement("canvas");
-    const outputSize = 600; // High resolution square/rect
-    canvas.width = outputSize;
-    canvas.height = Math.round(outputSize / aspectRatio);
+    
+    // Output resolution
+    const outputWidth = isRect ? 800 : 500;
+    const outputHeight = isRect ? Math.round(800 / (aspectRatio || 1.6)) : 500;
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -133,37 +145,32 @@ export default function ImageCropModal({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    // Crop box dimension in container (assume 260px viewfinder)
-    const cropBoxSize = 260;
-    const cropBoxHeight = cropBoxSize / aspectRatio;
-
-    // Calculate scale factor between canvas output and viewfinder display
-    const scaleFactor = canvas.width / cropBoxSize;
+    const scaleFactor = outputWidth / boxWidth;
 
     ctx.save();
     // Center point of canvas
-    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.translate(outputWidth / 2, outputHeight / 2);
     // Apply rotation
     ctx.rotate((rotation * Math.PI) / 180);
-    // Apply zoom and pan
+    // Apply zoom and scale to high-res canvas
     ctx.scale(zoom * scaleFactor, zoom * scaleFactor);
 
-    // Draw the image centered
-    const imgAspect = img.naturalWidth / img.naturalHeight;
-    let drawWidth = cropBoxSize;
-    let drawHeight = cropBoxSize / imgAspect;
+    // Initial base drawn size based on natural aspect ratio
+    const imgNaturalAspect = (img.naturalWidth || 1) / (img.naturalHeight || 1);
+    let drawW = boxWidth;
+    let drawH = boxWidth / imgNaturalAspect;
 
-    if (imgAspect < 1) {
-      drawHeight = cropBoxHeight;
-      drawWidth = cropBoxHeight * imgAspect;
+    if (imgNaturalAspect < 1) {
+      drawH = boxHeight;
+      drawW = boxHeight * imgNaturalAspect;
     }
 
     ctx.drawImage(
       img,
-      -drawWidth / 2 + (position.x / zoom),
-      -drawHeight / 2 + (position.y / zoom),
-      drawWidth,
-      drawHeight
+      -drawW / 2 + (position.x / zoom),
+      -drawH / 2 + (position.y / zoom),
+      drawW,
+      drawH
     );
 
     ctx.restore();
@@ -171,7 +178,7 @@ export default function ImageCropModal({
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
-        const filename = `avatar_${Date.now()}.webp`;
+        const filename = `photo_${Date.now()}.webp`;
         const croppedFile = new File([blob], filename, { type: "image/webp" });
         const previewUrl = URL.createObjectURL(blob);
         onCropComplete(croppedFile, previewUrl);
@@ -187,13 +194,13 @@ export default function ImageCropModal({
   return (
     <div
       data-lenis-prevent="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn font-plusJakarta"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn font-plusJakarta"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
       <div
         data-lenis-prevent="true"
-        className="relative flex flex-col items-center w-full max-w-md bg-slate-900 text-white rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden p-6 sm:p-7 gap-5 animate-scaleUp"
+        className={`relative flex flex-col items-center w-full ${isRect ? "max-w-xl" : "max-w-md"} bg-slate-900 text-white rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden p-6 sm:p-7 gap-5 animate-scaleUp`}
       >
         {/* Header */}
         <div className="flex items-center justify-between w-full border-b border-slate-800 pb-3.5">
@@ -206,7 +213,9 @@ export default function ImageCropModal({
                 {title}
               </h3>
               <p className="text-[11px] text-slate-400">
-                Geser dan sesuaikan zoom foto profil
+                {isRect 
+                  ? "Geser dan zoom gambar di dalam bingkai persegi panjang" 
+                  : "Geser dan zoom foto di dalam lingkaran (ala foto profil WhatsApp)"}
               </p>
             </div>
           </div>
@@ -220,7 +229,7 @@ export default function ImageCropModal({
           </button>
         </div>
 
-        {/* Viewfinder Area (WhatsApp Style) */}
+        {/* Viewfinder Area */}
         <div
           ref={containerRef}
           onWheel={handleWheel}
@@ -228,9 +237,14 @@ export default function ImageCropModal({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className="relative w-[280px] h-[280px] sm:w-[300px] sm:h-[300px] bg-slate-950 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing flex items-center justify-center select-none shadow-inner border border-slate-800"
+          style={{
+            width: isRect ? "100%" : "280px",
+            height: isRect ? `${boxHeight + 40}px` : "280px",
+            maxWidth: isRect ? "460px" : "280px",
+          }}
+          className="relative bg-slate-950 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing flex items-center justify-center select-none shadow-inner border border-slate-800"
         >
-          {/* Target Image */}
+          {/* Target Image with interactive transform */}
           <div
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${zoom}) rotate(${rotation}deg)`,
@@ -243,66 +257,46 @@ export default function ImageCropModal({
               ref={imageRef}
               src={imageSrc}
               alt="Crop target"
-              onLoad={() => setImageLoaded(true)}
-              className="max-w-none w-[260px] h-auto object-contain"
+              className="max-w-none h-auto object-contain"
+              style={{
+                width: isRect ? `${boxWidth}px` : "250px",
+              }}
               draggable={false}
             />
           </div>
 
-          {/* Mask Overlay (Dark outside circular/rect viewfinder) */}
-          <div className="absolute inset-0 pointer-events-none">
+          {/* Mask Overlay */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             {cropShape === "circle" ? (
               <div
-                className="w-full h-full"
                 style={{
-                  boxShadow: "0 0 0 9999px rgba(10, 15, 30, 0.75)",
+                  boxShadow: "0 0 0 9999px rgba(10, 15, 30, 0.78)",
                   borderRadius: "50%",
-                  width: "240px",
-                  height: "240px",
-                  margin: "auto",
-                  position: "absolute",
-                  top: "0",
-                  bottom: "0",
-                  left: "0",
-                  right: "0",
-                  border: "2px solid rgba(255, 255, 255, 0.9)",
+                  width: `${boxWidth}px`,
+                  height: `${boxHeight}px`,
+                  border: "2px solid rgba(255, 255, 255, 0.95)",
                 }}
               />
             ) : (
               <div
-                className="w-full h-full"
                 style={{
-                  boxShadow: "0 0 0 9999px rgba(10, 15, 30, 0.75)",
+                  boxShadow: "0 0 0 9999px rgba(10, 15, 30, 0.78)",
                   borderRadius: "16px",
-                  width: "250px",
-                  height: `${250 / aspectRatio}px`,
-                  margin: "auto",
-                  position: "absolute",
-                  top: "0",
-                  bottom: "0",
-                  left: "0",
-                  right: "0",
-                  border: "2px solid rgba(255, 255, 255, 0.9)",
+                  width: `${boxWidth}px`,
+                  height: `${boxHeight}px`,
+                  border: "2px solid rgba(255, 255, 255, 0.95)",
                 }}
               />
             )}
           </div>
-
-          {/* Hint Overlay */}
-          {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-950 text-xs text-slate-400">
-              Memuat gambar...
-            </div>
-          )}
         </div>
 
         {/* Controls: Zoom Slider & Rotate */}
         <div className="flex flex-col gap-3 w-full px-2">
-          {/* Zoom Slider */}
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.max(0.8, z - 0.15))}
+              onClick={() => setZoom((z) => Math.max(0.5, z - 0.15))}
               className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
               title="Perkecil"
             >
@@ -311,8 +305,8 @@ export default function ImageCropModal({
 
             <input
               type="range"
-              min="0.8"
-              max="3"
+              min="0.5"
+              max="3.5"
               step="0.01"
               value={zoom}
               onChange={(e) => setZoom(parseFloat(e.target.value))}
@@ -321,7 +315,7 @@ export default function ImageCropModal({
 
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.min(3, z + 0.15))}
+              onClick={() => setZoom((z) => Math.min(3.5, z + 0.15))}
               className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
               title="Perbesar"
             >
@@ -336,26 +330,41 @@ export default function ImageCropModal({
             >
               <RotateCw size={16} />
             </button>
+
+            <button
+              type="button"
+              onClick={handleReset}
+              className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+              title="Reset Posisi"
+            >
+              <RefreshCw size={16} />
+            </button>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 w-full pt-3 border-t border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-semibold transition-colors"
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            onClick={handleApply}
-            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-extrabold text-xs shadow-lg shadow-primary/30 hover:opacity-95 transition-all flex items-center gap-2"
-          >
-            <Check size={16} />
-            <span>Terapkan Foto</span>
-          </button>
+        <div className="flex items-center justify-between w-full pt-3 border-t border-slate-800">
+          <span className="text-[11px] text-slate-400">
+            {isRect ? "Rasio Persegi Panjang (16:10)" : "Rasio Lingkaran (1:1)"}
+          </span>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-semibold transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleApply}
+              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-extrabold text-xs shadow-lg shadow-primary/30 hover:opacity-95 transition-all flex items-center gap-2"
+            >
+              <Check size={16} />
+              <span>Terapkan Foto</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
