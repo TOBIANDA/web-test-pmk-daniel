@@ -297,20 +297,46 @@ export default function EditDivisionModal({
               </div>
 
               <div className="flex-1 flex flex-col gap-2 w-full">
-                <label className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
-                  {uploading ? <Loader2 size={15} className="animate-spin text-primary" /> : <Upload size={15} />}
-                  <span>{uploading ? "Mengunggah..." : "Pilih & Sesuaikan Foto"}</span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
+                    {uploading ? <Loader2 size={15} className="animate-spin text-primary" /> : <Upload size={15} />}
+                    <span>{uploading ? "Mengunggah..." : "Upload Foto Asli (Full)"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        setErrorMsg(null);
+                        try {
+                          const url = await pengurusService.uploadPhoto(file);
+                          setGroupPhotoUrl(url);
+                        } catch (err: any) {
+                          setErrorMsg(err.message || "Gagal mengunggah foto");
+                        } finally {
+                          setUploading(false);
+                        }
+                      }}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+
+                  <label className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
+                    <span>✂️ Sesuaikan / Crop Foto</span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
                 <span className="text-[11px] text-slate-400">
-                  Dapat di-crop & disesuaikan posisi sebelum diunggah
+                  Gunakan "Upload Foto Asli" untuk foto utuh, atau "Sesuaikan / Crop Foto" untuk zoom/posisi.
                 </span>
               </div>
             </div>
