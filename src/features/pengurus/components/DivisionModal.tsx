@@ -60,7 +60,7 @@ export default function DivisionModal({
     >
       <div
         data-lenis-prevent="true"
-        className="relative w-full max-w-md bg-white rounded-[28px] border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp font-plusJakarta text-slate-900"
+        className="relative w-full max-w-lg sm:max-w-xl bg-white rounded-[32px] border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp font-plusJakarta text-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Blue Header with Centered Official Logo Badge */}
