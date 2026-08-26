@@ -86,27 +86,25 @@ export default function DivisionModal({
           className="flex-1 overflow-y-auto overscroll-contain p-6 pt-5 flex flex-col gap-5 text-center font-plusJakarta"
         >
           {/* Photo Section */}
-          <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-50 mt-1">
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-100 mt-1">
             {isSingleLeader && mainLeader ? (
-              <div className="relative w-full h-56 sm:h-64 bg-gradient-to-t from-slate-900/60 to-transparent">
+              <div className="relative w-full aspect-[1.5] bg-slate-100">
                 <Image
                   src={mainLeader.photo_url || division.group_photo_url || "/images/bastian.webp"}
                   alt={mainLeader.name}
                   fill
                   unoptimized
-                  className="object-cover object-top"
-                  sizes="(max-width: 768px) 100vw, 400px"
+                  className="object-cover"
                 />
               </div>
             ) : (
-              <div className="relative w-full h-48 sm:h-52">
+              <div className="relative w-full aspect-[1.5] bg-slate-100">
                 <Image
                   src={division.group_photo_url || "/images/persekutuan.webp"}
                   alt={division.name}
                   fill
                   unoptimized
                   className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 400px"
                 />
               </div>
             )}
