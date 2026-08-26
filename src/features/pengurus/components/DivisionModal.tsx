@@ -129,49 +129,88 @@ export default function DivisionModal({
             </p>
           )}
 
-          {/* Division Members Section (Di Bawah Penjelasan Divisi) */}
+          {/* Division Members Section with Photo Portraits */}
           <div className="mt-1 pt-4 border-t border-slate-100 flex flex-col gap-3 text-left">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-              <Users size={14} className="text-primary" />
-              <span>Susunan Pengurus & Anggota</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <Users size={14} className="text-primary" />
+                <span>Susunan Potret Pengurus & Anggota</span>
+              </div>
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                {division.members?.length || 0} Pengurus
+              </span>
             </div>
 
             {(!division.members || division.members.length === 0) ? (
               <p className="text-xs text-slate-400 italic">Belum ada anggota terdata.</p>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 {/* Leaders Section */}
                 {leaders.length > 0 && (
-                  <div className="flex flex-col gap-1.5 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
-                    {leaders.map((leader) => (
-                      <div key={leader.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 last:border-0">
-                        <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <Award size={13} className="text-amber-500 shrink-0" />
-                          {leader.role}:
-                        </span>
-                        <span className="font-semibold text-primary">{leader.name}</span>
-                      </div>
-                    ))}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+                      Koordinator & Pimpinan:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {leaders.map((leader) => (
+                        <div
+                          key={leader.id}
+                          className="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/80 hover:border-primary/30 transition-all shadow-xs"
+                        >
+                          <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-200 border-2 border-amber-400/40 shadow-xs shrink-0">
+                            <Image
+                              src={leader.photo_url || "/images/persekutuan.webp"}
+                              alt={leader.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-extrabold text-xs text-slate-900 truncate">
+                              {leader.name}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 truncate">
+                              <Award size={11} className="shrink-0" />
+                              {leader.role}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Staff / Members List */}
+                {/* Staff / Members List with Avatars */}
                 {staff.length > 0 && (
-                  <div className="flex flex-col gap-1.5 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
-                    <span className="text-[11px] font-bold text-slate-500 uppercase">
-                      Anggota {division.name}:
+                  <div className="flex flex-col gap-2 mt-1">
+                    <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+                      Anggota Divisi:
                     </span>
-                    <ul className="flex flex-col gap-1">
-                      {staff.map((m, idx) => (
-                        <li key={m.id || idx} className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <ChevronRight size={12} className="text-slate-400 shrink-0" />
-                          <span>{m.name}</span>
-                          {m.role && m.role !== "Anggota" && (
-                            <span className="text-[10px] text-slate-400">({m.role})</span>
-                          )}
-                        </li>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {staff.map((m) => (
+                        <div
+                          key={m.id}
+                          className="flex items-center gap-3 p-2.5 rounded-2xl bg-white border border-slate-200/80 hover:border-primary/30 transition-all shadow-xs"
+                        >
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+                            <Image
+                              src={m.photo_url || "/images/persekutuan.webp"}
+                              alt={m.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-xs text-slate-900 truncate">
+                              {m.name}
+                            </span>
+                            <span className="text-[10px] text-slate-500 truncate">
+                              {m.role || "Anggota"}
+                            </span>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>

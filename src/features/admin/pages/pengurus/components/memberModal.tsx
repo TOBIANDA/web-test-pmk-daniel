@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { PengurusMember, PengurusMemberInput, Divisi } from "@/types/pengurus";
 import { pengurusService } from "@/services/pengurusService";
+import ImageCropModal from "@/components/ImageCropModal";
 import { 
   X, 
   Upload, 
@@ -12,7 +13,8 @@ import {
   UserPlus, 
   UserCheck, 
   Award, 
-  User
+  User,
+  Crop
 } from "lucide-react";
 
 interface MemberModalProps {
@@ -39,6 +41,11 @@ export default function MemberModal({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Cropper states
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
   useEffect(() => {
@@ -71,15 +78,31 @@ export default function MemberModal({
 
   if (!isOpen || !targetDivision) return null;
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImageSrc(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File, previewUrl: string) => {
+    // Show preview immediately
+    setPhotoUrl(previewUrl);
     setUploading(true);
     setErrorMsg(null);
     try {
-      const url = await pengurusService.uploadPhoto(file);
-      setPhotoUrl(url);
+      const uploadedUrl = await pengurusService.uploadPhoto(croppedFile);
+      setPhotoUrl(uploadedUrl);
     } catch (err: any) {
       setErrorMsg(err.message || "Gagal mengunggah foto");
     } finally {
@@ -213,7 +236,7 @@ export default function MemberModal({
 
           {/* Photo upload */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-gray-200/80 flex items-center gap-4">
-            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-slate-200 border border-gray-300 shrink-0">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-slate-200 border-2 border-primary/20 shadow-sm shrink-0">
               <Image
                 src={photoUrl}
                 alt="Avatar"
@@ -223,18 +246,23 @@ export default function MemberModal({
             </div>
 
             <div className="flex-1 flex flex-col gap-1.5">
-              <label className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
-                {uploading ? <Loader2 size={13} className="animate-spin text-primary" /> : <Upload size={13} />}
-                <span>{uploading ? "Mengunggah..." : "Upload Foto Anggota"}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-              </label>
-              <span className="text-[11px] text-slate-400">Opsional untuk potret anggota</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
+                  {uploading ? <Loader2 size={13} className="animate-spin text-primary" /> : <Upload size={13} />}
+                  <span>{uploading ? "Mengunggah..." : "Pilih & Sesuaikan Foto"}</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+              <span className="text-[11px] text-slate-400">
+                Bisa di-crop, geser posisi, & di-zoom seperti foto profil WhatsApp
+              </span>
             </div>
           </div>
 
@@ -249,7 +277,7 @@ export default function MemberModal({
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white font-extrabold text-xs rounded-full shadow-lg shadow-primary/20 hover:opacity-95 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {saving ? (
@@ -266,6 +294,17 @@ export default function MemberModal({
             </button>
           </div>
         </form>
+
+        {/* WhatsApp-Style Image Cropper Modal */}
+        <ImageCropModal
+          isOpen={cropModalOpen}
+          imageSrc={rawImageSrc}
+          onClose={() => setCropModalOpen(false)}
+          onCropComplete={handleCropComplete}
+          cropShape="circle"
+          aspectRatio={1}
+          title="Sesuaikan Foto Profil Anggota"
+        />
 
       </div>
     </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Divisi, DivisiInput } from "@/types/pengurus";
 import { pengurusService } from "@/services/pengurusService";
+import ImageCropModal from "@/components/ImageCropModal";
 import { 
   X, 
   Upload, 
@@ -64,6 +65,11 @@ export default function EditDivisionModal({
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Cropper states
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
   useEffect(() => {
     if (isOpen) {
@@ -97,19 +103,34 @@ export default function EditDivisionModal({
 
   if (!isOpen) return null;
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImageSrc(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File, previewUrl: string) => {
+    setGroupPhotoUrl(previewUrl);
     setUploading(true);
     setErrorMsg(null);
     try {
-      const url = await pengurusService.uploadPhoto(file);
+      const url = await pengurusService.uploadPhoto(croppedFile);
       setGroupPhotoUrl(url);
     } catch (err: any) {
       setErrorMsg(err.message || "Gagal mengunggah foto ke Cloudflare R2");
     } finally {
       setUploading(false);
+      setCropModalOpen(false);
     }
   };
 
@@ -141,7 +162,7 @@ export default function EditDivisionModal({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || "Gagal menyimpan divisi.");
+      setErrorMsg(err.message || "Gagal menyimpan data divisi.");
     } finally {
       setSaving(false);
     }
@@ -154,20 +175,20 @@ export default function EditDivisionModal({
     >
       <div
         data-lenis-prevent="true"
-        className="relative w-full max-w-2xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[88vh] my-auto animate-scaleUp font-plusJakarta text-slate-900"
+        className="relative w-full max-w-2xl bg-white rounded-[32px] border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scaleUp font-plusJakarta text-slate-900"
       >
         {/* Header Modal */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
-              <Settings2 size={20} />
+              {isEditing ? <Settings2 size={20} /> : <Layers size={20} />}
             </div>
             <div>
               <h2 className="font-plusJakarta font-extrabold text-xl text-slate-900">
                 {isEditing ? `Edit Divisi: ${division?.name}` : "Tambah Divisi Baru"}
               </h2>
               <p className="text-xs text-slate-500">
-                Atur informasi penjelasan divisi, tag komisi, icon, dan foto bersama
+                Atur nama komisi, ikon lambang, foto bersama, dan deskripsi pelayanan
               </p>
             </div>
           </div>
@@ -181,7 +202,7 @@ export default function EditDivisionModal({
           </button>
         </div>
 
-        {/* Modal Body Form */}
+        {/* Modal Form */}
         <form
           data-lenis-prevent="true"
           onSubmit={handleSubmit}
@@ -194,17 +215,17 @@ export default function EditDivisionModal({
             </div>
           )}
 
-          {/* Form Fields Grid */}
+          {/* Division Name & Komisi */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Nama Divisi / Posisi <span className="text-rose-500">*</span>
+                Nama Divisi / Bidang <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Pembinaan"
+                placeholder="Contoh: Media & Relasi"
                 required
                 className="w-full h-11 px-4 rounded-xl border border-gray-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
               />
@@ -212,12 +233,12 @@ export default function EditDivisionModal({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Tag Komisi / Kelompok
+                Komisi Naungan <span className="text-rose-500">*</span>
               </label>
               <select
                 value={komisi}
                 onChange={(e) => setKomisi(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all cursor-pointer"
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
               >
                 <option value="BPH">Badan Pengurus Harian (BPH)</option>
                 <option value="Komisi 1">Komisi 1 (Pembinaan)</option>
@@ -226,6 +247,7 @@ export default function EditDivisionModal({
                 <option value="Komisi 4">Komisi 4 (Media & Relasi)</option>
                 <option value="Sub Komisi 3 (Acara)">Sub Komisi 3 (Acara)</option>
                 <option value="Sub Komisi 4 (Medrel)">Sub Komisi 4 (Medrel)</option>
+                <option value="Lainnya">Lainnya</option>
               </select>
             </div>
           </div>
@@ -233,41 +255,38 @@ export default function EditDivisionModal({
           {/* Icon Selector Grid */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Pilih Ikon Divisi
+              Pilih Ikon Simbol Lambang Divisi
             </label>
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
               {AVAILABLE_ICONS.map((item) => {
-                const IconComp = item.icon;
+                const IconComponent = item.icon;
                 const isSelected = iconName === item.id;
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setIconName(item.id)}
-                    className={`flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all ${
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all ${
                       isSelected
-                        ? "bg-primary text-white border-primary shadow-md"
-                        : "bg-slate-50 text-slate-700 border-gray-200 hover:bg-slate-100"
+                        ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-[1.02]"
+                        : "bg-slate-50 border-gray-200 text-slate-700 hover:bg-slate-100 hover:border-gray-300"
                     }`}
                   >
-                    <IconComp size={20} />
-                    <span className="text-[10px] mt-1 font-semibold truncate w-full text-center">
-                      {item.id}
-                    </span>
+                    <IconComponent size={20} className={isSelected ? "text-white" : "text-slate-600"} />
+                    <span className="text-[10px] truncate max-w-full text-center">{item.label.split("/")[0]}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Group Photo Upload Section */}
-          <div className="bg-slate-50 p-5 rounded-2xl border border-gray-200/80 flex flex-col gap-3">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Foto Bersama Divisi / Banner
+          {/* Group Photo Upload */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Foto Bersama Divisi / Foto Unggulan (Cloudflare R2)
             </label>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="relative w-36 h-24 rounded-xl overflow-hidden bg-slate-200 border border-gray-300 shrink-0">
+            <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-gray-200">
+              <div className="relative w-36 h-24 rounded-xl overflow-hidden bg-slate-200 border-2 border-primary/20 shadow-sm shrink-0">
                 <Image
                   src={groupPhotoUrl}
                   alt="Preview"
@@ -279,22 +298,19 @@ export default function EditDivisionModal({
               <div className="flex-1 flex flex-col gap-2 w-full">
                 <label className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
                   {uploading ? <Loader2 size={15} className="animate-spin text-primary" /> : <Upload size={15} />}
-                  <span>{uploading ? "Mengunggah..." : "Pilih File Foto Baru"}</span>
+                  <span>{uploading ? "Mengunggah..." : "Pilih & Sesuaikan Foto"}</span>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={handleFileUpload}
+                    onChange={handleFileSelect}
                     className="hidden"
                     disabled={uploading}
                   />
                 </label>
-                <input
-                  type="text"
-                  value={groupPhotoUrl}
-                  onChange={(e) => setGroupPhotoUrl(e.target.value)}
-                  placeholder="Atau masukkan URL foto gambar..."
-                  className="w-full h-9 px-3 rounded-lg border border-gray-200 bg-white text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                />
+                <span className="text-[11px] text-slate-400">
+                  Dapat di-crop & disesuaikan posisi sebelum diunggah
+                </span>
               </div>
             </div>
           </div>
@@ -324,7 +340,7 @@ export default function EditDivisionModal({
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white font-extrabold text-xs rounded-full shadow-lg shadow-primary/20 hover:opacity-95 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {saving ? (
@@ -341,6 +357,17 @@ export default function EditDivisionModal({
             </button>
           </div>
         </form>
+
+        {/* WhatsApp-Style Image Cropper Modal for Division Photo */}
+        <ImageCropModal
+          isOpen={cropModalOpen}
+          imageSrc={rawImageSrc}
+          onClose={() => setCropModalOpen(false)}
+          onCropComplete={handleCropComplete}
+          cropShape="rect"
+          aspectRatio={1.5}
+          title="Sesuaikan Foto Divisi"
+        />
 
       </div>
     </div>
