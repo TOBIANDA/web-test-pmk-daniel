@@ -133,9 +133,9 @@ export default function ImageCropModal({
     const img = imageRef.current;
     const canvas = document.createElement("canvas");
     
-    // Output resolution
-    const outputWidth = isRect ? 800 : 500;
-    const outputHeight = isRect ? Math.round(800 / (aspectRatio || 1.6)) : 500;
+    // High-resolution output canvas
+    const outputWidth = isRect ? 960 : 600;
+    const outputHeight = isRect ? Math.round(960 / (aspectRatio || 1.5)) : 600;
     canvas.width = outputWidth;
     canvas.height = outputHeight;
 
@@ -148,44 +148,37 @@ export default function ImageCropModal({
     const scaleFactor = outputWidth / boxWidth;
 
     ctx.save();
-    // Center point of canvas
-    ctx.translate(outputWidth / 2, outputHeight / 2);
-    // Apply rotation
+    // 1. Move canvas origin to translated center in canvas coordinates
+    ctx.translate(
+      outputWidth / 2 + position.x * scaleFactor,
+      outputHeight / 2 + position.y * scaleFactor
+    );
+    // 2. Rotate around the image center
     ctx.rotate((rotation * Math.PI) / 180);
-    // Apply zoom and scale to high-res canvas
+    // 3. Scale by zoom factor and resolution scale
     ctx.scale(zoom * scaleFactor, zoom * scaleFactor);
 
-    // Initial base drawn size based on natural aspect ratio
+    // 4. Base dimension matches exact DOM rendered dimensions
     const imgNaturalAspect = (img.naturalWidth || 1) / (img.naturalHeight || 1);
-    let drawW = boxWidth;
-    let drawH = boxWidth / imgNaturalAspect;
+    const drawW = boxWidth;
+    const drawH = boxWidth / imgNaturalAspect;
 
-    if (imgNaturalAspect < 1) {
-      drawH = boxHeight;
-      drawW = boxHeight * imgNaturalAspect;
-    }
-
-    ctx.drawImage(
-      img,
-      -drawW / 2 + (position.x / zoom),
-      -drawH / 2 + (position.y / zoom),
-      drawW,
-      drawH
-    );
+    // 5. Draw image centered at (0, 0)
+    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
 
     ctx.restore();
 
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
-        const filename = `photo_${Date.now()}.webp`;
+        const filename = `cropped_${Date.now()}.webp`;
         const croppedFile = new File([blob], filename, { type: "image/webp" });
         const previewUrl = URL.createObjectURL(blob);
         onCropComplete(croppedFile, previewUrl);
         onClose();
       },
       "image/webp",
-      0.92
+      0.95
     );
   };
 
