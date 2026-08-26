@@ -291,6 +291,7 @@ export default function EditDivisionModal({
                   src={groupPhotoUrl}
                   alt="Preview"
                   fill
+                  unoptimized
                   className="object-cover"
                 />
               </div>

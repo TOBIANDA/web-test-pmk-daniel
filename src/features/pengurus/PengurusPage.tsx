@@ -201,6 +201,7 @@ export default function PengurusPage() {
                             src={member.photo_url || "/images/persekutuan.webp"}
                             alt={member.name}
                             fill
+                            unoptimized
                             className="object-cover"
                             sizes="120px"
                           />

@@ -251,6 +251,7 @@ export default function PengurusManagementPage() {
                       src={div.group_photo_url || "/images/persekutuan.webp"}
                       alt={div.name}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
                   </div>
@@ -282,6 +283,7 @@ export default function PengurusManagementPage() {
                                 src={member.photo_url || "/images/persekutuan.webp"}
                                 alt={member.name}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
                             </div>

@@ -93,6 +93,7 @@ export default function DivisionModal({
                   src={mainLeader.photo_url || division.group_photo_url || "/images/bastian.webp"}
                   alt={mainLeader.name}
                   fill
+                  unoptimized
                   className="object-cover object-top"
                   sizes="(max-width: 768px) 100vw, 400px"
                 />
@@ -103,6 +104,7 @@ export default function DivisionModal({
                   src={division.group_photo_url || "/images/persekutuan.webp"}
                   alt={division.name}
                   fill
+                  unoptimized
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 400px"
                 />
@@ -162,6 +164,7 @@ export default function DivisionModal({
                               src={leader.photo_url || "/images/persekutuan.webp"}
                               alt={leader.name}
                               fill
+                              unoptimized
                               className="object-cover"
                             />
                           </div>
@@ -197,6 +200,7 @@ export default function DivisionModal({
                               src={m.photo_url || "/images/persekutuan.webp"}
                               alt={m.name}
                               fill
+                              unoptimized
                               className="object-cover"
                             />
                           </div>

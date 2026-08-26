@@ -110,8 +110,8 @@ export default function ImageCropModal({
   // Wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY * -0.0012;
-    setZoom((prev) => Math.min(Math.max(0.5, prev + delta), 4));
+    const delta = e.deltaY * -0.0015;
+    setZoom((prev) => Math.min(Math.max(0.4, prev + delta), 6));
   };
 
   // Rotate 90 degrees clockwise
@@ -296,7 +296,7 @@ export default function ImageCropModal({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.max(0.5, z - 0.15))}
+              onClick={() => setZoom((z) => Math.max(0.4, z - 0.25))}
               className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
               title="Perkecil"
             >
@@ -305,8 +305,8 @@ export default function ImageCropModal({
 
             <input
               type="range"
-              min="0.5"
-              max="3.5"
+              min="0.4"
+              max="6"
               step="0.01"
               value={zoom}
               onChange={(e) => setZoom(parseFloat(e.target.value))}
@@ -315,7 +315,7 @@ export default function ImageCropModal({
 
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.min(3.5, z + 0.15))}
+              onClick={() => setZoom((z) => Math.min(6, z + 0.25))}
               className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
               title="Perbesar"
             >

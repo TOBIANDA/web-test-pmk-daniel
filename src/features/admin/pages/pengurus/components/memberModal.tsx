@@ -241,6 +241,7 @@ export default function MemberModal({
                 src={photoUrl}
                 alt="Avatar"
                 fill
+                unoptimized
                 className="object-cover"
               />
             </div>
