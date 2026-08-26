@@ -90,18 +90,13 @@ export const formService = {
       // API call failed, fallback to local storage
     }
 
-    const localForms = getLocalForms();
-    if (apiForms.length === 0) {
-      return activeOnly ? localForms.filter(f => f.is_active === 1) : localForms;
+    if (apiForms.length > 0) {
+      saveLocalForms(apiForms);
+      return activeOnly ? apiForms.filter((f) => f.is_active === 1) : apiForms;
     }
 
-    // Merge API forms with any extra local forms
-    const existingIds = new Set(apiForms.map(f => f.id));
-    const extraLocals = localForms.filter(f => !existingIds.has(f.id));
-    const combined = [...apiForms, ...extraLocals];
-    saveLocalForms(combined);
-
-    return activeOnly ? combined.filter(f => f.is_active === 1) : combined;
+    const localForms = getLocalForms();
+    return activeOnly ? localForms.filter((f) => f.is_active === 1) : localForms;
   },
 
   /**
