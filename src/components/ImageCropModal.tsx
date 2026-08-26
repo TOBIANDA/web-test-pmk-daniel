@@ -33,8 +33,8 @@ export default function ImageCropModal({
 
   // Viewfinder dimensions
   const isRect = cropShape === "rect";
-  const boxWidth = isRect ? 340 : 250;
-  const boxHeight = isRect ? Math.round(340 / (aspectRatio || 1.6)) : 250;
+  const boxWidth = isRect ? 360 : 250;
+  const boxHeight = isRect ? Math.round(360 / (aspectRatio || 1.5)) : 250;
 
   // Reset controls when opened or imageSrc changed
   useEffect(() => {
@@ -134,8 +134,8 @@ export default function ImageCropModal({
     const canvas = document.createElement("canvas");
     
     // High-resolution output canvas
-    const outputWidth = isRect ? 960 : 600;
-    const outputHeight = isRect ? Math.round(960 / (aspectRatio || 1.5)) : 600;
+    const outputWidth = isRect ? 900 : 600;
+    const outputHeight = isRect ? Math.round(900 / (aspectRatio || 1.5)) : 600;
     canvas.width = outputWidth;
     canvas.height = outputHeight;
 

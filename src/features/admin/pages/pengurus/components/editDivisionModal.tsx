@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Divisi, DivisiInput } from "@/types/pengurus";
 import { pengurusService } from "@/services/pengurusService";
+import ImageCropModal from "@/components/ImageCropModal";
 import { 
   X, 
   Upload, 
@@ -64,6 +65,11 @@ export default function EditDivisionModal({
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Cropper states
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
   useEffect(() => {
     if (isOpen) {
@@ -96,6 +102,37 @@ export default function EditDivisionModal({
   }, [division, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImageSrc(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File, previewUrl: string) => {
+    setGroupPhotoUrl(previewUrl);
+    setUploading(true);
+    setErrorMsg(null);
+    try {
+      const url = await pengurusService.uploadPhoto(croppedFile);
+      setGroupPhotoUrl(url);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Gagal mengunggah foto ke Cloudflare R2");
+    } finally {
+      setUploading(false);
+      setCropModalOpen(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,30 +298,18 @@ export default function EditDivisionModal({
               <div className="flex-1 flex flex-col gap-1.5 w-full">
                 <label className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm w-fit">
                   {uploading ? <Loader2 size={15} className="animate-spin text-primary" /> : <Upload size={15} />}
-                  <span>{uploading ? "Mengunggah ke R2..." : "Upload Foto Divisi (Full Asli)"}</span>
+                  <span>{uploading ? "Mengunggah ke R2..." : "Pilih & Sesuaikan Foto Divisi"}</span>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setUploading(true);
-                      setErrorMsg(null);
-                      try {
-                        const url = await pengurusService.uploadPhoto(file);
-                        setGroupPhotoUrl(url);
-                      } catch (err: any) {
-                        setErrorMsg(err.message || "Gagal mengunggah foto ke Cloudflare R2");
-                      } finally {
-                        setUploading(false);
-                      }
-                    }}
+                    onChange={handleFileSelect}
                     className="hidden"
                     disabled={uploading}
                   />
                 </label>
                 <span className="text-[11px] text-slate-400">
-                  Foto akan diunggah utuh 100% tanpa dipotong paksa.
+                  Dapat digeser & diatur zoom di dalam bingkai sebelum disimpan.
                 </span>
               </div>
             </div>
@@ -332,6 +357,17 @@ export default function EditDivisionModal({
             </button>
           </div>
         </form>
+
+        {/* WhatsApp-Style Image Cropper Modal for Division Photo */}
+        <ImageCropModal
+          isOpen={cropModalOpen}
+          imageSrc={rawImageSrc}
+          onClose={() => setCropModalOpen(false)}
+          onCropComplete={handleCropComplete}
+          cropShape="rect"
+          aspectRatio={1.5}
+          title="Sesuaikan Foto Divisi"
+        />
 
       </div>
     </div>
