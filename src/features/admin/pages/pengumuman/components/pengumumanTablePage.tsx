@@ -154,21 +154,26 @@ export default function PengumumanTablePage() {
     };
 
     return (
-        <section className="w-full pt-[60px]">
-            <div className="flex items-center justify-between">
-                <h1 className="font-plusJakarta font-bold text-primary text-2xl md:text-3xl lg:text-[40px]">
-                    Kelola Pengumuman
-                </h1>
+        <section className="w-full min-h-screen py-6 sm:py-10 px-4 sm:px-8 lg:px-14 font-plusJakarta">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="font-plusJakarta font-bold text-primary text-2xl sm:text-3xl lg:text-[38px] tracking-tight">
+                        Kelola Pengumuman
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                        Daftar dan publikasi kegiatan, open recruitment, dan berita persekutuan
+                    </p>
+                </div>
                 <Button
                     onClick={() => {
                         setIsModalOpen(true);
                         setMessage(null);
                     }}
                     size={"lg"}
-                    className="bg-primary hover:bg-primary/90 px-6 py-2 flex items-center gap-2 rounded-full shadow-sm"
+                    className="bg-primary hover:bg-primary/90 px-5 py-2.5 flex items-center gap-2 rounded-full shadow-sm w-fit"
                 >
-                    <Plus className="h-5 w-5 text-white" />
-                    <span className="font-plusJakarta font-medium text-sm text-white">
+                    <Plus className="h-4 w-4 text-white" />
+                    <span className="font-plusJakarta font-semibold text-xs sm:text-sm text-white">
                         Buat Pengumuman
                     </span>
                 </Button>

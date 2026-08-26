@@ -100,13 +100,13 @@ export default function Login() {
       {/* =========================================
           KONTEN UTAMA (Tengah Layar)
       ========================================= */}
-      <div className="relative z-10 flex flex-col items-center gap-[60px] py-12">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-8 sm:gap-12 px-4 py-8 sm:py-12">
         
         {/* ================= AREA HEADER ================= */}
-        <div className="flex h-[241px] w-[540px] flex-col items-center gap-[12px]">
-          <div className="flex h-[189px] w-[540px] flex-col items-center gap-[12px]">
+        <div className="flex w-full flex-col items-center gap-2 text-center">
+          <div className="flex flex-col items-center gap-2">
             {/* Logo */}
-            <div className="relative h-[117px] w-[121px] shrink-0">
+            <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0">
               <Image
                 src="/logo.png"
                 alt="Logo PMK Daniel"
@@ -117,36 +117,36 @@ export default function Login() {
             </div>
             
             {/* Judul: PMK Daniel */}
-            <h1 className="h-[60px] w-[540px] text-center font-plusJakarta text-[48px] font-extrabold leading-[60px] text-foreground">
+            <h1 className="font-plusJakarta text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-foreground tracking-tight">
               PMK Daniel
             </h1>
           </div>
 
           {/* Tagline: Together to be Better. */}
-          <p className="h-[40px] w-[540px] text-center font-plusJakarta text-[32px] font-extrabold leading-[40px] text-foreground">
+          <p className="font-plusJakarta text-lg sm:text-2xl font-extrabold text-foreground">
             Together to be <span className="text-secondary">Better.</span>
           </p>
         </div>
 
         {/* ================= AREA FORM LOGIN ================= */}
-        <Card className="flex w-[480px] flex-col items-start rounded-[6px] border border-border bg-card px-[28px] py-[36px] shadow-sm">
+        <Card className="w-full rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
           <CardContent className="w-full p-0">
-            <form onSubmit={handleSubmit} className="flex w-[424px] flex-col items-start gap-[24px]">
+            <form onSubmit={handleSubmit} className="flex w-full flex-col items-start gap-5">
               
               {/* Pesan Error */}
               {error && (
-                <div className="flex w-full items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+                <div className="flex w-full items-center gap-2 rounded-lg bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
               {/* Grup Input */}
-              <div className="flex w-[424px] flex-col items-start gap-[16px]">
+              <div className="flex w-full flex-col items-start gap-4">
                 
                 {/* Input Email / Username */}
                 <div className="flex w-full flex-col gap-1.5">
-                  <label className="font-plusJakarta text-[16px] font-medium leading-[20px] text-foreground">
+                  <label className="font-plusJakarta text-sm sm:text-base font-medium text-foreground">
                     Username / Email
                   </label>
                   <Input
@@ -155,13 +155,13 @@ export default function Login() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Masukkan username admin"
-                    className="box-border flex h-[44px] w-full items-center gap-[10px] rounded-[8px] border border-grey bg-white p-[12px] font-plusJakarta text-[16px] font-light leading-[20px] text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                    className="box-border flex h-11 w-full items-center rounded-xl border border-grey bg-white px-3.5 py-2 font-plusJakarta text-sm sm:text-base font-light text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
                   />
                 </div>
 
                 {/* Input Kata Sandi */}
                 <div className="flex w-full flex-col gap-1.5">
-                  <label className="font-plusJakarta text-[16px] font-medium leading-[20px] text-foreground">
+                  <label className="font-plusJakarta text-sm sm:text-base font-medium text-foreground">
                     Kata Sandi
                   </label>
                   <Input
@@ -170,7 +170,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan kata sandi"
-                    className="box-border flex h-[44px] w-full items-center gap-[10px] rounded-[8px] border border-grey bg-white p-[12px] font-plusJakarta text-[16px] font-light leading-[20px] text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                    className="box-border flex h-11 w-full items-center rounded-xl border border-grey bg-white px-3.5 py-2 font-plusJakarta text-sm sm:text-base font-light text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
                   />
                 </div>
               </div>
@@ -179,17 +179,17 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="mt-2 flex h-[44px] w-full flex-row items-center justify-center gap-[10px] rounded-full bg-primary px-[16px] py-[8px] hover:bg-primary/90 transition-colors disabled:opacity-70"
+                className="mt-2 flex h-11 w-full flex-row items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 hover:bg-primary/90 transition-colors disabled:opacity-70"
               >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span className="font-plusJakarta text-[14px] font-medium leading-[24px] text-primary-foreground">
+                    <span className="font-plusJakarta text-sm font-medium text-primary-foreground">
                       Memproses...
                     </span>
                   </>
                 ) : (
-                  <span className="font-plusJakarta text-[14px] font-medium leading-[24px] text-primary-foreground">
+                  <span className="font-plusJakarta text-sm font-semibold text-primary-foreground">
                     Masuk
                   </span>
                 )}

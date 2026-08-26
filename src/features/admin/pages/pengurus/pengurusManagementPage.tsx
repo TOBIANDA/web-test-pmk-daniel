@@ -77,11 +77,11 @@ export default function PengurusManagementPage() {
   const totalMembers = divisions.reduce((acc, d) => acc + (d.members?.length || 0), 0);
 
   return (
-    <div className="w-full min-h-screen py-10 px-8 lg:px-14 font-plusJakarta text-slate-900">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <div className="w-full min-h-screen py-6 sm:py-10 px-4 sm:px-8 lg:px-14 font-plusJakarta text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8">
         
         {/* Header Banner */}
-        <div className="relative rounded-[32px] overflow-hidden bg-gradient-to-r from-[#172554] via-[#1e3a8a] to-[#1d4ed8] p-8 sm:p-10 shadow-xl text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative rounded-2xl sm:rounded-[32px] overflow-hidden bg-gradient-to-r from-[#172554] via-[#1e3a8a] to-[#1d4ed8] p-5 sm:p-8 md:p-10 shadow-xl text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="absolute right-0 top-0 w-96 h-96 bg-secondary/15 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col gap-2 max-w-xl">
