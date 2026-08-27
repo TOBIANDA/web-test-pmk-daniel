@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Sparkles, Users, Crown, Shield, Layers, Award } from "lucide-react";
+import { ArrowLeft, Award } from "lucide-react";
 import { Divisi } from "@/types/pengurus";
 import { pengurusService, DEFAULT_DIVISIONS } from "@/services/pengurusService";
 import OrgChartTree from "./components/OrgChartTree";
@@ -37,7 +37,7 @@ export default function PengurusPage() {
     setIsModalOpen(true);
   };
 
-  const totalMembers = divisions.reduce((acc, d) => acc + (d.members?.length || 0), 0);
+
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#E2E2EF]/70 via-[#FFFFFF] to-[#FFEED0]/60 font-plusJakarta text-slate-900 overflow-hidden pb-28">
@@ -45,7 +45,7 @@ export default function PengurusPage() {
       <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-gradient-to-tr from-primary/15 via-secondary/20 to-amber-300/25 blur-[120px] pointer-events-none -z-0" />
       <div className="absolute top-64 right-[-100px] w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[100px] pointer-events-none -z-0" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-36 sm:pt-40">
         
         {/* Back Navigation Button */}
         <Link
@@ -78,22 +78,6 @@ export default function PengurusPage() {
           <p className="mt-4 font-plusJakarta text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl leading-relaxed font-medium">
             Satu tubuh di dalam Kristus, bertumbuh dan melayani bersama dengan segenap hati untuk kemuliaan nama Tuhan di FILKOM Universitas Brawijaya.
           </p>
-
-          {/* Quick Metrics Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-6 pt-6 border-t border-slate-200/60 w-full max-w-xl">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/80 border border-slate-200 shadow-sm text-xs font-bold text-slate-800">
-              <Crown size={15} className="text-amber-500" />
-              <span>1 Badan Pengurus Harian</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/80 border border-slate-200 shadow-sm text-xs font-bold text-slate-800">
-              <Layers size={15} className="text-blue-600" />
-              <span>4 Komisi Utama</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/80 border border-slate-200 shadow-sm text-xs font-bold text-slate-800">
-              <Users size={15} className="text-emerald-600" />
-              <span>{totalMembers} Pengurus Terdaftar</span>
-            </div>
-          </div>
 
         </div>
 
