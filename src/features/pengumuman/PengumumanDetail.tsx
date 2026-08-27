@@ -9,7 +9,6 @@ import {
     Clock,
     MapPin,
     User,
-    Eye,
     Share2,
     Check,
     ZoomIn,
@@ -66,7 +65,7 @@ export default function PengumumanDetailPage({ data: blog }: PengumumanDetailPag
 
     // Extract time & location if mentioned in text
     const timeMatch = fullText.match(/pukul\s+([0-9.:\s]+(?:WIB|WITA|WIT)?)/i) ||
-                      fullText.match(/jam\s+([0-9.:\s]+(?:WIB|WITA|WIT)?)/i);
+        fullText.match(/jam\s+([0-9.:\s]+(?:WIB|WITA|WIT)?)/i);
     const extractedTime = timeMatch ? timeMatch[0] : "10.30 WIB / Sesuai Jadwal";
 
     const locMatch = fullText.match(/(?:di|tempat:?)\s+(GKM\s*[0-9.]+|Gedung\s+[A-Za-z0-9.]+|Ruang\s+[A-Za-z0-9.]+|FILKOM\s+[A-Za-z0-9.]+)/i);
@@ -82,7 +81,7 @@ export default function PengumumanDetailPage({ data: blog }: PengumumanDetailPag
                     url: shareUrl,
                 });
                 return;
-            } catch (e) {}
+            } catch (e) { }
         }
 
         if (navigator.clipboard) {
@@ -115,9 +114,9 @@ export default function PengumumanDetailPage({ data: blog }: PengumumanDetailPag
                 ============================================================== */}
                 <div
                     ref={posterRef}
-                    className="lg:col-span-5 lg:sticky lg:top-28"
+                    className="lg:col-span-5 lg:sticky lg:top-24"
                 >
-                    <div className="bg-white rounded-[24px] lg:rounded-[32px] p-4 sm:p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(62,64,149,0.1)] transition-shadow duration-500">
+                    <div className="bg-white scale-90 rounded-[24px] lg:rounded-[32px] p-4 sm:p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(62,64,149,0.1)] transition-shadow duration-500">
                         {/* Poster Frame (3:4 Ratio) */}
                         <div
                             onClick={() => setIsLightboxOpen(true)}
@@ -149,14 +148,7 @@ export default function PengumumanDetailPage({ data: blog }: PengumumanDetailPag
 
                         {/* Action Under Poster */}
                         <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                            {blog.views !== undefined && blog.views > 0 ? (
-                                <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                                    <Eye size={14} className="text-primary" />
-                                    <span>{blog.views} kali dilihat</span>
-                                </span>
-                            ) : (
-                                <span className="text-xs text-gray-400 font-medium">PMK Daniel FILKOM UB</span>
-                            )}
+                            <span className="text-xs text-gray-400 font-medium">PMK Daniel FILKOM UB</span>
 
                             <button
                                 type="button"

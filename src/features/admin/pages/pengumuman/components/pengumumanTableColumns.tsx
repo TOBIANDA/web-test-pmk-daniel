@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Eye } from "lucide-react";
 import Link from "next/link";
 
 export type pengumuman = {
@@ -78,6 +78,16 @@ export const getColumns = (options: GetColumnsOptions = {}): ColumnDef<pengumuma
                 </div>
             );
         },
+    },
+    {
+        accessorKey: "views",
+        header: "DIBACA",
+        cell: ({ row }) => (
+            <div className="flex items-center gap-1.5 font-plusJakarta text-sm text-slate-600 font-semibold">
+                <Eye size={14} className="text-secondary" />
+                <span>{row.original.views || 0} kali</span>
+            </div>
+        ),
     },
     {
         id: "actions",

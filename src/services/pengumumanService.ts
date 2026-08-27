@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Pengumuman, PengumumanInput } from "@/types/pengumuman";
 
 export const API_BASE_URL =
@@ -31,6 +32,46 @@ function getUploadAuthHeaders(): Record<string, string> {
     }
     return headers;
 }
+
+const fetchPengumumanByIdInternal = async (idOrSlug: string): Promise<Pengumuman | undefined> => {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const url = `${API_BASE_URL}/pengumuman/${idOrSlug}`;
+
+        const res = await fetch(url, {
+            cache: "no-store",
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.data) {
+                const item = data.data;
+                return {
+                    id: item.id,
+                    title: item.title,
+                    slug: item.slug,
+                    imageUrl: item.image_url || "/pengumuman/persekutuan-doa-1-2026.jpg",
+                    datePublished: item.date_published,
+                    description: item.content,
+                    content: item.content,
+                    category: item.category,
+                    author: item.author,
+                    views: item.views,
+                    created_at: item.created_at,
+                    updated_at: item.updated_at,
+                };
+            }
+        }
+    } catch (error) {
+        console.error(`Gagal mengambil detail pengumuman (${idOrSlug}) dari API:`, error);
+    }
+
+    return undefined;
+};
 
 export const pengumumanService = {
     /**
@@ -83,45 +124,7 @@ export const pengumumanService = {
     /**
      * Mengambil detail pengumuman murni dari Backend API Cloudflare berdasarkan ID atau Slug
      */
-    async getPengumumanById(idOrSlug: string): Promise<Pengumuman | undefined> {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-            const url = `${API_BASE_URL}/pengumuman/${idOrSlug}`;
-
-            const res = await fetch(url, {
-                cache: "no-store",
-                signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.data) {
-                    const item = data.data;
-                    return {
-                        id: item.id,
-                        title: item.title,
-                        slug: item.slug,
-                        imageUrl: item.image_url || "/pengumuman/persekutuan-doa-1-2026.jpg",
-                        datePublished: item.date_published,
-                        description: item.content,
-                        content: item.content,
-                        category: item.category,
-                        author: item.author,
-                        views: item.views,
-                        created_at: item.created_at,
-                        updated_at: item.updated_at,
-                    };
-                }
-            }
-        } catch (error) {
-            console.error(`Gagal mengambil detail pengumuman (${idOrSlug}) dari API:`, error);
-        }
-
-        return undefined;
-    },
+    getPengumumanById: cache(fetchPengumumanByIdInternal),
 
     /**
      * Menambahkan pengumuman baru (Admin - with Authorization header)

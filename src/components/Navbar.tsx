@@ -89,11 +89,11 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[85%] lg:w-[80%]">
+    <nav className="fixed top-4 lg:top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] sm:w-[85%] lg:w-[80%]">
 
       <div
         ref={containerRef}
-        className="h-[96px] bg-white/30 backdrop-blur-xl border border-white/40 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] px-6 lg:px-8 flex items-center justify-between"
+        className="h-[64px] lg:h-[96px] bg-white/30 backdrop-blur-xl border border-white/40 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] px-5 lg:px-8 flex items-center justify-between"
       >
 
         {/* Kiri: Logo */}
@@ -103,7 +103,7 @@ export default function Navbar() {
             ref={logoImgRef}
             src="/logo.png"
             alt="Logo PMK"
-            className="select-none size-12 lg:size-14 object-contain relative z-10 bg-white rounded-full p-1"
+            className="select-none size-10 lg:size-14 object-contain relative z-10 bg-white rounded-full p-1"
           />
         </div>
 
