@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -13,28 +14,125 @@ const dataKegiatan = [
     {
         title: "Persekutuan Doa",
         number: "1",
-        imageUrl: "/images/persekutuan.webp",
+        images: [
+            "/images/persekutuan.webp",
+            "/images/persekutuan2.webp",
+        ],
         desc: "Merupakan kegiatan ibadah bersama untuk seluruh anggota dan pengurus PMK yang dilaksanakan setiap hari Jumat di masa perkuliahan."
     },
     {
         title: "Camp Daniel",
         number: "2",
-        imageUrl: "/images/campdaniel.webp",
+        images: [
+            "/images/campdaniel.webp",
+        ],
         desc: "Kegiatan retret rohani bersama untuk anggota baru PMK Daniel."
     },
     {
         title: "Paskah PMK Daniel",
         number: "3",
-        imageUrl: "/images/paskahpmk.webp",
+        images: [
+            "/images/paskahpmk.webp",
+            "/images/paskahpmk2.webp",
+        ],
         desc: "Ibadah Paskah bersama untuk anggota dan pengurus PMK Daniel."
     },
     {
         title: "Natal PMK Daniel",
         number: "4",
-        imageUrl: "/images/natalpmk.webp",
+        images: [
+            "/images/natalpmk.webp",
+        ],
         desc: "Ibadah Natal bersama untuk anggota dan pengurus PMK Daniel."
     },
-]
+];
+
+// Per-item slider component
+function ImageSlider({ images, title }: { images: string[]; title: string }) {
+    const [current, setCurrent] = useState(0);
+    const sliderRef = useRef<HTMLDivElement>(null);
+
+    const prev = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrent(c => (c - 1 + images.length) % images.length);
+    }, [images.length]);
+
+    const next = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrent(c => (c + 1) % images.length);
+    }, [images.length]);
+
+    const hasMultiple = images.length > 1;
+
+    return (
+        <div ref={sliderRef} className="image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] group select-none">
+
+            {/* Images */}
+            {images.map((src, i) => (
+                <div
+                    key={i}
+                    className={cn(
+                        "absolute inset-0 transition-opacity duration-500 ease-in-out",
+                        i === current ? "opacity-100" : "opacity-0"
+                    )}
+                >
+                    <Image
+                        draggable={false}
+                        src={src}
+                        alt={`${title} ${i + 1}`}
+                        fill
+                        className={cn(
+                            "inner-image select-none object-cover transition-transform duration-700 ease-out",
+                            i === current ? "group-hover:scale-105" : ""
+                        )}
+                    />
+                </div>
+            ))}
+
+            {/* Navigation arrows — only shown if multiple images */}
+            {hasMultiple && (
+                <>
+                    <button
+                        onClick={prev}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                        aria-label="Foto sebelumnya"
+                    >
+                        <ChevronLeft size={18} strokeWidth={2.5} />
+                    </button>
+                    <button
+                        onClick={next}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                        aria-label="Foto berikutnya"
+                    >
+                        <ChevronRight size={18} strokeWidth={2.5} />
+                    </button>
+
+                    {/* Dot indicators */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+                        {images.map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
+                                className={cn(
+                                    "rounded-full transition-all duration-300",
+                                    i === current
+                                        ? "w-5 h-1.5 bg-white"
+                                        : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
+                                )}
+                                aria-label={`Foto ${i + 1}`}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Counter */}
+                    <div className="absolute top-3 right-3 z-20 bg-black/40 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {current + 1} / {images.length}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
 
 export default function Kegiatan() {
     const sectionRef = useRef<HTMLElement>(null);
@@ -75,14 +173,12 @@ export default function Kegiatan() {
                 }
             });
 
-            // Set initial state (Mask reveal from sides)
             gsap.set(imageWrapper, {
                 clipPath: isEven ? "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)" : "polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%)"
             });
             gsap.set(innerImage, { scale: 1.15 });
             gsap.set(textContainer, { opacity: 0, x: isEven ? 40 : -40 });
 
-            // Animate reveal
             tl.to(imageWrapper, {
                 clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
                 duration: 0.6,
@@ -142,24 +238,14 @@ export default function Kegiatan() {
                                 isEven ? "md:flex-row" : "md:flex-row-reverse"
                             )}
                         >
-                            {/* Image Side */}
+                            {/* Image Side with Slider */}
                             <div className="w-full md:w-1/2 flex justify-center">
-                                <div className="image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] group">
-                                    <Image
-                                        draggable={false}
-                                        src={data.imageUrl}
-                                        alt={data.title}
-                                        fill
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                        className="inner-image select-none object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                                    />
-                                </div>
+                                <ImageSlider images={data.images} title={data.title} />
                             </div>
 
                             {/* Text Side */}
                             <div className={cn(
                                 "text-container w-full md:w-1/2 flex flex-col justify-center",
-                                // Left align on mobile for readability, Zig-Zag alignment on tablet/desktop
                                 isEven ? "items-start text-left md:pl-4 lg:pl-10" : "items-start md:items-end text-left md:text-right md:pr-4 lg:pr-10"
                             )}>
                                 {/* Number Badge */}
@@ -173,6 +259,13 @@ export default function Kegiatan() {
                                 <h3 className="font-plusJakarta font-bold text-2xl sm:text-3xl lg:text-4xl text-primary mb-4">
                                     {data.title}
                                 </h3>
+
+                                {/* Photo count hint */}
+                                {data.images.length > 1 && (
+                                    <p className="text-xs font-semibold text-secondary mb-3 tracking-wide">
+                                        {data.images.length} foto — geser untuk melihat semua
+                                    </p>
+                                )}
 
                                 {/* Description */}
                                 <p className="font-plusJakarta font-medium text-sm sm:text-base text-gray-700 leading-relaxed max-w-md">
