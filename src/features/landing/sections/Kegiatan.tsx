@@ -24,7 +24,9 @@ const dataKegiatan = [
         number: "2",
         images: [
             "/images/campdaniel.webp",
-            "/images/doapengurus.webp",
+            "/images/campdaniel2.webp",
+            "/images/campdaniel3.webp",
+            "/images/campdaniel4.webp",
         ],
         desc: "Kegiatan retret rohani bersama untuk anggota baru PMK Daniel."
     },
@@ -47,127 +49,93 @@ const dataKegiatan = [
     },
 ];
 
-// Drag/swipe-based slider
+// Hold-to-slide & Click-to-advance Image Slider
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
     const [current, setCurrent] = useState(0);
-    const [dragging, setDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState(0);
-    const startXRef = useRef<number>(0);
-    const isDraggingRef = useRef(false);
-    const DRAG_THRESHOLD = 50;
+    const [isHolding, setIsHolding] = useState(false);
+    const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const hasMultiple = images.length > 1;
 
-    const goTo = useCallback((index: number) => {
-        setCurrent((index + images.length) % images.length);
+    const nextSlide = useCallback(() => {
+        setCurrent(prev => (prev + 1) % images.length);
     }, [images.length]);
 
-    // ── Mouse events ──────────────────────
-    const onMouseDown = useCallback((e: React.MouseEvent) => {
-        if (!hasMultiple) return;
-        startXRef.current = e.clientX;
-        isDraggingRef.current = true;
-        setDragging(true);
-        setDragOffset(0);
-    }, [hasMultiple]);
-
-    const onMouseMove = useCallback((e: React.MouseEvent) => {
-        if (!isDraggingRef.current) return;
-        setDragOffset(e.clientX - startXRef.current);
-    }, []);
-
-    const onMouseUp = useCallback((e: React.MouseEvent) => {
-        if (!isDraggingRef.current) return;
-        const delta = e.clientX - startXRef.current;
-        isDraggingRef.current = false;
-        setDragging(false);
-        setDragOffset(0);
-        if (Math.abs(delta) > DRAG_THRESHOLD) {
-            goTo(delta < 0 ? current + 1 : current - 1);
+    const stopHold = useCallback(() => {
+        setIsHolding(false);
+        if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+            holdTimerRef.current = null;
         }
-    }, [current, goTo]);
-
-    const onMouseLeave = useCallback(() => {
-        if (!isDraggingRef.current) return;
-        isDraggingRef.current = false;
-        setDragging(false);
-        setDragOffset(0);
-    }, []);
-
-    // ── Touch events ──────────────────────
-    const onTouchStart = useCallback((e: React.TouchEvent) => {
-        if (!hasMultiple) return;
-        startXRef.current = e.touches[0].clientX;
-        isDraggingRef.current = true;
-        setDragging(true);
-        setDragOffset(0);
-    }, [hasMultiple]);
-
-    const onTouchMove = useCallback((e: React.TouchEvent) => {
-        if (!isDraggingRef.current) return;
-        setDragOffset(e.touches[0].clientX - startXRef.current);
-    }, []);
-
-    const onTouchEnd = useCallback((e: React.TouchEvent) => {
-        if (!isDraggingRef.current) return;
-        const delta = e.changedTouches[0].clientX - startXRef.current;
-        isDraggingRef.current = false;
-        setDragging(false);
-        setDragOffset(0);
-        if (Math.abs(delta) > DRAG_THRESHOLD) {
-            goTo(delta < 0 ? current + 1 : current - 1);
+        if (holdIntervalRef.current) {
+            clearInterval(holdIntervalRef.current);
+            holdIntervalRef.current = null;
         }
-    }, [current, goTo]);
+    }, []);
+
+    const startHold = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+        if (!hasMultiple) return;
+        // Advance once on tap/click
+        nextSlide();
+        setIsHolding(true);
+
+        // If held down for more than 400ms, continuously slide every 750ms
+        holdTimerRef.current = setTimeout(() => {
+            holdIntervalRef.current = setInterval(() => {
+                nextSlide();
+            }, 750);
+        }, 400);
+    }, [hasMultiple, nextSlide]);
+
+    useEffect(() => {
+        return () => {
+            if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+            if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+        };
+    }, []);
 
     return (
         <div
             className={cn(
-                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none",
-                hasMultiple ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
+                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none transition-transform duration-300",
+                hasMultiple ? "cursor-pointer active:scale-[0.985]" : ""
             )}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseLeave}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+            onMouseDown={startHold}
+            onMouseUp={stopHold}
+            onMouseLeave={stopHold}
+            onTouchStart={startHold}
+            onTouchEnd={stopHold}
+            onTouchCancel={stopHold}
         >
-            {/* Images with slight drag-follow transform */}
-            {images.map((src, i) => {
-                const offset = i === current ? dragOffset : 0;
-                return (
-                    <div
-                        key={i}
-                        className={cn(
-                            "absolute inset-0 transition-opacity duration-500 ease-in-out",
-                            i === current ? "opacity-100" : "opacity-0"
-                        )}
-                        style={{
-                            transform: `translateX(${offset * 0.08}px)`,
-                            transition: dragging ? "none" : "opacity 0.5s ease, transform 0.4s ease",
-                        }}
-                    >
-                        <Image
-                            draggable={false}
-                            src={src}
-                            alt={`${title} ${i + 1}`}
-                            fill
-                            className="inner-image select-none object-cover"
-                        />
-                    </div>
-                );
-            })}
+            {/* Images transition */}
+            {images.map((src, i) => (
+                <div
+                    key={i}
+                    className={cn(
+                        "absolute inset-0 transition-opacity duration-500 ease-in-out",
+                        i === current ? "opacity-100" : "opacity-0 pointer-events-none"
+                    )}
+                >
+                    <Image
+                        draggable={false}
+                        src={src}
+                        alt={`${title} ${i + 1}`}
+                        fill
+                        className="inner-image select-none object-cover"
+                    />
+                </div>
+            ))}
 
             {/* Dot indicators */}
             {hasMultiple && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 pointer-events-none">
                     {images.map((_, i) => (
                         <div
                             key={i}
                             className={cn(
                                 "rounded-full transition-all duration-300",
                                 i === current
-                                    ? "w-5 h-1.5 bg-white"
+                                    ? "w-5 h-1.5 bg-white shadow-sm"
                                     : "w-1.5 h-1.5 bg-white/50"
                             )}
                         />
@@ -175,9 +143,11 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
                 </div>
             )}
 
-            {/* Drag hint — shown briefly then fades, only on first render */}
-            {hasMultiple && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 group-hover:opacity-0">
+            {/* Holding pulse indicator */}
+            {hasMultiple && isHolding && (
+                <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse pointer-events-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                    <span>{current + 1} / {images.length}</span>
                 </div>
             )}
         </div>
@@ -288,7 +258,7 @@ export default function Kegiatan() {
                                 isEven ? "md:flex-row" : "md:flex-row-reverse"
                             )}
                         >
-                            {/* Image Side with Slider */}
+                            {/* Image Side with Hold Slider */}
                             <div className="w-full md:w-1/2 flex justify-center">
                                 <ImageSlider images={data.images} title={data.title} />
                             </div>
