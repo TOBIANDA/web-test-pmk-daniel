@@ -146,11 +146,13 @@ export default function FilosofiLogo() {
                     >
                         {/* Logo Header */}
                         <div className="relative z-10 flex flex-col items-center text-center">
-                            <div className="relative w-36 h-36 mb-5 p-3.5 bg-white rounded-full shadow-lg ring-4 ring-primary/10 flex items-center justify-center">
+                            <div className="relative w-40 h-40 mb-5 p-3.5 bg-white rounded-full shadow-lg ring-4 ring-primary/10 flex items-center justify-center">
                                 <Image 
                                     src="/logo.png" 
                                     alt="Logo PMK Daniel" 
                                     fill 
+                                    unoptimized
+                                    priority
                                     className="object-contain p-2" 
                                 />
                             </div>
