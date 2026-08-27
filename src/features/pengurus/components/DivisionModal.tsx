@@ -85,8 +85,8 @@ export default function DivisionModal({
           data-lenis-prevent="true"
           className="flex-1 overflow-y-auto overscroll-contain p-6 pt-5 flex flex-col gap-5 text-center font-plusJakarta"
         >
-          {/* Photo Section - 16:10 matching admin cropper with object-contain to prevent any cropping */}
-          <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-md border border-slate-200 bg-slate-900 mt-1 flex items-center justify-center">
+          {/* Photo Section - Exactly 16:10 matching admin cropper with shrink-0 */}
+          <div className="relative w-full aspect-[16/10] shrink-0 rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-100 mt-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={
@@ -95,7 +95,7 @@ export default function DivisionModal({
                   : division.group_photo_url) || "/images/persekutuan.webp"
               }
               alt={isSingleLeader && mainLeader ? mainLeader.name : division.name}
-              className="w-full h-full object-contain rounded-2xl"
+              className="w-full h-full object-cover rounded-2xl"
             />
           </div>
 

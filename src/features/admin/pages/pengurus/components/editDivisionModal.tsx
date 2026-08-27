@@ -365,7 +365,7 @@ export default function EditDivisionModal({
           onClose={() => setCropModalOpen(false)}
           onCropComplete={handleCropComplete}
           cropShape="rect"
-          aspectRatio={1.5}
+          aspectRatio={1.6}
           title="Sesuaikan Foto Divisi"
         />
 
