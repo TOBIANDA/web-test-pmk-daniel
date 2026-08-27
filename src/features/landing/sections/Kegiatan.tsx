@@ -50,134 +50,149 @@ const dataKegiatan = [
     },
 ];
 
-// Premium Intuitive Image Slider with Hand Cursor, Click Navigation & Swipe
+// Touch & Mouse Drag Slider with Hand Cursor (cursor-grab / cursor-grabbing)
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
     const [current, setCurrent] = useState(0);
-    const [isHovered, setIsHovered] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState(0);
+
     const containerRef = useRef<HTMLDivElement>(null);
-    const touchStartXRef = useRef<number>(0);
-
+    const startXRef = useRef<number>(0);
+    const isPointerDownRef = useRef(false);
     const hasMultiple = images.length > 1;
+    const DRAG_THRESHOLD = 40; // minimum drag distance in px to change slide
 
-    const prevSlide = useCallback((e?: React.MouseEvent) => {
+    const next = useCallback((e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
-        setCurrent((prev) => (prev - 1 + images.length) % images.length);
+        setCurrent(prev => (prev + 1) % images.length);
     }, [images.length]);
 
-    const nextSlide = useCallback((e?: React.MouseEvent) => {
+    const prev = useCallback((e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
-        setCurrent((prev) => (prev + 1) % images.length);
+        setCurrent(prev => (prev - 1 + images.length) % images.length);
     }, [images.length]);
 
-    const goTo = useCallback((index: number, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrent(index);
-    }, []);
-
-    // Click on image halves (left = prev, right = next)
-    const onCardClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        if (!hasMultiple || !containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        const relativeX = e.clientX - rect.left;
-        if (relativeX < rect.width / 2) {
-            prevSlide();
-        } else {
-            nextSlide();
-        }
-    }, [hasMultiple, prevSlide, nextSlide]);
-
-    // Touch swipe support for mobile
-    const onTouchStart = useCallback((e: React.TouchEvent) => {
-        touchStartXRef.current = e.touches[0].clientX;
-    }, []);
-
-    const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    // Pointer events (handles Mouse & Touch uniformly)
+    const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
         if (!hasMultiple) return;
-        const touchEndX = e.changedTouches[0].clientX;
-        const diff = touchEndX - touchStartXRef.current;
-        if (Math.abs(diff) > 40) {
-            if (diff > 0) {
-                prevSlide();
-            } else {
-                nextSlide();
-            }
+        // Don't start drag if clicking directly on a button
+        if ((e.target as HTMLElement).closest("button")) return;
+        
+        isPointerDownRef.current = true;
+        startXRef.current = e.clientX;
+        setIsDragging(true);
+        setDragOffset(0);
+        
+        try {
+            (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+        } catch (_) {}
+    }, [hasMultiple]);
+
+    const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isPointerDownRef.current) return;
+        const diff = e.clientX - startXRef.current;
+        setDragOffset(diff);
+    }, []);
+
+    const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isPointerDownRef.current) return;
+        isPointerDownRef.current = false;
+        setIsDragging(false);
+
+        const diff = e.clientX - startXRef.current;
+        setDragOffset(0);
+
+        try {
+            (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+        } catch (_) {}
+
+        if (diff < -DRAG_THRESHOLD) {
+            // Dragged left -> Next slide
+            next();
+        } else if (diff > DRAG_THRESHOLD) {
+            // Dragged right -> Previous slide
+            prev();
         }
-    }, [hasMultiple, prevSlide, nextSlide]);
+    }, [next, prev]);
 
     return (
         <div
             ref={containerRef}
             className={cn(
-                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none",
-                hasMultiple ? "cursor-pointer group" : ""
+                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none touch-pan-y group",
+                hasMultiple
+                    ? (isDragging ? "cursor-grabbing" : "cursor-grab")
+                    : "cursor-default"
             )}
-            onClick={onCardClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
         >
-            {/* Images transition */}
-            {images.map((src, i) => (
-                <div
-                    key={i}
-                    className={cn(
-                        "absolute inset-0 transition-opacity duration-500 ease-in-out pointer-events-none",
-                        i === current ? "opacity-100" : "opacity-0"
-                    )}
-                >
-                    <Image
-                        draggable={false}
-                        src={src}
-                        alt={`${title} ${i + 1}`}
-                        fill
-                        className="inner-image select-none object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                </div>
-            ))}
+            {/* Slides container */}
+            <div
+                className="w-full h-full flex transition-transform duration-500 ease-out"
+                style={{
+                    transform: `translateX(calc(-${current * 100}% + ${dragOffset}px))`,
+                    transition: isDragging ? "none" : "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)",
+                }}
+            >
+                {images.map((src, i) => (
+                    <div key={i} className="relative w-full h-full shrink-0">
+                        <Image
+                            draggable={false}
+                            src={src}
+                            alt={`${title} ${i + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="select-none object-cover pointer-events-none"
+                        />
+                    </div>
+                ))}
+            </div>
 
-            {/* Clickable Arrow Controls */}
+            {/* Nav buttons (appear on hover) */}
             {hasMultiple && (
                 <>
-                    {/* Previous Button (Left) */}
+                    {/* Prev Button */}
                     <button
                         type="button"
-                        onClick={prevSlide}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
+                        onClick={prev}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
                         aria-label="Foto sebelumnya"
                     >
-                        <ChevronLeft size={22} strokeWidth={2.5} />
+                        <ChevronLeft size={20} strokeWidth={2.5} />
                     </button>
 
-                    {/* Next Button (Right) */}
+                    {/* Next Button */}
                     <button
                         type="button"
-                        onClick={nextSlide}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
+                        onClick={next}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
                         aria-label="Foto berikutnya"
                     >
-                        <ChevronRight size={22} strokeWidth={2.5} />
+                        <ChevronRight size={20} strokeWidth={2.5} />
                     </button>
 
                     {/* Counter Badge */}
-                    <div className="absolute top-4 right-4 z-20 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    <div className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                         {current + 1} / {images.length}
                     </div>
 
-                    {/* Clickable Dot Indicators */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1.5 rounded-full bg-black/20 backdrop-blur-sm">
+                    {/* Dot Indicators (clickable) */}
+                    <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
                         {images.map((_, i) => (
                             <button
                                 key={i}
                                 type="button"
-                                onClick={(e) => goTo(i, e)}
+                                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
                                 className={cn(
-                                    "rounded-full transition-all duration-300 cursor-pointer",
+                                    "rounded-full transition-all duration-300 cursor-pointer p-0",
                                     i === current
-                                        ? "w-6 h-2 bg-white shadow-sm"
-                                        : "w-2 h-2 bg-white/50 hover:bg-white/90"
+                                        ? "w-6 h-1.5 bg-white shadow-md"
+                                        : "w-1.5 h-1.5 bg-white/60 hover:bg-white"
                                 )}
-                                aria-label={`Buka foto ke-${i + 1}`}
+                                aria-label={`Foto ${i + 1}`}
                             />
                         ))}
                     </div>
@@ -291,7 +306,7 @@ export default function Kegiatan() {
                                 isEven ? "md:flex-row" : "md:flex-row-reverse"
                             )}
                         >
-                            {/* Image Side with Clean Slider */}
+                            {/* Image Side with Smooth Drag & Swipe Slider */}
                             <div className="w-full md:w-1/2 flex justify-center">
                                 <ImageSlider images={data.images} title={data.title} />
                             </div>
