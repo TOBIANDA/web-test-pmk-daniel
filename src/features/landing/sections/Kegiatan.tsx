@@ -50,16 +50,15 @@ const dataKegiatan = [
     },
 ];
 
-// Bidirectional Hold-to-Slide Slider with Hand Cursor (pointer / grabbing)
+// Hover-to-Slide Slider with Hand Cursor (cursor-pointer)
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
     const [current, setCurrent] = useState(0);
-    const [isHolding, setIsHolding] = useState(false);
-    const [holdDirection, setHoldDirection] = useState<"left" | "right" | null>(null);
+    const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const isPointerDownRef = useRef(false);
-    const currentDirectionRef = useRef<"left" | "right">("right");
+    const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const hoverIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const currentHoverSideRef = useRef<"left" | "right" | null>(null);
 
     const hasMultiple = images.length > 1;
 
@@ -73,105 +72,84 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
         });
     }, [images.length]);
 
-    const stopHold = useCallback(() => {
-        isPointerDownRef.current = false;
-        setIsHolding(false);
-        setHoldDirection(null);
-        if (holdIntervalRef.current) {
-            clearInterval(holdIntervalRef.current);
-            holdIntervalRef.current = null;
+    const stopHover = useCallback(() => {
+        currentHoverSideRef.current = null;
+        setHoverSide(null);
+        if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+        }
+        if (hoverIntervalRef.current) {
+            clearInterval(hoverIntervalRef.current);
+            hoverIntervalRef.current = null;
         }
     }, []);
 
-    const startHold = useCallback((clientX: number) => {
-        if (!hasMultiple || !containerRef.current) return;
+    const startHover = useCallback((dir: "left" | "right") => {
+        if (!hasMultiple) return;
+        if (currentHoverSideRef.current === dir) return; // already active on this side
 
-        const rect = containerRef.current.getBoundingClientRect();
-        const relativeX = clientX - rect.left;
-        const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
+        // Clear previous side timers
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+        if (hoverIntervalRef.current) clearInterval(hoverIntervalRef.current);
 
-        isPointerDownRef.current = true;
-        currentDirectionRef.current = dir;
-        setHoldDirection(dir);
-        setIsHolding(true);
+        currentHoverSideRef.current = dir;
+        setHoverSide(dir);
 
-        // Immediate advance on press/click
-        stepSlide(dir);
-
-        // Continuous auto-advance while holding (every 550ms)
-        holdIntervalRef.current = setInterval(() => {
-            if (isPointerDownRef.current) {
-                stepSlide(currentDirectionRef.current);
-            }
-        }, 550);
+        // Advance after a brief comfortable hover delay (250ms)
+        hoverTimerRef.current = setTimeout(() => {
+            stepSlide(dir);
+            // Continue advancing every 750ms if cursor stays on this side
+            hoverIntervalRef.current = setInterval(() => {
+                if (currentHoverSideRef.current) {
+                    stepSlide(currentHoverSideRef.current);
+                }
+            }, 750);
+        }, 250);
     }, [hasMultiple, stepSlide]);
 
-    const updateDirection = useCallback((clientX: number) => {
-        if (!isPointerDownRef.current || !containerRef.current) return;
+    const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (!hasMultiple || !containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
-        const relativeX = clientX - rect.left;
+        const relativeX = e.clientX - rect.left;
         const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
-        currentDirectionRef.current = dir;
-        setHoldDirection(dir);
-    }, []);
+        startHover(dir);
+    }, [hasMultiple, startHover]);
 
-    // Pointer events (handles Mouse & Touch uniformly)
-    const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-        if (!hasMultiple) return;
-        // If clicking dot buttons, ignore container hold
-        if ((e.target as HTMLElement).closest("button")) return;
+    const onMouseLeave = useCallback(() => {
+        stopHover();
+    }, [stopHover]);
 
-        e.preventDefault();
-        try {
-            (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-        } catch (_) {}
-        startHold(e.clientX);
-    }, [hasMultiple, startHold]);
-
-    const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-        if (!isPointerDownRef.current) return;
-        e.preventDefault();
-        updateDirection(e.clientX);
-    }, [updateDirection]);
-
-    const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-        try {
-            (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-        } catch (_) {}
-        stopHold();
-    }, [stopHold]);
+    // Touch support for mobile (tap left/right side)
+    const onTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+        if (!hasMultiple || !containerRef.current) return;
+        const touch = e.changedTouches[0];
+        const rect = containerRef.current.getBoundingClientRect();
+        const relativeX = touch.clientX - rect.left;
+        const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
+        stepSlide(dir);
+        stopHover();
+    }, [hasMultiple, stepSlide, stopHover]);
 
     useEffect(() => {
-        const handleGlobalUp = () => {
-            if (isPointerDownRef.current) {
-                stopHold();
-            }
-        };
-        window.addEventListener("pointerup", handleGlobalUp);
-        window.addEventListener("pointercancel", handleGlobalUp);
         return () => {
-            window.removeEventListener("pointerup", handleGlobalUp);
-            window.removeEventListener("pointercancel", handleGlobalUp);
-            stopHold();
+            if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+            if (hoverIntervalRef.current) clearInterval(hoverIntervalRef.current);
         };
-    }, [stopHold]);
+    }, []);
 
     return (
         <div
             ref={containerRef}
             className={cn(
-                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none touch-none group",
-                hasMultiple
-                    ? (isHolding ? "cursor-grabbing active:scale-[0.99]" : "cursor-pointer")
-                    : "cursor-default"
+                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none group",
+                hasMultiple ? "cursor-pointer" : "cursor-default"
             )}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            onContextMenu={(e) => e.preventDefault()}
+            onMouseMove={onMouseMove}
+            onMouseLeave={onMouseLeave}
+            onTouchEnd={onTouchEnd}
         >
-            {/* Images transition with fade & slight zoom */}
+            {/* Images transition with fade & subtle scale */}
             {images.map((src, i) => (
                 <div
                     key={i}
@@ -191,13 +169,13 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
                 </div>
             ))}
 
-            {/* Visual Cues for Hold Direction */}
+            {/* Hover Side Visual Indicators */}
             {hasMultiple && (
                 <>
                     {/* Left half indicator */}
                     <div className={cn(
                         "absolute left-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
-                        isHolding && holdDirection === "left"
+                        hoverSide === "left"
                             ? "bg-secondary text-white scale-110 shadow-lg opacity-100 ring-4 ring-secondary/30"
                             : "bg-black/30 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-60"
                     )}>
@@ -207,19 +185,19 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
                     {/* Right half indicator */}
                     <div className={cn(
                         "absolute right-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
-                        isHolding && holdDirection === "right"
+                        hoverSide === "right"
                             ? "bg-secondary text-white scale-110 shadow-lg opacity-100 ring-4 ring-secondary/30"
                             : "bg-black/30 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-60"
                     )}>
                         <ChevronRight size={20} strokeWidth={2.5} />
                     </div>
 
-                    {/* Counter / Hold Badge */}
+                    {/* Counter / Active Side Badge */}
                     <div className={cn(
                         "absolute top-4 right-4 z-20 bg-black/50 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all duration-300 pointer-events-none",
-                        isHolding ? "bg-secondary/90 shadow-md opacity-100" : "opacity-0 group-hover:opacity-100"
+                        hoverSide ? "bg-secondary/90 shadow-md opacity-100" : "opacity-0 group-hover:opacity-100"
                     )}>
-                        {isHolding && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+                        {hoverSide && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                         <span>{current + 1} / {images.length}</span>
                     </div>
                 </>
@@ -352,7 +330,7 @@ export default function Kegiatan() {
                                 isEven ? "md:flex-row" : "md:flex-row-reverse"
                             )}
                         >
-                            {/* Image Side with Hold Slider */}
+                            {/* Image Side with Hover-to-Slide Slider */}
                             <div className="w-full md:w-1/2 flex justify-center">
                                 <ImageSlider images={data.images} title={data.title} />
                             </div>
