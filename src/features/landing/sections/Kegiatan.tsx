@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
@@ -50,103 +50,71 @@ const dataKegiatan = [
     },
 ];
 
-// Hover-to-Slide Image Slider (No click required: hold cursor on left/right side to slide)
+// Premium Intuitive Image Slider with Hand Cursor, Click Navigation & Swipe
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
     const [current, setCurrent] = useState(0);
-    const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
-
+    const [isHovered, setIsHovered] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const hoverIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const activeSideRef = useRef<"left" | "right" | null>(null);
+    const touchStartXRef = useRef<number>(0);
 
     const hasMultiple = images.length > 1;
 
-    const stepSlide = useCallback((dir: "left" | "right") => {
-        setCurrent((prev) => {
-            if (dir === "right") {
-                return (prev + 1) % images.length;
-            } else {
-                return (prev - 1 + images.length) % images.length;
-            }
-        });
+    const prevSlide = useCallback((e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setCurrent((prev) => (prev - 1 + images.length) % images.length);
     }, [images.length]);
 
-    const stopHoverSlide = useCallback(() => {
-        activeSideRef.current = null;
-        setHoverSide(null);
-        if (hoverTimerRef.current) {
-            clearTimeout(hoverTimerRef.current);
-            hoverTimerRef.current = null;
-        }
-        if (hoverIntervalRef.current) {
-            clearInterval(hoverIntervalRef.current);
-            hoverIntervalRef.current = null;
-        }
+    const nextSlide = useCallback((e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setCurrent((prev) => (prev + 1) % images.length);
+    }, [images.length]);
+
+    const goTo = useCallback((index: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrent(index);
     }, []);
 
-    const startHoverSlide = useCallback((dir: "left" | "right") => {
-        if (!hasMultiple) return;
-        if (activeSideRef.current === dir) return; // already hovering this side
-
-        // Clear previous side timers
-        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-        if (hoverIntervalRef.current) clearInterval(hoverIntervalRef.current);
-
-        activeSideRef.current = dir;
-        setHoverSide(dir);
-
-        // After hovering for 350ms without clicking, trigger the slide
-        hoverTimerRef.current = setTimeout(() => {
-            stepSlide(dir);
-            // If cursor remains on this side, continue sliding every 900ms
-            hoverIntervalRef.current = setInterval(() => {
-                if (activeSideRef.current) {
-                    stepSlide(activeSideRef.current);
-                }
-            }, 900);
-        }, 350);
-    }, [hasMultiple, stepSlide]);
-
-    const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Click on image halves (left = prev, right = next)
+    const onCardClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!hasMultiple || !containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
         const relativeX = e.clientX - rect.left;
-        const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
-        startHoverSlide(dir);
-    }, [hasMultiple, startHoverSlide]);
+        if (relativeX < rect.width / 2) {
+            prevSlide();
+        } else {
+            nextSlide();
+        }
+    }, [hasMultiple, prevSlide, nextSlide]);
 
-    const onMouseLeave = useCallback(() => {
-        stopHoverSlide();
-    }, [stopHoverSlide]);
-
-    // Touch support for mobile (tap left/right side)
-    const onTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-        if (!hasMultiple || !containerRef.current) return;
-        const touch = e.changedTouches[0];
-        const rect = containerRef.current.getBoundingClientRect();
-        const relativeX = touch.clientX - rect.left;
-        const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
-        stepSlide(dir);
-        stopHoverSlide();
-    }, [hasMultiple, stepSlide, stopHoverSlide]);
-
-    useEffect(() => {
-        return () => {
-            if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-            if (hoverIntervalRef.current) clearInterval(hoverIntervalRef.current);
-        };
+    // Touch swipe support for mobile
+    const onTouchStart = useCallback((e: React.TouchEvent) => {
+        touchStartXRef.current = e.touches[0].clientX;
     }, []);
+
+    const onTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (!hasMultiple) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const diff = touchEndX - touchStartXRef.current;
+        if (Math.abs(diff) > 40) {
+            if (diff > 0) {
+                prevSlide();
+            } else {
+                nextSlide();
+            }
+        }
+    }, [hasMultiple, prevSlide, nextSlide]);
 
     return (
         <div
             ref={containerRef}
             className={cn(
                 "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none",
-                hasMultiple ? "cursor-ew-resize group" : ""
+                hasMultiple ? "cursor-pointer group" : ""
             )}
-            onMouseMove={onMouseMove}
-            onMouseLeave={onMouseLeave}
+            onClick={onCardClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
         >
             {/* Images transition */}
@@ -163,59 +131,57 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
                         src={src}
                         alt={`${title} ${i + 1}`}
                         fill
-                        className="inner-image select-none object-cover"
+                        className="inner-image select-none object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                 </div>
             ))}
 
-            {/* Hover visual cues */}
+            {/* Clickable Arrow Controls */}
             {hasMultiple && (
                 <>
-                    {/* Left half indicator */}
-                    <div className={cn(
-                        "absolute left-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
-                        hoverSide === "left"
-                            ? "bg-secondary text-white scale-110 shadow-lg opacity-100 ring-4 ring-secondary/20"
-                            : "bg-black/30 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-60"
-                    )}>
-                        <ChevronLeft size={20} strokeWidth={2.5} />
+                    {/* Previous Button (Left) */}
+                    <button
+                        type="button"
+                        onClick={prevSlide}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
+                        aria-label="Foto sebelumnya"
+                    >
+                        <ChevronLeft size={22} strokeWidth={2.5} />
+                    </button>
+
+                    {/* Next Button (Right) */}
+                    <button
+                        type="button"
+                        onClick={nextSlide}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
+                        aria-label="Foto berikutnya"
+                    >
+                        <ChevronRight size={22} strokeWidth={2.5} />
+                    </button>
+
+                    {/* Counter Badge */}
+                    <div className="absolute top-4 right-4 z-20 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        {current + 1} / {images.length}
                     </div>
 
-                    {/* Right half indicator */}
-                    <div className={cn(
-                        "absolute right-3.5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
-                        hoverSide === "right"
-                            ? "bg-secondary text-white scale-110 shadow-lg opacity-100 ring-4 ring-secondary/20"
-                            : "bg-black/30 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-60"
-                    )}>
-                        <ChevronRight size={20} strokeWidth={2.5} />
+                    {/* Clickable Dot Indicators */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1.5 rounded-full bg-black/20 backdrop-blur-sm">
+                        {images.map((_, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={(e) => goTo(i, e)}
+                                className={cn(
+                                    "rounded-full transition-all duration-300 cursor-pointer",
+                                    i === current
+                                        ? "w-6 h-2 bg-white shadow-sm"
+                                        : "w-2 h-2 bg-white/50 hover:bg-white/90"
+                                )}
+                                aria-label={`Buka foto ke-${i + 1}`}
+                            />
+                        ))}
                     </div>
-
-                    {/* Active hovering badge */}
-                    {hoverSide && (
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md pointer-events-none">
-                            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-                            <span>{hoverSide === "left" ? "Sebelumnya" : "Berikutnya"} · {current + 1}/{images.length}</span>
-                        </div>
-                    )}
                 </>
-            )}
-
-            {/* Dot indicators */}
-            {hasMultiple && (
-                <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 pointer-events-none">
-                    {images.map((_, i) => (
-                        <div
-                            key={i}
-                            className={cn(
-                                "rounded-full transition-all duration-300",
-                                i === current
-                                    ? "w-6 h-1.5 bg-white shadow-md"
-                                    : "w-1.5 h-1.5 bg-white/50"
-                            )}
-                        />
-                    ))}
-                </div>
             )}
         </div>
     );
@@ -325,7 +291,7 @@ export default function Kegiatan() {
                                 isEven ? "md:flex-row" : "md:flex-row-reverse"
                             )}
                         >
-                            {/* Image Side with Hover-to-Slide Slider */}
+                            {/* Image Side with Clean Slider */}
                             <div className="w-full md:w-1/2 flex justify-center">
                                 <ImageSlider images={data.images} title={data.title} />
                             </div>
