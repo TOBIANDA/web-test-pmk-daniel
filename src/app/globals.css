@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant hover (&:hover);
+@custom-variant group-hover (.group:hover &);
 
 @theme inline {
   --font-plusJakarta: var(--font-plusJakarta);
@@ -152,5 +154,16 @@
 
   html {
     @apply font-plusJakarta scroll-smooth;
+  }
+
+  /* Fix for Tailwind v4: Restore default transition duration for utility classes */
+  .transition, 
+  .transition-all, 
+  .transition-colors, 
+  .transition-opacity, 
+  .transition-shadow, 
+  .transition-transform {
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
