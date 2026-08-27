@@ -96,16 +96,16 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
         currentHoverSideRef.current = dir;
         setHoverSide(dir);
 
-        // Advance after a brief comfortable hover delay (250ms)
+        // Advance after an intentional, comfortable hover delay (480ms)
         hoverTimerRef.current = setTimeout(() => {
             stepSlide(dir);
-            // Continue advancing every 750ms if cursor stays on this side
+            // Continue advancing calmly every 1100ms if cursor stays on this side
             hoverIntervalRef.current = setInterval(() => {
                 if (currentHoverSideRef.current) {
                     stepSlide(currentHoverSideRef.current);
                 }
-            }, 750);
-        }, 250);
+            }, 1100);
+        }, 480);
     }, [hasMultiple, stepSlide]);
 
     const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -154,7 +154,7 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
                 <div
                     key={i}
                     className={cn(
-                        "absolute inset-0 transition-all duration-500 ease-in-out pointer-events-none",
+                        "absolute inset-0 transition-all duration-700 ease-out pointer-events-none",
                         i === current ? "opacity-100 scale-100" : "opacity-0 scale-105"
                     )}
                 >
