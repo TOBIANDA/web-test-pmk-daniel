@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -49,20 +50,34 @@ const dataKegiatan = [
     },
 ];
 
-// Hold-to-slide & Click-to-advance Image Slider
+// Bidirectional Hold & Swipe Image Slider
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
     const [current, setCurrent] = useState(0);
     const [isHolding, setIsHolding] = useState(false);
+    const [holdDirection, setHoldDirection] = useState<"left" | "right" | null>(null);
+
+    const containerRef = useRef<HTMLDivElement>(null);
     const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
     const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isPointerDownRef = useRef(false);
+    const currentDirectionRef = useRef<"left" | "right">("right");
+
     const hasMultiple = images.length > 1;
 
-    const nextSlide = useCallback(() => {
-        setCurrent(prev => (prev + 1) % images.length);
+    const stepSlide = useCallback((dir: "left" | "right") => {
+        setCurrent((prev) => {
+            if (dir === "right") {
+                return (prev + 1) % images.length;
+            } else {
+                return (prev - 1 + images.length) % images.length;
+            }
+        });
     }, [images.length]);
 
     const stopHold = useCallback(() => {
+        isPointerDownRef.current = false;
         setIsHolding(false);
+        setHoldDirection(null);
         if (holdTimerRef.current) {
             clearTimeout(holdTimerRef.current);
             holdTimerRef.current = null;
@@ -73,46 +88,94 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
         }
     }, []);
 
-    const startHold = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-        if (!hasMultiple) return;
+    const startHold = useCallback((clientX: number) => {
+        if (!hasMultiple || !containerRef.current) return;
+        
+        const rect = containerRef.current.getBoundingClientRect();
+        const relativeX = clientX - rect.left;
+        const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
+        
+        isPointerDownRef.current = true;
+        currentDirectionRef.current = dir;
+        setHoldDirection(dir);
         setIsHolding(true);
 
-        // Only start sliding once held down for 250ms
-        holdTimerRef.current = setTimeout(() => {
-            nextSlide();
-            holdIntervalRef.current = setInterval(() => {
-                nextSlide();
-            }, 700);
-        }, 250);
-    }, [hasMultiple, nextSlide]);
+        // Immediate advance on hold start
+        stepSlide(dir);
+
+        // Continuous auto-slide while holding
+        holdIntervalRef.current = setInterval(() => {
+            if (isPointerDownRef.current) {
+                stepSlide(currentDirectionRef.current);
+            }
+        }, 600);
+    }, [hasMultiple, stepSlide]);
+
+    const updateDirection = useCallback((clientX: number) => {
+        if (!isPointerDownRef.current || !containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const relativeX = clientX - rect.left;
+        const dir: "left" | "right" = relativeX < rect.width / 2 ? "left" : "right";
+        currentDirectionRef.current = dir;
+        setHoldDirection(dir);
+    }, []);
+
+    // Pointer events (handles Mouse, Touch, and Pen uniformly)
+    const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!hasMultiple) return;
+        e.preventDefault();
+        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+        startHold(e.clientX);
+    }, [hasMultiple, startHold]);
+
+    const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isPointerDownRef.current) return;
+        e.preventDefault();
+        updateDirection(e.clientX);
+    }, [updateDirection]);
+
+    const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+        try {
+            (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+        } catch (_) {}
+        stopHold();
+    }, [stopHold]);
 
     useEffect(() => {
-        return () => {
-            if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-            if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+        const handleGlobalUp = () => {
+            if (isPointerDownRef.current) {
+                stopHold();
+            }
         };
-    }, []);
+        window.addEventListener("pointerup", handleGlobalUp);
+        window.addEventListener("pointercancel", handleGlobalUp);
+        return () => {
+            window.removeEventListener("pointerup", handleGlobalUp);
+            window.removeEventListener("pointercancel", handleGlobalUp);
+            stopHold();
+        };
+    }, [stopHold]);
 
     return (
         <div
+            ref={containerRef}
             className={cn(
-                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none transition-transform duration-300",
-                hasMultiple ? "cursor-pointer active:scale-[0.985]" : ""
+                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none touch-none",
+                hasMultiple ? "cursor-pointer group" : ""
             )}
-            onMouseDown={startHold}
-            onMouseUp={stopHold}
-            onMouseLeave={stopHold}
-            onTouchStart={startHold}
-            onTouchEnd={stopHold}
-            onTouchCancel={stopHold}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onContextMenu={(e) => e.preventDefault()}
         >
             {/* Images transition */}
             {images.map((src, i) => (
                 <div
                     key={i}
                     className={cn(
-                        "absolute inset-0 transition-opacity duration-500 ease-in-out",
-                        i === current ? "opacity-100" : "opacity-0 pointer-events-none"
+                        "absolute inset-0 transition-opacity duration-500 ease-in-out pointer-events-none",
+                        i === current ? "opacity-100" : "opacity-0"
                     )}
                 >
                     <Image
@@ -125,28 +188,53 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
                 </div>
             ))}
 
+            {/* Hold directional visual feedback & hint arrows on hover */}
+            {hasMultiple && (
+                <>
+                    {/* Left half indicator */}
+                    <div className={cn(
+                        "absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
+                        isHolding && holdDirection === "left"
+                            ? "bg-secondary text-white scale-110 shadow-lg opacity-100"
+                            : "bg-black/30 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-100"
+                    )}>
+                        <ChevronLeft size={20} strokeWidth={2.5} />
+                    </div>
+
+                    {/* Right half indicator */}
+                    <div className={cn(
+                        "absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-none",
+                        isHolding && holdDirection === "right"
+                            ? "bg-secondary text-white scale-110 shadow-lg opacity-100"
+                            : "bg-black/30 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-100"
+                    )}>
+                        <ChevronRight size={20} strokeWidth={2.5} />
+                    </div>
+
+                    {/* Active Hold Pill Badge */}
+                    {isHolding && (
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md pointer-events-none animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                            <span>{holdDirection === "left" ? "Mundur" : "Maju"} · {current + 1}/{images.length}</span>
+                        </div>
+                    )}
+                </>
+            )}
+
             {/* Dot indicators */}
             {hasMultiple && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 pointer-events-none">
+                <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 pointer-events-none">
                     {images.map((_, i) => (
                         <div
                             key={i}
                             className={cn(
                                 "rounded-full transition-all duration-300",
                                 i === current
-                                    ? "w-5 h-1.5 bg-white shadow-sm"
+                                    ? "w-6 h-1.5 bg-white shadow-md"
                                     : "w-1.5 h-1.5 bg-white/50"
                             )}
                         />
                     ))}
-                </div>
-            )}
-
-            {/* Holding pulse indicator */}
-            {hasMultiple && isHolding && (
-                <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse pointer-events-none">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                    <span>{current + 1} / {images.length}</span>
                 </div>
             )}
         </div>
@@ -257,7 +345,7 @@ export default function Kegiatan() {
                                 isEven ? "md:flex-row" : "md:flex-row-reverse"
                             )}
                         >
-                            {/* Image Side with Hold Slider */}
+                            {/* Image Side with Bidirectional Hold Slider */}
                             <div className="w-full md:w-1/2 flex justify-center">
                                 <ImageSlider images={data.images} title={data.title} />
                             </div>
