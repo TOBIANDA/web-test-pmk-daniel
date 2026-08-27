@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -25,6 +24,7 @@ const dataKegiatan = [
         number: "2",
         images: [
             "/images/campdaniel.webp",
+            "/images/doapengurus.webp",
         ],
         desc: "Kegiatan retret rohani bersama untuk anggota baru PMK Daniel."
     },
@@ -47,88 +47,138 @@ const dataKegiatan = [
     },
 ];
 
-// Per-item slider component
+// Drag/swipe-based slider
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
     const [current, setCurrent] = useState(0);
-    const sliderRef = useRef<HTMLDivElement>(null);
-
-    const prev = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrent(c => (c - 1 + images.length) % images.length);
-    }, [images.length]);
-
-    const next = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrent(c => (c + 1) % images.length);
-    }, [images.length]);
-
+    const [dragging, setDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState(0);
+    const startXRef = useRef<number>(0);
+    const isDraggingRef = useRef(false);
+    const DRAG_THRESHOLD = 50;
     const hasMultiple = images.length > 1;
 
+    const goTo = useCallback((index: number) => {
+        setCurrent((index + images.length) % images.length);
+    }, [images.length]);
+
+    // ── Mouse events ──────────────────────
+    const onMouseDown = useCallback((e: React.MouseEvent) => {
+        if (!hasMultiple) return;
+        startXRef.current = e.clientX;
+        isDraggingRef.current = true;
+        setDragging(true);
+        setDragOffset(0);
+    }, [hasMultiple]);
+
+    const onMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!isDraggingRef.current) return;
+        setDragOffset(e.clientX - startXRef.current);
+    }, []);
+
+    const onMouseUp = useCallback((e: React.MouseEvent) => {
+        if (!isDraggingRef.current) return;
+        const delta = e.clientX - startXRef.current;
+        isDraggingRef.current = false;
+        setDragging(false);
+        setDragOffset(0);
+        if (Math.abs(delta) > DRAG_THRESHOLD) {
+            goTo(delta < 0 ? current + 1 : current - 1);
+        }
+    }, [current, goTo]);
+
+    const onMouseLeave = useCallback(() => {
+        if (!isDraggingRef.current) return;
+        isDraggingRef.current = false;
+        setDragging(false);
+        setDragOffset(0);
+    }, []);
+
+    // ── Touch events ──────────────────────
+    const onTouchStart = useCallback((e: React.TouchEvent) => {
+        if (!hasMultiple) return;
+        startXRef.current = e.touches[0].clientX;
+        isDraggingRef.current = true;
+        setDragging(true);
+        setDragOffset(0);
+    }, [hasMultiple]);
+
+    const onTouchMove = useCallback((e: React.TouchEvent) => {
+        if (!isDraggingRef.current) return;
+        setDragOffset(e.touches[0].clientX - startXRef.current);
+    }, []);
+
+    const onTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (!isDraggingRef.current) return;
+        const delta = e.changedTouches[0].clientX - startXRef.current;
+        isDraggingRef.current = false;
+        setDragging(false);
+        setDragOffset(0);
+        if (Math.abs(delta) > DRAG_THRESHOLD) {
+            goTo(delta < 0 ? current + 1 : current - 1);
+        }
+    }, [current, goTo]);
+
     return (
-        <div ref={sliderRef} className="image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] group select-none">
-
-            {/* Images */}
-            {images.map((src, i) => (
-                <div
-                    key={i}
-                    className={cn(
-                        "absolute inset-0 transition-opacity duration-500 ease-in-out",
-                        i === current ? "opacity-100" : "opacity-0"
-                    )}
-                >
-                    <Image
-                        draggable={false}
-                        src={src}
-                        alt={`${title} ${i + 1}`}
-                        fill
+        <div
+            className={cn(
+                "image-wrapper relative w-full aspect-[4/3] lg:aspect-[16/11] overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] select-none",
+                hasMultiple ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
+            )}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseLeave}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+        >
+            {/* Images with slight drag-follow transform */}
+            {images.map((src, i) => {
+                const offset = i === current ? dragOffset : 0;
+                return (
+                    <div
+                        key={i}
                         className={cn(
-                            "inner-image select-none object-cover transition-transform duration-700 ease-out",
-                            i === current ? "group-hover:scale-105" : ""
+                            "absolute inset-0 transition-opacity duration-500 ease-in-out",
+                            i === current ? "opacity-100" : "opacity-0"
                         )}
-                    />
-                </div>
-            ))}
+                        style={{
+                            transform: `translateX(${offset * 0.08}px)`,
+                            transition: dragging ? "none" : "opacity 0.5s ease, transform 0.4s ease",
+                        }}
+                    >
+                        <Image
+                            draggable={false}
+                            src={src}
+                            alt={`${title} ${i + 1}`}
+                            fill
+                            className="inner-image select-none object-cover"
+                        />
+                    </div>
+                );
+            })}
 
-            {/* Navigation arrows — only shown if multiple images */}
+            {/* Dot indicators */}
             {hasMultiple && (
-                <>
-                    <button
-                        onClick={prev}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                        aria-label="Foto sebelumnya"
-                    >
-                        <ChevronLeft size={18} strokeWidth={2.5} />
-                    </button>
-                    <button
-                        onClick={next}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                        aria-label="Foto berikutnya"
-                    >
-                        <ChevronRight size={18} strokeWidth={2.5} />
-                    </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+                    {images.map((_, i) => (
+                        <div
+                            key={i}
+                            className={cn(
+                                "rounded-full transition-all duration-300",
+                                i === current
+                                    ? "w-5 h-1.5 bg-white"
+                                    : "w-1.5 h-1.5 bg-white/50"
+                            )}
+                        />
+                    ))}
+                </div>
+            )}
 
-                    {/* Dot indicators */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
-                        {images.map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
-                                className={cn(
-                                    "rounded-full transition-all duration-300",
-                                    i === current
-                                        ? "w-5 h-1.5 bg-white"
-                                        : "w-1.5 h-1.5 bg-white/50 hover:bg-white/80"
-                                )}
-                                aria-label={`Foto ${i + 1}`}
-                            />
-                        ))}
-                    </div>
-
-                    {/* Counter */}
-                    <div className="absolute top-3 right-3 z-20 bg-black/40 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {current + 1} / {images.length}
-                    </div>
-                </>
+            {/* Drag hint — shown briefly then fades, only on first render */}
+            {hasMultiple && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 group-hover:opacity-0">
+                </div>
             )}
         </div>
     );
@@ -259,13 +309,6 @@ export default function Kegiatan() {
                                 <h3 className="font-plusJakarta font-bold text-2xl sm:text-3xl lg:text-4xl text-primary mb-4">
                                     {data.title}
                                 </h3>
-
-                                {/* Photo count hint */}
-                                {data.images.length > 1 && (
-                                    <p className="text-xs font-semibold text-secondary mb-3 tracking-wide">
-                                        {data.images.length} foto — geser untuk melihat semua
-                                    </p>
-                                )}
 
                                 {/* Description */}
                                 <p className="font-plusJakarta font-medium text-sm sm:text-base text-gray-700 leading-relaxed max-w-md">
