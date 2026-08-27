@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FormField, FormFieldType, DynamicForm, DynamicFormCreateInput } from "@/types/form";
+import { FormField, FormFieldType, FieldValidation, ValidationRuleType, DynamicForm, DynamicFormCreateInput } from "@/types/form";
 import { formService } from "@/services/formService";
 import { 
   X, 
@@ -11,9 +11,10 @@ import {
   ArrowUp, 
   ArrowDown, 
   Loader2, 
-  Sparkles,
   Layers,
-  Settings2
+  Settings2,
+  ShieldCheck,
+  ChevronDown
 } from "lucide-react";
 
 interface FormBuilderModalProps {
@@ -33,6 +34,34 @@ const FIELD_TYPES: { type: FormFieldType; label: string; icon: string }[] = [
   { type: "date", label: "Tanggal", icon: "📅" },
 ];
 
+// Validation options per field type
+const VALIDATION_OPTIONS: Record<FormFieldType, { type: ValidationRuleType; label: string; hasValue: boolean; valuePlaceholder?: string }[]> = {
+  text: [
+    { type: "number", label: "Angka saja", hasValue: false },
+    { type: "email", label: "Format Email", hasValue: false },
+    { type: "url", label: "Format URL", hasValue: false },
+    { type: "phone", label: "Nomor Telepon (08xx)", hasValue: false },
+    { type: "min_length", label: "Minimal karakter", hasValue: true, valuePlaceholder: "Contoh: 5" },
+    { type: "max_length", label: "Maksimal karakter", hasValue: true, valuePlaceholder: "Contoh: 100" },
+    { type: "regex", label: "Pola Regex kustom", hasValue: true, valuePlaceholder: "Contoh: ^[A-Z]" },
+  ],
+  textarea: [
+    { type: "min_length", label: "Minimal karakter", hasValue: true, valuePlaceholder: "Contoh: 20" },
+    { type: "max_length", label: "Maksimal karakter", hasValue: true, valuePlaceholder: "Contoh: 500" },
+  ],
+  checkbox: [
+    { type: "min_checked", label: "Minimal pilih", hasValue: true, valuePlaceholder: "Contoh: 1" },
+    { type: "max_checked", label: "Maksimal pilih", hasValue: true, valuePlaceholder: "Contoh: 3" },
+  ],
+  date: [
+    { type: "min_date", label: "Tanggal minimum", hasValue: true, valuePlaceholder: "Contoh: 2025-01-01" },
+    { type: "max_date", label: "Tanggal maksimum", hasValue: true, valuePlaceholder: "Contoh: 2026-12-31" },
+  ],
+  radio: [],
+  select: [],
+  file: [],
+};
+
 export default function FormBuilderModal({
   isOpen,
   onClose,
@@ -48,6 +77,8 @@ export default function FormBuilderModal({
   const [fields, setFields] = useState<FormField[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Track which fields have validation panel expanded
+  const [validationOpen, setValidationOpen] = useState<Record<string, boolean>>({});
 
   // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
   useEffect(() => {
@@ -71,6 +102,12 @@ export default function FormBuilderModal({
       setDescription(initialForm.description || "");
       setIsActive(initialForm.is_active ?? 1);
       setFields(initialForm.fields_schema || []);
+      // Expand validation panels for fields that already have validation
+      const openState: Record<string, boolean> = {};
+      (initialForm.fields_schema || []).forEach((f) => {
+        if (f.validation) openState[f.id] = true;
+      });
+      setValidationOpen(openState);
     } else {
       setTitle("");
       setSlug("");
@@ -90,6 +127,7 @@ export default function FormBuilderModal({
           type: "text",
           placeholder: "Contoh: 265150200111001",
           required: true,
+          validation: { type: "number", errorMessage: "NIM harus berupa angka" },
         },
         {
           id: "divisi_minat",
@@ -99,6 +137,7 @@ export default function FormBuilderModal({
           options: ["Acara & Liturgi", "Musik & Praise", "Multimedia & Kreatif", "Doa & Konseling", "Humas & Logistik"],
         }
       ]);
+      setValidationOpen({ nim: true });
     }
   }, [initialForm, isOpen]);
 
@@ -174,6 +213,25 @@ export default function FormBuilderModal({
     const field = fields[fieldIndex];
     const updatedOptions = (field.options || []).filter((_, i) => i !== optIndex);
     handleUpdateField(fieldIndex, { options: updatedOptions });
+  };
+
+  const toggleValidationPanel = (fieldId: string) => {
+    setValidationOpen((prev) => {
+      const isCurrentlyOpen = !!prev[fieldId];
+      // If closing, also clear the validation on the field
+      if (isCurrentlyOpen) {
+        setFields((prevFields) =>
+          prevFields.map((f) => (f.id === fieldId ? { ...f, validation: undefined } : f))
+        );
+      }
+      return { ...prev, [fieldId]: !isCurrentlyOpen };
+    });
+  };
+
+  const handleUpdateValidation = (fieldIndex: number, updates: Partial<FieldValidation>) => {
+    const field = fields[fieldIndex];
+    const existing = field.validation || { type: "number" as ValidationRuleType };
+    handleUpdateField(fieldIndex, { validation: { ...existing, ...updates } });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -348,160 +406,278 @@ export default function FormBuilderModal({
               </div>
             </div>
 
-            {fields.map((field, idx) => (
-              <div
-                key={field.id || idx}
-                className="bg-white p-5 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col gap-4 hover:border-primary/40 transition-all group"
-              >
-                {/* Field Controls Header */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-xs font-mono font-bold flex items-center justify-center">
-                      {idx + 1}
-                    </span>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Pertanyaan #{idx + 1}
-                    </span>
+            {fields.map((field, idx) => {
+              const validationOpts = VALIDATION_OPTIONS[field.type] || [];
+              const hasValidationOptions = validationOpts.length > 0;
+              const isPanelOpen = !!validationOpen[field.id];
+              const currentValidationType = field.validation?.type || (validationOpts[0]?.type);
+              const currentValidationDef = validationOpts.find(v => v.type === currentValidationType);
+
+              return (
+                <div
+                  key={field.id || idx}
+                  className="bg-white p-5 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col gap-4 hover:border-primary/40 transition-all group"
+                >
+                  {/* Field Controls Header */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-xs font-mono font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Pertanyaan #{idx + 1}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {/* Move Up */}
+                      <button
+                        type="button"
+                        onClick={() => handleMoveField(idx, "up")}
+                        disabled={idx === 0}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded-lg hover:bg-slate-100 transition-colors"
+                        title="Geser ke atas"
+                      >
+                        <ArrowUp size={15} />
+                      </button>
+                      {/* Move Down */}
+                      <button
+                        type="button"
+                        onClick={() => handleMoveField(idx, "down")}
+                        disabled={idx === fields.length - 1}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded-lg hover:bg-slate-100 transition-colors"
+                        title="Geser ke bawah"
+                      >
+                        <ArrowDown size={15} />
+                      </button>
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveField(idx)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-2"
+                        title="Hapus pertanyaan"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    {/* Move Up */}
-                    <button
-                      type="button"
-                      onClick={() => handleMoveField(idx, "up")}
-                      disabled={idx === 0}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded-lg hover:bg-slate-100 transition-colors"
-                      title="Geser ke atas"
-                    >
-                      <ArrowUp size={15} />
-                    </button>
-                    {/* Move Down */}
-                    <button
-                      type="button"
-                      onClick={() => handleMoveField(idx, "down")}
-                      disabled={idx === fields.length - 1}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded-lg hover:bg-slate-100 transition-colors"
-                      title="Geser ke bawah"
-                    >
-                      <ArrowDown size={15} />
-                    </button>
-                    {/* Delete */}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveField(idx)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-2"
-                      title="Hapus pertanyaan"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+                  {/* Field Details Inputs */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Label */}
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                        Label Pertanyaan
+                      </label>
+                      <input
+                        type="text"
+                        value={field.label}
+                        onChange={(e) => handleUpdateField(idx, { label: e.target.value })}
+                        placeholder="Tuliskan teks pertanyaan..."
+                        required
+                        className="w-full h-10 px-3.5 rounded-xl border border-gray-200 bg-slate-50/50 font-plusJakarta text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                      />
+                    </div>
 
-                {/* Field Details Inputs */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Label */}
-                  <div className="md:col-span-2">
-                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      Label Pertanyaan
-                    </label>
+                    {/* Type Selector */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                        Tipe Input
+                      </label>
+                      <select
+                        value={field.type}
+                        onChange={(e) => {
+                          const newType = e.target.value as FormFieldType;
+                          const defaultOpts = (newType === "radio" || newType === "checkbox" || newType === "select") && (!field.options || field.options.length === 0)
+                            ? ["Opsi 1", "Opsi 2"]
+                            : field.options;
+                          // Clear validation when type changes if new type doesn't support current validation
+                          const newValidationOpts = VALIDATION_OPTIONS[newType] || [];
+                          const keepValidation = field.validation && newValidationOpts.some(v => v.type === field.validation?.type);
+                          handleUpdateField(idx, { type: newType, options: defaultOpts, validation: keepValidation ? field.validation : undefined });
+                          if (!keepValidation) {
+                            setValidationOpen(prev => ({ ...prev, [field.id]: false }));
+                          }
+                        }}
+                        className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-slate-50/50 font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all cursor-pointer"
+                      >
+                        {FIELD_TYPES.map((ft) => (
+                          <option key={ft.type} value={ft.type}>
+                            {ft.icon} {ft.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Options Manager (For Radio / Checkbox / Select) */}
+                  {(field.type === "radio" || field.type === "checkbox" || field.type === "select") && (
+                    <div className="p-4 bg-slate-50 rounded-xl border border-gray-200/80 flex flex-col gap-2.5">
+                      <label className="block text-[11px] font-bold text-slate-600 uppercase">
+                        Pilihan Opsi Jawaban
+                      </label>
+                      {(field.options || []).map((opt, optIdx) => (
+                        <div key={optIdx} className="flex items-center gap-2">
+                          <span className="text-slate-400 text-xs font-mono">
+                            {field.type === "radio" ? "🔘" : field.type === "checkbox" ? "☑️" : "•"}
+                          </span>
+                          <input
+                            type="text"
+                            value={opt}
+                            onChange={(e) => handleUpdateOption(idx, optIdx, e.target.value)}
+                            placeholder={`Opsi ${optIdx + 1}`}
+                            className="flex-1 h-9 px-3 rounded-lg border border-gray-200 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                          />
+                          {(field.options || []).length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveOption(idx, optIdx)}
+                              className="p-1 text-slate-400 hover:text-rose-500 rounded"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => handleAddOption(idx)}
+                        className="text-xs font-bold text-primary hover:text-primary-dark inline-flex items-center gap-1 mt-1 w-fit"
+                      >
+                        <Plus size={13} /> Tambah Opsi
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Field Options Footer (Required toggle & placeholder) */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                     <input
                       type="text"
-                      value={field.label}
-                      onChange={(e) => handleUpdateField(idx, { label: e.target.value })}
-                      placeholder="Tuliskan teks pertanyaan..."
-                      required
-                      className="w-full h-10 px-3.5 rounded-xl border border-gray-200 bg-slate-50/50 font-plusJakarta text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                      value={field.placeholder || ""}
+                      onChange={(e) => handleUpdateField(idx, { placeholder: e.target.value })}
+                      placeholder="Teks placeholder / contoh jawaban..."
+                      className="flex-1 min-w-[200px] h-8 px-3 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-700 placeholder:text-slate-400"
                     />
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!!field.required}
+                        onChange={(e) => handleUpdateField(idx, { required: e.target.checked })}
+                        className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                      />
+                      <span className="font-plusJakarta text-xs font-bold text-slate-700">
+                        Wajib Diisi (*Required)
+                      </span>
+                    </label>
                   </div>
 
-                  {/* Type Selector */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
-                      Tipe Input
-                    </label>
-                    <select
-                      value={field.type}
-                      onChange={(e) => {
-                        const newType = e.target.value as FormFieldType;
-                        const defaultOpts = (newType === "radio" || newType === "checkbox" || newType === "select") && (!field.options || field.options.length === 0)
-                          ? ["Opsi 1", "Opsi 2"]
-                          : field.options;
-                        handleUpdateField(idx, { type: newType, options: defaultOpts });
-                      }}
-                      className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-slate-50/50 font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all cursor-pointer"
-                    >
-                      {FIELD_TYPES.map((ft) => (
-                        <option key={ft.type} value={ft.type}>
-                          {ft.icon} {ft.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Options Manager (For Radio / Checkbox / Select) */}
-                {(field.type === "radio" || field.type === "checkbox" || field.type === "select") && (
-                  <div className="p-4 bg-slate-50 rounded-xl border border-gray-200/80 flex flex-col gap-2.5">
-                    <label className="block text-[11px] font-bold text-slate-600 uppercase">
-                      Pilihan Opsi Jawaban
-                    </label>
-                    {(field.options || []).map((opt, optIdx) => (
-                      <div key={optIdx} className="flex items-center gap-2">
-                        <span className="text-slate-400 text-xs font-mono">
-                          {field.type === "radio" ? "🔘" : field.type === "checkbox" ? "☑️" : "•"}
-                        </span>
-                        <input
-                          type="text"
-                          value={opt}
-                          onChange={(e) => handleUpdateOption(idx, optIdx, e.target.value)}
-                          placeholder={`Opsi ${optIdx + 1}`}
-                          className="flex-1 h-9 px-3 rounded-lg border border-gray-200 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                        {(field.options || []).length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveOption(idx, optIdx)}
-                            className="p-1 text-slate-400 hover:text-rose-500 rounded"
-                          >
-                            <X size={14} />
-                          </button>
+                  {/* ============================================= */}
+                  {/* VALIDATION PANEL */}
+                  {/* ============================================= */}
+                  {hasValidationOptions && (
+                    <div className="border-t border-gray-100 pt-3">
+                      {/* Toggle button */}
+                      <button
+                        type="button"
+                        onClick={() => toggleValidationPanel(field.id)}
+                        className={`flex items-center gap-2 text-xs font-bold transition-colors ${
+                          isPanelOpen
+                            ? "text-primary"
+                            : "text-slate-500 hover:text-primary"
+                        }`}
+                      >
+                        <div className={`w-9 h-5 rounded-full transition-colors relative flex items-center ${
+                          isPanelOpen ? "bg-primary" : "bg-slate-200"
+                        }`}>
+                          <div className={`w-4 h-4 bg-white rounded-full shadow absolute transition-transform ${
+                            isPanelOpen ? "translate-x-4" : "translate-x-0.5"
+                          }`} />
+                        </div>
+                        <ShieldCheck size={14} />
+                        Validasi Input
+                        {isPanelOpen && field.validation && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase">
+                            Aktif
+                          </span>
                         )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => handleAddOption(idx)}
-                      className="text-xs font-bold text-primary hover:text-primary-dark inline-flex items-center gap-1 mt-1 w-fit"
-                    >
-                      <Plus size={13} /> Tambah Opsi
-                    </button>
-                  </div>
-                )}
+                      </button>
 
-                {/* Field Options Footer (Required toggle & placeholder) */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                  <input
-                    type="text"
-                    value={field.placeholder || ""}
-                    onChange={(e) => handleUpdateField(idx, { placeholder: e.target.value })}
-                    placeholder="Teks placeholder / contoh jawaban..."
-                    className="flex-1 min-w-[200px] h-8 px-3 rounded-lg border border-gray-200 bg-slate-50 text-xs text-slate-700 placeholder:text-slate-400"
-                  />
+                      {/* Expanded Validation Panel */}
+                      {isPanelOpen && (
+                        <div className="mt-3 p-4 bg-primary/5 rounded-xl border border-primary/15 flex flex-col gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {/* Rule Type Selector */}
+                            <div className="sm:col-span-1">
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                Jenis Validasi
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={field.validation?.type || validationOpts[0]?.type || ""}
+                                  onChange={(e) => {
+                                    const newType = e.target.value as ValidationRuleType;
+                                    // Clear value when rule type changes
+                                    handleUpdateValidation(idx, { type: newType, value: undefined });
+                                  }}
+                                  className="w-full h-9 pl-3 pr-8 rounded-lg border border-primary/20 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none cursor-pointer"
+                                >
+                                  {validationOpts.map((opt) => (
+                                    <option key={opt.type} value={opt.type}>
+                                      {opt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                              </div>
+                            </div>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={!!field.required}
-                      onChange={(e) => handleUpdateField(idx, { required: e.target.checked })}
-                      className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
-                    />
-                    <span className="font-plusJakarta text-xs font-bold text-slate-700">
-                      Wajib Diisi (*Required)
-                    </span>
-                  </label>
+                            {/* Value Input (only if rule requires a value) */}
+                            {currentValidationDef?.hasValue && (
+                              <div className="sm:col-span-1">
+                                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                  Nilai
+                                </label>
+                                <input
+                                  type={
+                                    currentValidationType === "min_date" || currentValidationType === "max_date"
+                                      ? "date"
+                                      : "text"
+                                  }
+                                  value={field.validation?.value || ""}
+                                  onChange={(e) => handleUpdateValidation(idx, { value: e.target.value })}
+                                  placeholder={currentValidationDef?.valuePlaceholder || ""}
+                                  className="w-full h-9 px-3 rounded-lg border border-primary/20 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                />
+                              </div>
+                            )}
+
+                            {/* Custom error message */}
+                            <div className={currentValidationDef?.hasValue ? "sm:col-span-1" : "sm:col-span-2"}>
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                Pesan Error (Opsional)
+                              </label>
+                              <input
+                                type="text"
+                                value={field.validation?.errorMessage || ""}
+                                onChange={(e) => handleUpdateValidation(idx, { errorMessage: e.target.value })}
+                                placeholder="Contoh: Hanya angka yang diperbolehkan"
+                                className="w-full h-9 px-3 rounded-lg border border-primary/20 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Preview hint */}
+                          <p className="text-[10px] text-primary/70 font-plusJakarta">
+                            💡 Validasi ini akan diterapkan pada formulir publik saat responden mengisi jawaban.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Bottom Footer Actions */}

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { formService } from "@/services/formService";
-import { DynamicForm, FormField } from "@/types/form";
+import { DynamicForm, FormField, FieldValidation } from "@/types/form";
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -37,6 +37,8 @@ export default function PublicDynamicFormPage() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   // File upload state: field_id -> { uploading: boolean, fileName?: string, url?: string, error?: string }
   const [fileStates, setFileStates] = useState<Record<string, { uploading: boolean; fileName?: string; url?: string; error?: string }>>({});
+  // Validation errors per field
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!slug) return;
@@ -88,14 +90,103 @@ export default function PublicDynamicFormPage() {
     return { filled, total, percentage };
   }, [form, answers]);
 
+  // ============================================================
+  // VALIDATION HELPER
+  // ============================================================
+  const validateField = (field: FormField, value: any): string | null => {
+    const v: FieldValidation | undefined = field.validation;
+    if (!v || value === undefined || value === null || value === "") return null;
+
+    const strVal = typeof value === "string" ? value : String(value);
+    const numVal = parseFloat(strVal);
+
+    const err = (msg: string) => v.errorMessage || msg;
+
+    switch (v.type) {
+      case "number":
+        if (!/^-?\d+([.,]\d+)?$/.test(strVal.trim()))
+          return err("Jawaban harus berupa angka");
+        break;
+      case "email":
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(strVal.trim()))
+          return err("Format email tidak valid (contoh: nama@email.com)");
+        break;
+      case "url":
+        try { new URL(strVal.trim()); } catch { return err("Format URL tidak valid (contoh: https://example.com)"); }
+        break;
+      case "phone":
+        if (!/^(\+62|62|0)[0-9]{8,13}$/.test(strVal.trim().replace(/\s|-/g, "")))
+          return err("Format nomor telepon tidak valid (contoh: 08123456789)");
+        break;
+      case "min_length": {
+        const min = parseInt(v.value || "0", 10);
+        if (strVal.length < min) return err(`Jawaban minimal ${min} karakter (saat ini: ${strVal.length})`);
+        break;
+      }
+      case "max_length": {
+        const max = parseInt(v.value || "9999", 10);
+        if (strVal.length > max) return err(`Jawaban maksimal ${max} karakter (saat ini: ${strVal.length})`);
+        break;
+      }
+      case "min_value": {
+        const min = parseFloat(v.value || "0");
+        if (isNaN(numVal) || numVal < min) return err(`Nilai harus ≥ ${min}`);
+        break;
+      }
+      case "max_value": {
+        const max = parseFloat(v.value || "0");
+        if (isNaN(numVal) || numVal > max) return err(`Nilai harus ≤ ${max}`);
+        break;
+      }
+      case "regex": {
+        try {
+          const pattern = new RegExp(v.value || "");
+          if (!pattern.test(strVal)) return err("Format jawaban tidak sesuai");
+        } catch { /* invalid regex — skip */ }
+        break;
+      }
+      case "min_checked": {
+        const arr = Array.isArray(value) ? value : [];
+        const min = parseInt(v.value || "1", 10);
+        if (arr.length < min) return err(`Pilih minimal ${min} opsi`);
+        break;
+      }
+      case "max_checked": {
+        const arr = Array.isArray(value) ? value : [];
+        const max = parseInt(v.value || "9999", 10);
+        if (arr.length > max) return err(`Maksimal pilih ${max} opsi`);
+        break;
+      }
+      case "min_date": {
+        if (v.value && strVal < v.value) return err(`Tanggal harus setelah ${v.value}`);
+        break;
+      }
+      case "max_date": {
+        if (v.value && strVal > v.value) return err(`Tanggal harus sebelum ${v.value}`);
+        break;
+      }
+    }
+    return null;
+  };
+
   const handleInputChange = (fieldId: string, value: any) => {
     setAnswers((prev) => ({
       ...prev,
       [fieldId]: value,
     }));
+    // Clear field error on change
+    if (fieldErrors[fieldId]) {
+      setFieldErrors((prev) => { const n = { ...prev }; delete n[fieldId]; return n; });
+    }
   };
 
-  const handleCheckboxChange = (fieldId: string, option: string, checked: boolean) => {
+  const handleBlurValidate = (field: FormField) => {
+    const val = answers[field.id];
+    const err = validateField(field, val);
+    setFieldErrors((prev) => err ? { ...prev, [field.id]: err } : (({ [field.id]: _, ...rest }) => rest)(prev));
+  };
+
+  const handleCheckboxChange = (fieldId: string, option: string, checked: boolean, field: FormField) => {
     setAnswers((prev) => {
       const currentList: string[] = Array.isArray(prev[fieldId]) ? [...prev[fieldId]] : [];
       if (checked) {
@@ -104,7 +195,11 @@ export default function PublicDynamicFormPage() {
         const idx = currentList.indexOf(option);
         if (idx > -1) currentList.splice(idx, 1);
       }
-      return { ...prev, [fieldId]: currentList };
+      const newList = currentList;
+      // Validate immediately on checkbox change
+      const err = validateField(field, newList);
+      setFieldErrors((fe) => err ? { ...fe, [fieldId]: err } : (({ [fieldId]: _, ...rest }) => rest)(fe));
+      return { ...prev, [fieldId]: newList };
     });
   };
 
@@ -153,25 +248,46 @@ export default function PublicDynamicFormPage() {
     if (!form) return;
     setErrorMsg(null);
 
-    // Validate required fields
+    // Validate required fields + custom validation rules
+    const newFieldErrors: Record<string, string> = {};
+    let firstErrorFieldId: string | null = null;
+
     for (const field of form.fields_schema) {
+      const val = answers[field.id];
+
+      // Required check
       if (field.required) {
-        const val = answers[field.id];
         if (
-          val === undefined || 
-          val === null || 
-          (typeof val === "string" && !val.trim()) || 
+          val === undefined ||
+          val === null ||
+          (typeof val === "string" && !val.trim()) ||
           (Array.isArray(val) && val.length === 0)
         ) {
-          setErrorMsg(`Pertanyaan "${field.label}" wajib diisi.`);
-          setActiveFieldId(field.id);
-          const element = document.getElementById(`card_${field.id}`);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-          return;
+          newFieldErrors[field.id] = `Pertanyaan ini wajib diisi.`;
+          if (!firstErrorFieldId) firstErrorFieldId = field.id;
+          continue;
         }
       }
+
+      // Custom validation rule check
+      if (field.validation && val !== undefined && val !== null && val !== "") {
+        const err = validateField(field, val);
+        if (err) {
+          newFieldErrors[field.id] = err;
+          if (!firstErrorFieldId) firstErrorFieldId = field.id;
+        }
+      }
+    }
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      setErrorMsg(`Terdapat ${Object.keys(newFieldErrors).length} kesalahan dalam formulir. Periksa kembali jawaban Anda.`);
+      if (firstErrorFieldId) {
+        setActiveFieldId(firstErrorFieldId);
+        const element = document.getElementById(`card_${firstErrorFieldId}`);
+        if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
     }
 
     setSubmitting(true);
@@ -403,7 +519,9 @@ export default function PublicDynamicFormPage() {
                 id={`card_${field.id}`}
                 onClick={() => setActiveFieldId(field.id)}
                 className={`relative rounded-[28px] p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 flex flex-col gap-4 border ${
-                  isFocused
+                  fieldErrors[field.id]
+                    ? "bg-white border-rose-300 shadow-[0_12px_40px_rgba(225,29,72,0.08)] ring-2 ring-rose-200"
+                    : isFocused
                     ? "bg-white border-primary shadow-[0_12px_40px_rgba(62,64,149,0.12)] ring-2 ring-primary/20"
                     : isFilled
                     ? "bg-white/95 border-gray-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
@@ -453,30 +571,56 @@ export default function PublicDynamicFormPage() {
 
                 {/* Question Inputs */}
                 <div className="mt-1">
-                  {/* Type 1: Text / Email */}
+                  {/* Type 1: Text */}
                   {field.type === "text" && (
-                    <input
-                      type="text"
-                      value={fieldValue || ""}
-                      onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      placeholder={field.placeholder || "Ketik jawaban Anda..."}
-                      required={field.required}
-                      disabled={submitting || form.is_active === 0}
-                      className="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-slate-50/70 font-plusJakarta text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={fieldValue || ""}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                        onBlur={() => handleBlurValidate(field)}
+                        placeholder={field.placeholder || "Ketik jawaban Anda..."}
+                        required={field.required}
+                        disabled={submitting || form.is_active === 0}
+                        className={`w-full h-12 px-4 rounded-2xl border font-plusJakarta text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:bg-white transition-all ${
+                          fieldErrors[field.id]
+                            ? "border-rose-300 bg-rose-50/40 focus:ring-rose-200 focus:border-rose-400"
+                            : "border-gray-200 bg-slate-50/70 focus:ring-primary/20 focus:border-primary"
+                        }`}
+                      />
+                      {fieldErrors[field.id] && (
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-plusJakarta font-semibold mt-1">
+                          <AlertCircle size={13} />
+                          {fieldErrors[field.id]}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Type 2: Textarea / Paragraph */}
                   {field.type === "textarea" && (
-                    <textarea
-                      rows={4}
-                      value={fieldValue || ""}
-                      onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      placeholder={field.placeholder || "Tuliskan jawaban Anda secara rinci di sini..."}
-                      required={field.required}
-                      disabled={submitting || form.is_active === 0}
-                      className="w-full p-4 rounded-2xl border border-gray-200 bg-slate-50/70 font-plusJakarta text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all resize-y leading-relaxed"
-                    />
+                    <>
+                      <textarea
+                        rows={4}
+                        value={fieldValue || ""}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                        onBlur={() => handleBlurValidate(field)}
+                        placeholder={field.placeholder || "Tuliskan jawaban Anda secara rinci di sini..."}
+                        required={field.required}
+                        disabled={submitting || form.is_active === 0}
+                        className={`w-full p-4 rounded-2xl border font-plusJakarta text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:bg-white transition-all resize-y leading-relaxed ${
+                          fieldErrors[field.id]
+                            ? "border-rose-300 bg-rose-50/40 focus:ring-rose-200 focus:border-rose-400"
+                            : "border-gray-200 bg-slate-50/70 focus:ring-primary/20 focus:border-primary"
+                        }`}
+                      />
+                      {fieldErrors[field.id] && (
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-plusJakarta font-semibold mt-1">
+                          <AlertCircle size={13} />
+                          {fieldErrors[field.id]}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Type 3: Radio (Single Selection Card) */}
@@ -517,35 +661,43 @@ export default function PublicDynamicFormPage() {
 
                   {/* Type 4: Checkbox (Multi Selection Cards) */}
                   {field.type === "checkbox" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {(field.options || []).map((opt, optIdx) => {
-                        const isChecked = Array.isArray(fieldValue) && fieldValue.includes(opt);
-                        return (
-                          <label
-                            key={optIdx}
-                            className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
-                              isChecked
-                                ? "bg-primary/5 border-primary text-primary font-bold shadow-sm"
-                                : "bg-slate-50/60 border-gray-200/80 hover:border-gray-300 hover:bg-white text-slate-700"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => handleCheckboxChange(field.id, opt, e.target.checked)}
-                              disabled={submitting || form.is_active === 0}
-                              className="hidden"
-                            />
-                            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
-                              isChecked ? "border-primary bg-primary text-white" : "border-slate-400 bg-white"
-                            }`}>
-                              {isChecked && <Check size={13} strokeWidth={3.5} />}
-                            </div>
-                            <span className="font-plusJakarta text-sm leading-snug">{opt}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {(field.options || []).map((opt, optIdx) => {
+                          const isChecked = Array.isArray(fieldValue) && fieldValue.includes(opt);
+                          return (
+                            <label
+                              key={optIdx}
+                              className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
+                                isChecked
+                                  ? "bg-primary/5 border-primary text-primary font-bold shadow-sm"
+                                  : "bg-slate-50/60 border-gray-200/80 hover:border-gray-300 hover:bg-white text-slate-700"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => handleCheckboxChange(field.id, opt, e.target.checked, field)}
+                                disabled={submitting || form.is_active === 0}
+                                className="hidden"
+                              />
+                              <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                                isChecked ? "border-primary bg-primary text-white" : "border-slate-400 bg-white"
+                              }`}>
+                                {isChecked && <Check size={13} strokeWidth={3.5} />}
+                              </div>
+                              <span className="font-plusJakarta text-sm leading-snug">{opt}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {fieldErrors[field.id] && (
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-plusJakarta font-semibold mt-1">
+                          <AlertCircle size={13} />
+                          {fieldErrors[field.id]}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Type 5: Select Dropdown */}
@@ -575,16 +727,29 @@ export default function PublicDynamicFormPage() {
 
                   {/* Type 6: Date Picker */}
                   {field.type === "date" && (
-                    <div className="relative">
-                      <input
-                        type="date"
-                        value={fieldValue || ""}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        required={field.required}
-                        disabled={submitting || form.is_active === 0}
-                        className="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-slate-50/70 font-plusJakarta text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
-                      />
-                    </div>
+                    <>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={fieldValue || ""}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          onBlur={() => handleBlurValidate(field)}
+                          required={field.required}
+                          disabled={submitting || form.is_active === 0}
+                          className={`w-full h-12 px-4 rounded-2xl border font-plusJakarta text-sm text-slate-800 focus:outline-none focus:ring-2 focus:bg-white transition-all ${
+                            fieldErrors[field.id]
+                              ? "border-rose-300 bg-rose-50/40 focus:ring-rose-200 focus:border-rose-400"
+                              : "border-gray-200 bg-slate-50/70 focus:ring-primary/20 focus:border-primary"
+                          }`}
+                        />
+                      </div>
+                      {fieldErrors[field.id] && (
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-plusJakarta font-semibold mt-1">
+                          <AlertCircle size={13} />
+                          {fieldErrors[field.id]}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Type 7: File Upload */}
@@ -668,6 +833,7 @@ export default function PublicDynamicFormPage() {
                 if (window.confirm("Kosongkan semua jawaban yang sudah diisi?")) {
                   setAnswers({});
                   setFileStates({});
+                  setFieldErrors({});
                 }
               }}
               className="text-slate-400 hover:text-rose-500 font-plusJakarta text-xs font-bold transition-colors py-2"

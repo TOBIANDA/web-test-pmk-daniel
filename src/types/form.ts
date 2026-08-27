@@ -7,6 +7,27 @@ export type FormFieldType =
   | "file" 
   | "date";
 
+export type ValidationRuleType =
+  | "number"
+  | "email"
+  | "url"
+  | "phone"
+  | "min_length"
+  | "max_length"
+  | "min_value"
+  | "max_value"
+  | "regex"
+  | "min_checked"
+  | "max_checked"
+  | "min_date"
+  | "max_date";
+
+export interface FieldValidation {
+  type: ValidationRuleType;
+  value?: string;        // threshold value (e.g. "8" for min_length:8)
+  errorMessage?: string; // custom error message shown to respondent
+}
+
 export interface FormField {
   id: string;
   label: string;
@@ -15,6 +36,7 @@ export interface FormField {
   required?: boolean;
   options?: string[];
   helpText?: string;
+  validation?: FieldValidation; // NEW: optional validation rule
 }
 
 export interface DynamicForm {
