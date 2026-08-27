@@ -33,34 +33,52 @@ function sanitizeFilename(title: string): string {
 }
 
 /**
+ * Sanitize cell values against CSV/Excel Formula Injection (CWE-1236)
+ * Prepends a single quote if the string starts with dangerous formula trigger characters.
+ */
+export function sanitizeCellValue(val: any): string {
+  if (val === undefined || val === null) return "";
+  
+  let strVal: string;
+  if (Array.isArray(val)) {
+    strVal = val.map((v) => sanitizeCellValue(v)).join(", ");
+  } else if (typeof val === "object") {
+    strVal = JSON.stringify(val);
+  } else {
+    strVal = String(val);
+  }
+
+  const trimmed = strVal.trim();
+  const DANGEROUS_PREFIXES = ["=", "+", "-", "@", "\t", "\r", "%"];
+  
+  if (DANGEROUS_PREFIXES.some((prefix) => trimmed.startsWith(prefix))) {
+    return `'${strVal}`;
+  }
+  
+  return strVal;
+}
+
+/**
  * Prepare raw structured rows from form and submissions
  */
 function buildExportData(form: DynamicForm, submissions: FormSubmission[]) {
   const fields = form.fields_schema || [];
   
-  // Headers
-  const headers = ["No", "ID Respon", "Waktu Pengisian", ...fields.map((f) => f.label || f.id)];
+  // Headers (sanitized)
+  const headers = ["No", "ID Respon", "Waktu Pengisian", ...fields.map((f) => sanitizeCellValue(f.label || f.id))];
 
-  // Rows
+  // Rows with strict cell sanitization
   const rows = submissions.map((sub, idx) => {
     const rowObj: Record<string, any> = {
       No: idx + 1,
-      "ID Respon": sub.id,
+      "ID Respon": sanitizeCellValue(sub.id),
       "Waktu Pengisian": formatDateWIB(sub.submitted_at),
     };
 
     fields.forEach((f) => {
       const val = sub.answers?.[f.id];
-      const headerKey = f.label || f.id;
-      if (Array.isArray(val)) {
-        rowObj[headerKey] = val.join(", ");
-      } else if (typeof val === "object" && val !== null) {
-        rowObj[headerKey] = JSON.stringify(val);
-      } else if (val === undefined || val === null) {
-        rowObj[headerKey] = "";
-      } else {
-        rowObj[headerKey] = String(val);
-      }
+      const headerKey = sanitizeCellValue(f.label || f.id);
+      rowObj[headerKey] = sanitizeCellValue(val);
     });
 
     return rowObj;

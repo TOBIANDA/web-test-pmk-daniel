@@ -295,6 +295,17 @@ export const formService = {
    * Upload file attachment (Public)
    */
   async uploadAttachment(file: File): Promise<{ url: string; fileName: string }> {
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error("Ukuran berkas melebihi batas 10MB");
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+      throw new Error("Format berkas tidak diizinkan. Hanya menerima JPG, PNG, WEBP, atau PDF.");
+    }
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -311,7 +322,11 @@ export const formService = {
       if (res.data?.success && res.data?.data) {
         return res.data.data;
       }
-    } catch (err) {}
+    } catch (err: any) {
+      if (err.message && err.message.includes("Format berkas")) {
+        throw err;
+      }
+    }
 
     // Fallback: create an object URL or data URL preview so user is not blocked
     return {

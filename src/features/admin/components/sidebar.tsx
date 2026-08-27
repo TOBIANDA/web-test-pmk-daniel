@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Megaphone, FileSpreadsheet, Users, LogOut, X } from "lucide-react";
 
 interface SidebarProps {
@@ -12,10 +12,30 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const handleLinkClick = () => {
     if (onClose) {
       onClose();
+    }
+  };
+
+  const handleLogout = async () => {
+    handleLinkClick();
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+    } catch (e) {
+      console.warn("Logout error:", e);
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("pmk_admin_token");
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_user");
+      }
+      router.push("/pausmakanyunus");
+      router.refresh();
     }
   };
 
@@ -105,21 +125,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Logout Button */}
       <div className="mt-auto p-4 border-t border-slate-100">
-        <Link
-          href="/pausmakanyunus"
-          onClick={() => {
-            handleLinkClick();
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("pmk_admin_token");
-              localStorage.removeItem("admin_token");
-              localStorage.removeItem("admin_user");
-            }
-          }}
-          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 font-bold text-sm transition-colors"
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 px-4 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 font-bold text-sm transition-colors text-left"
         >
           <LogOut size={19} />
           <span>Keluar</span>
-        </Link>
+        </button>
       </div>
     </div>
   );

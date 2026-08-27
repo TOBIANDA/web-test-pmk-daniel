@@ -1,5 +1,7 @@
-import PengumumanContainer from "@/features/admin/pages/pengumuman/container/pengumumanContainer";
+import PengumumanManagementPage from "@/features/admin/pages/pengumuman/pengumumanManagementPage";
+
+export const dynamic = "force-dynamic";
 
 export default function LimarotiduaikanPage() {
-    return <PengumumanContainer />;
+    return <PengumumanManagementPage />;
 }

@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2 } from "lucide-react";
-import apiClient from "@/lib/axios";
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/daudpakeketapel";
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    if (!username.trim() || !password) {
       setError("Mohon isi username/email dan kata sandi");
       return;
     }
@@ -27,35 +29,109 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await apiClient.post<{
-        success: boolean;
-        data?: { token: string; user: any };
-        message?: string;
-        error?: string;
-      }>("/auth/login", {
-        username: username.trim(),
-        password: password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password,
+        }),
       });
 
-      if (res.data?.success && res.data.data?.token) {
-        localStorage.setItem("admin_token", res.data.data.token);
-        localStorage.setItem("pmk_admin_token", res.data.data.token);
-        if (res.data.data.user) {
-          localStorage.setItem("admin_user", JSON.stringify(res.data.data.user));
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        const token = data.token || data.data?.token;
+        if (typeof window !== "undefined" && token) {
+          localStorage.setItem("admin_token", token);
+          localStorage.setItem("pmk_admin_token", token);
         }
-        router.push("/daudpakeketapel");
+        router.push(redirectUrl);
+        router.refresh();
       } else {
-        setError(res.data?.message || res.data?.error || "Username atau kata sandi salah");
+        setError(data.message || "Username atau kata sandi salah");
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      const msg = err.response?.data?.detail || err.response?.data?.message || "Gagal login. Pastikan server backend aktif.";
-      setError(msg);
+      setError("Gagal terhubung ke server login. Silakan coba beberapa saat lagi.");
     } finally {
       setLoading(false);
     }
   };
 
+  return (
+    <Card className="w-full rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+      <CardContent className="w-full p-0">
+        <form onSubmit={handleSubmit} className="flex w-full flex-col items-start gap-5">
+          {/* Pesan Error */}
+          {error && (
+            <div className="flex w-full items-center gap-2 rounded-lg bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Grup Input */}
+          <div className="flex w-full flex-col items-start gap-4">
+            {/* Input Email / Username */}
+            <div className="flex w-full flex-col gap-1.5">
+              <label className="font-plusJakarta text-sm sm:text-base font-medium text-foreground">
+                Username / Email
+              </label>
+              <Input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Masukkan username admin"
+                className="box-border flex h-11 w-full items-center rounded-xl border border-grey bg-white px-3.5 py-2 font-plusJakarta text-sm sm:text-base font-light text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+              />
+            </div>
+
+            {/* Input Kata Sandi */}
+            <div className="flex w-full flex-col gap-1.5">
+              <label className="font-plusJakarta text-sm sm:text-base font-medium text-foreground">
+                Kata Sandi
+              </label>
+              <Input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan kata sandi"
+                className="box-border flex h-11 w-full items-center rounded-xl border border-grey bg-white px-3.5 py-2 font-plusJakarta text-sm sm:text-base font-light text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+              />
+            </div>
+          </div>
+
+          {/* Button Masuk */}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="mt-2 flex h-11 w-full flex-row items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 hover:bg-primary/90 transition-colors disabled:opacity-70"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <span className="font-plusJakarta text-sm font-medium text-primary-foreground">
+                  Memverifikasi...
+                </span>
+              </>
+            ) : (
+              <span className="font-plusJakarta text-sm font-semibold text-primary-foreground">
+                Masuk
+              </span>
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function Login() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background">
       {/* Rectangle 3 (Orange - Kanan Atas) */}
@@ -70,7 +146,7 @@ export default function Login() {
           filter: "blur(339.95px)",
         }}
       />
-      
+
       {/* Rectangle 4 (Orange - Kiri Bawah) */}
       <div
         className="pointer-events-none absolute"
@@ -83,7 +159,7 @@ export default function Login() {
           filter: "blur(339.95px)",
         }}
       />
-      
+
       {/* Rectangle 2 (Purple - Kanan Bawah) */}
       <div
         className="pointer-events-none absolute"
@@ -101,7 +177,6 @@ export default function Login() {
           KONTEN UTAMA (Tengah Layar)
       ========================================= */}
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-8 sm:gap-12 px-4 py-8 sm:py-12">
-        
         {/* ================= AREA HEADER ================= */}
         <div className="flex w-full flex-col items-center gap-2 text-center">
           <div className="flex flex-col items-center gap-2">
@@ -115,7 +190,7 @@ export default function Login() {
                 className="object-contain"
               />
             </div>
-            
+
             {/* Judul: PMK Daniel */}
             <h1 className="font-plusJakarta text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-foreground tracking-tight">
               PMK Daniel
@@ -129,76 +204,15 @@ export default function Login() {
         </div>
 
         {/* ================= AREA FORM LOGIN ================= */}
-        <Card className="w-full rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
-          <CardContent className="w-full p-0">
-            <form onSubmit={handleSubmit} className="flex w-full flex-col items-start gap-5">
-              
-              {/* Pesan Error */}
-              {error && (
-                <div className="flex w-full items-center gap-2 rounded-lg bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Grup Input */}
-              <div className="flex w-full flex-col items-start gap-4">
-                
-                {/* Input Email / Username */}
-                <div className="flex w-full flex-col gap-1.5">
-                  <label className="font-plusJakarta text-sm sm:text-base font-medium text-foreground">
-                    Username / Email
-                  </label>
-                  <Input
-                    type="text"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Masukkan username admin"
-                    className="box-border flex h-11 w-full items-center rounded-xl border border-grey bg-white px-3.5 py-2 font-plusJakarta text-sm sm:text-base font-light text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
-                  />
-                </div>
-
-                {/* Input Kata Sandi */}
-                <div className="flex w-full flex-col gap-1.5">
-                  <label className="font-plusJakarta text-sm sm:text-base font-medium text-foreground">
-                    Kata Sandi
-                  </label>
-                  <Input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Masukkan kata sandi"
-                    className="box-border flex h-11 w-full items-center rounded-xl border border-grey bg-white px-3.5 py-2 font-plusJakarta text-sm sm:text-base font-light text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
-                  />
-                </div>
-              </div>
-
-              {/* Button Masuk */}
-              <Button
-                type="submit"
-                disabled={loading}
-                className="mt-2 flex h-11 w-full flex-row items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 hover:bg-primary/90 transition-colors disabled:opacity-70"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span className="font-plusJakarta text-sm font-medium text-primary-foreground">
-                      Memproses...
-                    </span>
-                  </>
-                ) : (
-                  <span className="font-plusJakarta text-sm font-semibold text-primary-foreground">
-                    Masuk
-                  </span>
-                )}
-              </Button>
-              
-            </form>
-          </CardContent>
-        </Card>
-
+        <Suspense
+          fallback={
+            <div className="w-full flex items-center justify-center p-8 bg-card rounded-2xl border">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          }
+        >
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );

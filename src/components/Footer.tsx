@@ -17,18 +17,18 @@ export default function Footer() {
             title: "Pengumuman",
             href: "/pengumuman"
         },
-        {
-            title: "Kepengurusan",
-            href: "/pengurus"
-        },
+        // {
+        //     title: "Kepengurusan",
+        //     href: "/pengurus"
+        // },
         {
             title: "Form & Pendataan",
             href: "/join"
         },
-        {
-            title: "Kontak",
-            href: "/kontak"
-        }
+        // {
+        //     title: "Kontak",
+        //     href: "/kontak"
+        // }
     ]
 
     return (

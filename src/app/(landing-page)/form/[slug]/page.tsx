@@ -213,9 +213,30 @@ export default function PublicDynamicFormPage() {
     });
   };
 
+  const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
   const handleFileUpload = async (fieldId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // 1. Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setFileStates((prev) => ({
+        ...prev,
+        [fieldId]: { uploading: false, error: "Ukuran berkas melebihi batas maksimal 10MB." },
+      }));
+      return;
+    }
+
+    // 2. Validate MIME type
+    if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+      setFileStates((prev) => ({
+        ...prev,
+        [fieldId]: { uploading: false, error: "Format berkas tidak diizinkan. Hanya mendukung JPG, PNG, WEBP, atau PDF." },
+      }));
+      return;
+    }
 
     setFileStates((prev) => ({
       ...prev,
@@ -786,6 +807,7 @@ export default function PublicDynamicFormPage() {
                         <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 hover:border-primary rounded-2xl bg-slate-50/60 hover:bg-primary/5 cursor-pointer transition-all duration-300 group">
                           <input
                             type="file"
+                            accept="image/jpeg,image/png,image/webp,application/pdf"
                             onChange={(e) => handleFileUpload(field.id, e)}
                             disabled={submitting || fileState?.uploading || form.is_active === 0}
                             className="hidden"

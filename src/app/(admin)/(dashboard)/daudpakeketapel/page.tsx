@@ -25,11 +25,8 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const token = localStorage.getItem("admin_token");
         const res = await fetch("/api/stats", {
-          headers: {
-            "Authorization": `Bearer ${token || ""}`
-          }
+          credentials: "same-origin",
         });
         if (res.ok) {
           const data = await res.json();

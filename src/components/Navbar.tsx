@@ -112,9 +112,11 @@ export default function Navbar() {
           <a ref={addLinkRef} href="/" className="hover:text-primary transition-colors">Beranda</a>
           <a ref={addLinkRef} href="/tentang" className="hover:text-primary transition-colors">Tentang Kami</a>
           <a ref={addLinkRef} href="/pengumuman" className="hover:text-primary transition-colors">Pengumuman</a>
-          <a ref={addLinkRef} href="/pengurus" className="hover:text-primary transition-colors">Kepengurusan</a>
+          {/* Under Maintenance: Kepengurusan */}
+          {/* <a ref={addLinkRef} href="/pengurus" className="hover:text-primary transition-colors">Kepengurusan</a> */}
           <a ref={addLinkRef} href="/join" className="hover:text-primary transition-colors">Form & Pendataan</a>
-          <a ref={addLinkRef} href="/kontak" className="hover:text-primary transition-colors">Kontak</a>
+          {/* Under Maintenance: Kontak */}
+          {/* <a ref={addLinkRef} href="/kontak" className="hover:text-primary transition-colors">Kontak</a> */}
         </div>
 
         {/* Kanan: Button & Mobile Toggle */}
@@ -148,9 +150,11 @@ export default function Navbar() {
         <a href="/" className="hover:text-primary">Beranda</a>
         <a href="/tentang" className="hover:text-primary">Tentang Kami</a>
         <a href="/pengumuman" className="hover:text-primary">Pengumuman</a>
-        <a href="/pengurus" className="hover:text-primary">Kepengurusan</a>
+        {/* Under Maintenance: Kepengurusan */}
+        {/* <a href="/pengurus" className="hover:text-primary">Kepengurusan</a> */}
         <a href="/join" className="hover:text-primary">Form & Pendataan</a>
-        <a href="/kontak" className="hover:text-primary">Kontak</a>
+        {/* Under Maintenance: Kontak */}
+        {/* <a href="/kontak" className="hover:text-primary">Kontak</a> */}
         <Button className="w-full mt-4" onClick={() => window.location.href = '/join'}>
           Join Us!
         </Button>

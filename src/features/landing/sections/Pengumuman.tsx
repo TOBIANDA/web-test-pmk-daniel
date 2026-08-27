@@ -5,7 +5,6 @@ import { truncateByWords } from "@/utils/truncate";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useRef } from "react";
-import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -62,7 +61,6 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
         }
     }, { scope: sectionRef });
 
-
     return (
         <section ref={sectionRef} className="py-16 md:py-24 w-[85%] lg:w-[80%] mx-auto overflow-hidden">
             {/* Header Section */}
@@ -84,9 +82,10 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
             {/* Cards Grid: 1 col on mobile/tablet, 3 cols on desktop */}
             <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
                 {previewPengumuman.map((item) => (
-                    <div 
+                    <Link 
                         key={item.id} 
-                        className="pengumuman-card group flex flex-col bg-white rounded-[24px] lg:rounded-[32px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(62,64,149,0.12)] transition-shadow duration-500 border border-gray-100/50"
+                        href={`/pengumuman/${item.slug || item.id}`}
+                        className="pengumuman-card group flex flex-col bg-white rounded-[24px] lg:rounded-[32px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(62,64,149,0.12)] transition-all duration-500 border border-gray-100/50 cursor-pointer block"
                     >
                         {/* Image Wrapper */}
                         <div className="w-full overflow-hidden rounded-[16px] lg:rounded-[20px] aspect-[3/4] relative mb-6">
@@ -109,11 +108,9 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
 
                         {/* Content */}
                         <div className="flex flex-col flex-grow px-2">
-                            <Link href={`/pengumuman/${item.id}`} className="group-hover:text-primary transition-colors duration-300">
-                                <h3 className="font-plusJakarta font-bold text-xl lg:text-2xl leading-snug line-clamp-2">
-                                    {item.title}
-                                </h3>
-                            </Link>
+                            <h3 className="font-plusJakarta font-bold text-xl lg:text-2xl leading-snug line-clamp-2 text-slate-900 group-hover:text-primary transition-colors duration-300">
+                                {item.title}
+                            </h3>
                             
                             <p className="mt-3 font-plusJakarta font-medium text-sm text-gray-600 line-clamp-3 leading-relaxed flex-grow">
                                 {truncateByWords({ text: item.description, wordLimit: 20 })}
@@ -121,16 +118,13 @@ export default function Pengumuman({ data }: PengumumanSectionProps) {
                             
                             {/* Action Link */}
                             <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                                <Link 
-                                    href={`/pengumuman/${item.id}`} 
-                                    className="inline-flex items-center gap-2 font-plusJakarta font-bold text-sm text-secondary hover:text-primary transition-colors duration-300"
-                                >
-                                    Baca Selengkapnya
+                                <span className="inline-flex items-center gap-2 font-plusJakarta font-bold text-sm text-secondary group-hover:text-primary transition-colors duration-300">
+                                    <span>Baca Selengkapnya</span>
                                     <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                                </Link>
+                                </span>
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </section>

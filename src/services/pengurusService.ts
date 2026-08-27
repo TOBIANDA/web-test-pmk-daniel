@@ -359,14 +359,23 @@ export const pengurusService = {
    * Upload division photo or portrait to Cloudflare R2
    */
   async uploadPhoto(file: File): Promise<string> {
-    const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : "";
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      throw new Error("Ukuran gambar melebihi batas 5MB");
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
+      throw new Error("Format gambar tidak diizinkan. Hanya menerima JPG, PNG, atau WEBP.");
+    }
+
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const res = await apiClient.post<ApiResponse<{ url: string }>>("/upload", formData, {
         headers: {
-          "Authorization": `Bearer ${token || ""}`,
           "Content-Type": "multipart/form-data",
         },
         timeout: 15000,
