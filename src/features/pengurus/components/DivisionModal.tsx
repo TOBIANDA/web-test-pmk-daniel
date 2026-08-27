@@ -86,7 +86,7 @@ export default function DivisionModal({
           className="flex-1 overflow-y-auto overscroll-contain p-6 pt-5 flex flex-col gap-5 text-center font-plusJakarta"
         >
           {/* Photo Section */}
-          <div className="relative w-full aspect-[1.5] rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-100 mt-1 flex items-center justify-center">
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-slate-100 mt-1 flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={
@@ -95,7 +95,7 @@ export default function DivisionModal({
                   : division.group_photo_url) || "/images/persekutuan.webp"
               }
               alt={isSingleLeader && mainLeader ? mainLeader.name : division.name}
-              className="w-full h-full object-cover rounded-2xl"
+              className="w-full h-auto max-h-[380px] object-cover rounded-2xl"
             />
           </div>
 
