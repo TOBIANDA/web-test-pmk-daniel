@@ -11,7 +11,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pmkdaniel.com"),
+  metadataBase: new URL("https://pmkdaniel.site"),
   title: {
     default: "PMK Daniel FILKOM UB",
     template: "%s | PMK Daniel FILKOM UB",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PMK Daniel FILKOM UB",
     description: "Persekutuan Mahasiswa Kristen (PMK) Daniel Fakultas Ilmu Komputer Universitas Brawijaya.",
-    url: "https://pmkdaniel.com",
+    url: "https://pmkdaniel.site",
     siteName: "PMK Daniel FILKOM UB",
     images: [
       {
