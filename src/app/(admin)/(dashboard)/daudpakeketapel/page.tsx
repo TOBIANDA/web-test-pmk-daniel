@@ -55,13 +55,13 @@ export default function DashboardPage() {
       ];
 
   return (
-    <div className="w-full min-h-screen py-10 px-8 lg:px-14 font-plusJakarta text-slate-900">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <div className="w-full min-h-screen py-6 sm:py-10 px-4 sm:px-8 lg:px-14 font-plusJakarta text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-plusJakarta text-3xl sm:text-4xl font-extrabold text-primary tracking-tight">
+            <h1 className="font-plusJakarta text-2xl sm:text-4xl font-extrabold text-primary tracking-tight">
               Dashboard Admin
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
@@ -69,17 +69,17 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <Link
               href="/bahteranabinuh"
-              className="flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-all shadow-sm"
+              className="flex items-center gap-2 rounded-full bg-slate-900 px-4 sm:px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-all shadow-sm"
             >
               <FileSpreadsheet className="h-4 w-4" />
               <span>Kelola Formulir</span>
             </Link>
             <Link
               href="/limarotiduaikan"
-              className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-white hover:bg-primary/90 transition-all shadow-sm"
+              className="flex items-center gap-2 rounded-full bg-primary px-4 sm:px-5 py-2.5 text-xs font-bold text-white hover:bg-primary/90 transition-all shadow-sm"
             >
               <Plus className="h-4 w-4" />
               <span>Kelola Pengumuman</span>

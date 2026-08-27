@@ -150,77 +150,92 @@ export default function OrgChartTree({
           </div>
 
           {/* Komisi 1: Pembinaan */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 w-full">
+          <div className="w-full flex flex-col items-center">
             <DivisionButtonCard
               divisionId={pembinaan.id}
               onClick={() => onSelectDivision(pembinaan)}
-              className="w-full max-w-[240px] mx-auto block"
+              className="w-full max-w-[240px]"
             />
           </div>
 
           {/* Komisi 2: Pemerhati */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 w-full">
+          <div className="w-full flex flex-col items-center">
             <DivisionButtonCard
               divisionId={pemerhati.id}
               onClick={() => onSelectDivision(pemerhati)}
-              className="w-full max-w-[240px] mx-auto block"
+              className="w-full max-w-[240px]"
             />
           </div>
 
           {/* Komisi 3: Acara (with nested sub-divisions) */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 flex flex-col gap-3 w-full">
+          <div className="w-full flex flex-col items-center">
             <DivisionButtonCard
               divisionId={acara.id}
               onClick={() => onSelectDivision(acara)}
-              className="w-full max-w-[240px] mx-auto block"
+              className="w-full max-w-[240px]"
             />
 
             {/* Sub-Divisions Branch */}
-            <div className="relative flex flex-col gap-2 pl-4 ml-3 border-l-2 border-dashed border-primary/40">
+            <div className="relative flex flex-col gap-2.5 pl-4 mt-2 border-l-2 border-dashed border-primary/40 w-full max-w-[240px] ml-4">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Sub-Divisi Acara:
               </span>
-              <DivisionButtonCard
-                divisionId={teknisInventaris.id}
-                onClick={() => onSelectDivision(teknisInventaris)}
-                className="w-full max-w-[220px]"
-              />
-              <DivisionButtonCard
-                divisionId={acaraSub.id}
-                onClick={() => onSelectDivision(acaraSub)}
-                className="w-full max-w-[220px]"
-              />
-              <DivisionButtonCard
-                divisionId={minatBakat.id}
-                onClick={() => onSelectDivision(minatBakat)}
-                className="w-full max-w-[220px]"
-              />
+              <div className="relative flex items-center">
+                <div className="absolute -left-4 w-4 border-t-2 border-dashed border-primary/40" />
+                <DivisionButtonCard
+                  divisionId={teknisInventaris.id}
+                  onClick={() => onSelectDivision(teknisInventaris)}
+                  className="w-full"
+                />
+              </div>
+              <div className="relative flex items-center">
+                <div className="absolute -left-4 w-4 border-t-2 border-dashed border-primary/40" />
+                <DivisionButtonCard
+                  divisionId={acaraSub.id}
+                  onClick={() => onSelectDivision(acaraSub)}
+                  className="w-full"
+                />
+              </div>
+              <div className="relative flex items-center">
+                <div className="absolute -left-4 w-4 border-t-2 border-dashed border-primary/40" />
+                <DivisionButtonCard
+                  divisionId={minatBakat.id}
+                  onClick={() => onSelectDivision(minatBakat)}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
 
           {/* Komisi 4: Media & Relasi (with nested sub-divisions) */}
-          <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 flex flex-col gap-3 w-full">
+          <div className="w-full flex flex-col items-center">
             <DivisionButtonCard
               divisionId={mediaRelasi.id}
               onClick={() => onSelectDivision(mediaRelasi)}
-              className="w-full max-w-[240px] mx-auto block"
+              className="w-full max-w-[240px]"
             />
 
             {/* Sub-Divisions Branch */}
-            <div className="relative flex flex-col gap-2 pl-4 ml-3 border-l-2 border-dashed border-primary/40">
+            <div className="relative flex flex-col gap-2.5 pl-4 mt-2 border-l-2 border-dashed border-primary/40 w-full max-w-[240px] ml-4">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Sub-Divisi Media & Relasi:
               </span>
-              <DivisionButtonCard
-                divisionId={media.id}
-                onClick={() => onSelectDivision(media)}
-                className="w-full max-w-[220px]"
-              />
-              <DivisionButtonCard
-                divisionId={relasi.id}
-                onClick={() => onSelectDivision(relasi)}
-                className="w-full max-w-[220px]"
-              />
+              <div className="relative flex items-center">
+                <div className="absolute -left-4 w-4 border-t-2 border-dashed border-primary/40" />
+                <DivisionButtonCard
+                  divisionId={media.id}
+                  onClick={() => onSelectDivision(media)}
+                  className="w-full"
+                />
+              </div>
+              <div className="relative flex items-center">
+                <div className="absolute -left-4 w-4 border-t-2 border-dashed border-primary/40" />
+                <DivisionButtonCard
+                  divisionId={relasi.id}
+                  onClick={() => onSelectDivision(relasi)}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
 

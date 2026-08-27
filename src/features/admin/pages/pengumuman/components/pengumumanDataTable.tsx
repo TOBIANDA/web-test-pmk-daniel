@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
                     />
                 </div>
 
-                <div className="flex items-center gap-30 text-sm md:text-base font-medium font-plusJakarta ">
+                <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm md:text-base font-medium font-plusJakarta">
                     <span>
                         Menampilkan {startRow}–{endRow} dari {totalRows}
                     </span>
@@ -83,6 +83,7 @@ export function DataTable<TData, TValue>({
                 </div>
             </div>
 
+            <div className="overflow-x-auto w-full">
             <Table>
                 <TableHeader className="bg-[#F5873280] ">
                     {table.getHeaderGroups().map((headerGroup) => (
@@ -145,6 +146,7 @@ export function DataTable<TData, TValue>({
                     )}
                 </TableBody>
             </Table>
+            </div>
 
             {pageCount > 1 && (
                 <div className="flex items-center justify-center py-4 border-t gap-2">

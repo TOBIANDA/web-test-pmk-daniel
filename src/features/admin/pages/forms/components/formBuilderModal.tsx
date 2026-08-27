@@ -285,16 +285,16 @@ export default function FormBuilderModal({
       >
         
         {/* Header Modal */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 border-b border-gray-100 bg-slate-50/90 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
               <Settings2 size={20} />
             </div>
             <div>
-              <h2 className="font-plusJakarta font-extrabold text-xl text-slate-900">
+              <h2 className="font-plusJakarta font-extrabold text-base sm:text-xl text-slate-900">
                 {isEditing ? "Edit Formulir Pendataan" : "Buat Formulir Baru"}
               </h2>
-              <p className="font-plusJakarta text-xs text-slate-500">
+              <p className="font-plusJakarta text-xs text-slate-500 line-clamp-1">
                 Susun pertanyaan kustom bergaya Google Form untuk jemaat/anggota PMK Daniel
               </p>
             </div>
@@ -313,7 +313,7 @@ export default function FormBuilderModal({
         <form 
           data-lenis-prevent="true"
           onSubmit={handleSubmit} 
-          className="flex-1 overflow-y-auto overscroll-contain p-6 sm:p-8 flex flex-col gap-6"
+          className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-8 flex flex-col gap-5 sm:gap-6"
         >
           {errorMsg && (
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm font-plusJakarta flex items-center gap-2">
@@ -323,7 +323,7 @@ export default function FormBuilderModal({
           )}
 
           {/* Form Meta Section */}
-          <div className="bg-slate-50 p-6 rounded-3xl border border-gray-200/80 flex flex-col gap-4">
+          <div className="bg-slate-50 p-4 sm:p-6 rounded-3xl border border-gray-200/80 flex flex-col gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">

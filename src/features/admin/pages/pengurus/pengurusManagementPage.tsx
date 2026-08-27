@@ -198,10 +198,10 @@ export default function PengurusManagementPage() {
                 className="bg-white rounded-3xl border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all overflow-hidden flex flex-col group"
               >
                 {/* Division Card Header */}
-                <div className="p-6 pb-4 flex items-start justify-between gap-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
+                <div className="p-4 sm:p-6 pb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 border-b border-slate-100">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="w-auto h-10 max-w-[170px] flex items-center justify-center shrink-0">
-                      <DivisionButtonCard divisionId={div.id} className="w-[150px]" />
+                      <DivisionButtonCard divisionId={div.id} className="w-[140px] sm:w-[150px]" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -212,13 +212,13 @@ export default function PengurusManagementPage() {
                           {div.members?.length || 0} Anggota
                         </span>
                       </div>
-                      <h2 className="text-lg font-extrabold text-slate-900 mt-1 group-hover:text-primary transition-colors">
+                      <h2 className="text-base sm:text-lg font-extrabold text-slate-900 mt-1 group-hover:text-primary transition-colors">
                         {div.name}
                       </h2>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
                     <button
                       onClick={() => {
                         setSelectedDivision(div);
@@ -245,8 +245,8 @@ export default function PengurusManagementPage() {
                 </div>
 
                 {/* Photo & Description Banner */}
-                <div className="px-6 py-4 flex gap-4 items-center bg-slate-50/50">
-                  <div className="relative w-28 h-20 rounded-xl overflow-hidden bg-slate-200 border border-slate-200 shrink-0">
+                <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center bg-slate-50/50">
+                  <div className="relative w-full sm:w-28 h-32 sm:h-20 rounded-xl overflow-hidden bg-slate-200 border border-slate-200 shrink-0">
                     <Image
                       src={div.group_photo_url || "/images/persekutuan.webp"}
                       alt={div.name}
@@ -261,7 +261,7 @@ export default function PengurusManagementPage() {
                 </div>
 
                 {/* Members List Table */}
-                <div className="p-6 pt-4 flex-1 flex flex-col gap-2.5">
+                <div className="p-4 sm:p-6 pt-4 flex-1 flex flex-col gap-2.5">
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     Daftar Anggota & Peran
                   </span>
