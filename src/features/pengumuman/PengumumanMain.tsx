@@ -26,7 +26,7 @@ export default function PengumumanMainPage({ data }: PengumumanMainPageProps) {
                 {data.map((item) => (
                     <div key={item.id} className="flex flex-col items-center border border-black/10 p-6 rounded-[12px] md:rounded-[24px] lg:rounded-[30px] xl:rounded-[32px] w-full">
                         <div className="w-full">
-                            <div className="rounded-2xl overflow-hidden aspect-5/3 w-full  relative">
+                            <div className="rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-[3/4] w-full relative">
                                 <Image
                                     draggable={false}
                                     src={item.imageUrl}
