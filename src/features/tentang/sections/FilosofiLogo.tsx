@@ -105,18 +105,18 @@ export default function FilosofiLogo() {
                     {symbols.map((s, i) => (
                         <div
                             key={i}
-                            className={`grid grid-cols-12 gap-4 py-5 ${i < symbols.length - 1 ? "border-b border-gray-100" : ""} group`}
+                            className={`grid grid-cols-12 gap-4 py-5 ${i < symbols.length - 1 ? "border-b border-gray-200/80" : ""} group items-start`}
                         >
                             <div className="col-span-2 lg:col-span-1 pt-0.5">
-                                <span className="text-2xl font-black font-plusJakarta leading-none text-gray-100 group-hover:text-secondary/30 transition-colors select-none">
+                                <span className="text-2xl md:text-3xl font-black font-plusJakarta leading-none text-primary/40 group-hover:text-secondary transition-colors select-none">
                                     {s.num}
                                 </span>
                             </div>
                             <div className="col-span-10 lg:col-span-11">
-                                <h4 className="text-sm sm:text-base font-extrabold text-primary font-plusJakarta group-hover:text-secondary transition-colors mb-1">
+                                <h4 className="text-base sm:text-lg font-extrabold text-primary font-plusJakarta group-hover:text-secondary transition-colors mb-1">
                                     {s.title}
                                 </h4>
-                                <p className="text-sm font-medium text-gray-500 leading-relaxed">{s.desc}</p>
+                                <p className="text-sm font-medium text-gray-600 leading-relaxed">{s.desc}</p>
                             </div>
                         </div>
                     ))}
@@ -127,38 +127,38 @@ export default function FilosofiLogo() {
             <div className="fl-row border-t border-gray-200">
                 <p className="text-xs font-extrabold tracking-[0.3em] text-secondary uppercase mt-10 mb-8">Makna Warna</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-gray-200">
                     {colors.map((c, i) => (
                         <div
                             key={i}
-                            className={`py-8 md:py-10 ${i === 0 ? "md:pr-12 md:border-r border-gray-100" : "md:pl-12"}`}
+                            className={`py-8 md:py-10 ${i === 0 ? "md:pr-12 md:border-r border-gray-200" : "md:pl-12"}`}
                         >
                             {/* Color swatch + name */}
                             <div className="flex items-center gap-4 mb-6">
                                 <div
-                                    className="w-10 h-10 rounded-full shrink-0"
+                                    className="w-11 h-11 rounded-full shrink-0 shadow-md ring-4 ring-black/5"
                                     style={{ background: c.swatch }}
                                 />
                                 <div>
-                                    <p className="text-base font-extrabold text-primary font-plusJakarta leading-none">
+                                    <p className="text-lg font-extrabold text-primary font-plusJakarta leading-none">
                                         Warna {c.name}
                                     </p>
-                                    <p className="text-xs text-gray-400 font-medium mt-0.5">
+                                    <p className="text-xs font-bold text-gray-500 mt-1">
                                         {c.refs.join(" · ")}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Context note */}
-                            <p className="text-xs font-medium text-gray-400 leading-relaxed mb-3 italic">
+                            <p className="text-xs font-semibold text-gray-600 leading-relaxed mb-3 italic bg-gray-50 p-3 rounded-xl border border-gray-200/60">
                                 {c.context}
                             </p>
 
                             {/* Orange separator */}
-                            <div className="w-6 h-px bg-secondary mb-4" />
+                            <div className="w-8 h-0.5 bg-secondary mb-4" />
 
                             {/* Meaning */}
-                            <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                            <p className="text-sm font-medium text-gray-700 leading-relaxed">
                                 {c.meaning}
                             </p>
                         </div>
@@ -166,8 +166,8 @@ export default function FilosofiLogo() {
                 </div>
 
                 {/* Full-width footer note */}
-                <div className="border-t border-gray-100 pt-8 mt-2">
-                    <p className="text-sm font-medium text-gray-500 leading-relaxed max-w-3xl">
+                <div className="border-t border-gray-200 pt-8 mt-2">
+                    <p className="text-sm font-medium text-gray-600 leading-relaxed max-w-3xl">
                         Kedua warna ini bersama-sama mengungkapkan semangat mahasiswa Kristen yang dipenuhi oleh kasih, kebenaran, dan damai Tuhan dalam persekutuan di PMK Daniel.
                     </p>
                 </div>
