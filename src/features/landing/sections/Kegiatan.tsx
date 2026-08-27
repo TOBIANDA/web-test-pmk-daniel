@@ -75,16 +75,15 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
 
     const startHold = useCallback((e: React.MouseEvent | React.TouchEvent) => {
         if (!hasMultiple) return;
-        // Advance once on tap/click
-        nextSlide();
         setIsHolding(true);
 
-        // If held down for more than 400ms, continuously slide every 750ms
+        // Only start sliding once held down for 250ms
         holdTimerRef.current = setTimeout(() => {
+            nextSlide();
             holdIntervalRef.current = setInterval(() => {
                 nextSlide();
-            }, 750);
-        }, 400);
+            }, 700);
+        }, 250);
     }, [hasMultiple, nextSlide]);
 
     useEffect(() => {
