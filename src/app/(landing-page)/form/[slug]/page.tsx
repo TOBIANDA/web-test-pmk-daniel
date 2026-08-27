@@ -6,6 +6,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { formService } from "@/services/formService";
 import { DynamicForm, FormField, FieldValidation } from "@/types/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -39,6 +47,8 @@ export default function PublicDynamicFormPage() {
   const [fileStates, setFileStates] = useState<Record<string, { uploading: boolean; fileName?: string; url?: string; error?: string }>>({});
   // Validation errors per field
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Reset confirmation dialog state
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -398,45 +408,19 @@ export default function PublicDynamicFormPage() {
   if (!form) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E2E2EF]/80 via-[#FFFFFF] to-[#FFEED0]/80 text-slate-800 py-8 sm:py-16 px-4 sm:px-6 relative selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-screen bg-gradient-to-br from-[#E2E2EF]/80 via-[#FFFFFF] to-[#FFEED0]/80 text-slate-800 pb-20 px-4 sm:px-6 relative selection:bg-primary/20 selection:text-primary">
       {/* Soft floating pastel ambient lights */}
       <div className="fixed top-12 right-12 w-[480px] h-[480px] bg-secondary/20 rounded-full blur-[160px] pointer-events-none -z-10" />
       <div className="fixed bottom-12 left-12 w-[480px] h-[480px] bg-primary/15 rounded-full blur-[160px] pointer-events-none -z-10" />
 
-      {/* Floating Sticky Progress Bar at Top */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-        <div className="max-w-[760px] mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="relative w-8 h-8 shrink-0">
-              <Image src="/logo.png" alt="PMK Daniel" fill className="object-contain" />
-            </div>
-            <span className="font-plusJakarta font-bold text-xs sm:text-sm text-slate-900 truncate">
-              {form.title}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="font-plusJakarta font-bold text-xs text-primary">
-              {progressStats.percentage}% terisi
-            </span>
-            <div className="w-24 sm:w-32 h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200/80">
-              <div 
-                className="h-full bg-gradient-to-r from-primary via-primary/90 to-secondary rounded-full transition-all duration-500"
-                style={{ width: `${progressStats.percentage}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="w-full max-w-[760px] mx-auto flex flex-col gap-6 pt-12 sm:pt-14">
+      <div className="w-full max-w-[760px] mx-auto flex flex-col gap-6 pt-36 sm:pt-40">
         {/* Back Link */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-plusJakarta text-xs sm:text-sm font-semibold w-fit group"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 hover:text-primary font-plusJakarta text-xs sm:text-sm font-bold border border-white/80 shadow-sm backdrop-blur-md transition-all w-fit group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span>Kembali ke Beranda PMK Daniel</span>
+          <span>Kembali ke Beranda</span>
         </Link>
 
         {/* Error Alert Box */}
@@ -494,6 +478,20 @@ export default function PublicDynamicFormPage() {
               {form.description}
             </div>
           )}
+
+          {/* Progress Bar inside Hero Card */}
+          <div className="bg-slate-50/90 rounded-2xl p-4 border border-gray-100/90 flex flex-col gap-2 mb-6">
+            <div className="flex items-center justify-between text-xs font-plusJakarta font-bold">
+              <span className="text-slate-600">Progres Pengisian Formulir</span>
+              <span className="text-primary font-extrabold">{progressStats.filled} dari {progressStats.total} pertanyaan ({progressStats.percentage}%)</span>
+            </div>
+            <div className="w-full h-2.5 bg-gray-200/70 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary via-primary/90 to-secondary rounded-full transition-all duration-500"
+                style={{ width: `${progressStats.percentage}%` }}
+              />
+            </div>
+          </div>
 
           <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs font-plusJakarta text-slate-500">
             <span className="flex items-center gap-1.5 text-slate-700 font-medium">
@@ -829,17 +827,47 @@ export default function PublicDynamicFormPage() {
           <div className="rounded-[32px] border border-white/80 bg-white/90 backdrop-blur-xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
             <button
               type="button"
-              onClick={() => {
-                if (window.confirm("Kosongkan semua jawaban yang sudah diisi?")) {
-                  setAnswers({});
-                  setFileStates({});
-                  setFieldErrors({});
-                }
-              }}
+              onClick={() => setIsResetDialogOpen(true)}
               className="text-slate-400 hover:text-rose-500 font-plusJakarta text-xs font-bold transition-colors py-2"
             >
               Kosongkan Formulir
             </button>
+
+            {/* Shadcn Dialog for Reset Confirmation */}
+            <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-rose-600">
+                    <Trash2 size={20} />
+                    Kosongkan Formulir?
+                  </DialogTitle>
+                  <DialogDescription className="pt-2">
+                    Semua isian dan jawaban yang telah Anda ketik akan dihapus dan direset kembali ke awal. Tindakan ini tidak dapat dibatalkan.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsResetDialogOpen(false)}
+                    className="px-5 py-2.5 rounded-full border border-gray-200 text-slate-700 font-plusJakarta font-semibold text-xs hover:bg-slate-100 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAnswers({});
+                      setFileStates({});
+                      setFieldErrors({});
+                      setIsResetDialogOpen(false);
+                    }}
+                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-plusJakarta font-bold text-xs rounded-full shadow-lg shadow-rose-600/20 transition-all"
+                  >
+                    Ya, Kosongkan
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             <button
               type="submit"
