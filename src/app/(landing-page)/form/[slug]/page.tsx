@@ -80,15 +80,16 @@ export default function PublicDynamicFormPage() {
     return () => { isMounted = false; };
   }, [slug]);
 
-  // Calculate progress percentage
+  // Calculate progress percentage (excluding section header fields)
   const progressStats = useMemo(() => {
     if (!form || !form.fields_schema || form.fields_schema.length === 0) {
       return { filled: 0, total: 0, percentage: 0 };
     }
-    const total = form.fields_schema.length;
+    const inputFields = form.fields_schema.filter((f) => f.type !== "section");
+    const total = inputFields.length;
     let filled = 0;
 
-    for (const field of form.fields_schema) {
+    for (const field of inputFields) {
       const val = answers[field.id];
       if (val !== undefined && val !== null && val !== "") {
         if (Array.isArray(val) && val.length === 0) continue;
@@ -96,7 +97,7 @@ export default function PublicDynamicFormPage() {
       }
     }
 
-    const percentage = Math.round((filled / total) * 100);
+    const percentage = total === 0 ? 100 : Math.round((filled / total) * 100);
     return { filled, total, percentage };
   }, [form, answers]);
 
@@ -263,6 +264,7 @@ export default function PublicDynamicFormPage() {
     let firstErrorFieldId: string | null = null;
 
     for (const field of form.fields_schema) {
+      if (field.type === "section") continue;
       const val = answers[field.id];
 
       // Required check
@@ -505,33 +507,84 @@ export default function PublicDynamicFormPage() {
 
         {/* Dynamic Question Cards Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {form.fields_schema.map((field: FormField, index: number) => {
-            const fieldValue = answers[field.id];
-            const fileState = fileStates[field.id];
-            const isFocused = activeFieldId === field.id;
-            const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
+          {(() => {
+            let questionCounter = 0;
+            return form.fields_schema.map((field: FormField, index: number) => {
+              // Section Header Divider Card (like in Google Forms)
+              if (field.type === "section") {
+                return (
+                  <div
+                    key={field.id || `section_${index}`}
+                    className="relative rounded-[28px] overflow-hidden border border-amber-200/90 bg-white/95 shadow-[0_8px_30px_rgba(245,135,50,0.08)] mt-3"
+                  >
+                    {/* Orange Header Stripe */}
+                    <div className="bg-gradient-to-r from-secondary to-amber-500 px-6 sm:px-8 py-4 flex items-center gap-2.5 text-white">
+                      <Sparkles size={18} className="shrink-0" />
+                      <h3 className="font-plusJakarta font-extrabold text-base sm:text-lg tracking-tight">
+                        {field.label}
+                      </h3>
+                    </div>
+                    {field.helpText && (
+                      <div className="p-6 sm:p-8 font-plusJakarta text-slate-700 text-sm sm:text-base leading-relaxed whitespace-pre-line bg-slate-50/40">
+                        {field.helpText.split("\n").map((line, lIdx) => {
+                          if (line.includes("https://")) {
+                            const parts = line.split(/(https:\/\/[^\s]+)/g);
+                            return (
+                              <p key={lIdx} className="my-2">
+                                {parts.map((p, pIdx) =>
+                                  p.startsWith("https://") ? (
+                                    <a
+                                      key={pIdx}
+                                      href={p}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-primary hover:text-secondary underline font-bold break-all transition-colors inline-flex items-center gap-1"
+                                    >
+                                      {p}
+                                    </a>
+                                  ) : (
+                                    p
+                                  )
+                                )}
+                              </p>
+                            );
+                          }
+                          return <p key={lIdx} className={line === "" ? "h-2" : "my-1"}>{line}</p>;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
-            return (
-              <div
-                key={field.id || `field_${index}`}
-                id={`card_${field.id}`}
-                onClick={() => setActiveFieldId(field.id)}
-                className={`relative rounded-[28px] p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 flex flex-col gap-4 border ${
-                  fieldErrors[field.id]
-                    ? "bg-white border-rose-300 shadow-[0_12px_40px_rgba(225,29,72,0.08)] ring-2 ring-rose-200"
-                    : isFocused
-                    ? "bg-white border-primary shadow-[0_12px_40px_rgba(62,64,149,0.12)] ring-2 ring-primary/20"
-                    : isFilled
-                    ? "bg-white/95 border-gray-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
-                    : "bg-white/85 border-gray-200/70 hover:border-primary/40 shadow-sm"
-                }`}
-              >
-                {/* Top Badge & Number */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 text-primary font-mono text-xs font-extrabold flex items-center justify-center">
-                      {(index + 1).toString().padStart(2, "0")}
-                    </span>
+              questionCounter++;
+              const questionNumber = questionCounter.toString().padStart(2, "0");
+              const fieldValue = answers[field.id];
+              const fileState = fileStates[field.id];
+              const isFocused = activeFieldId === field.id;
+              const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
+
+              return (
+                <div
+                  key={field.id || `field_${index}`}
+                  id={`card_${field.id}`}
+                  onClick={() => setActiveFieldId(field.id)}
+                  className={`relative rounded-[28px] p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 flex flex-col gap-4 border ${
+                    fieldErrors[field.id]
+                      ? "bg-white border-rose-300 shadow-[0_12px_40px_rgba(225,29,72,0.08)] ring-2 ring-rose-200"
+                      : isFocused
+                      ? "bg-white border-primary shadow-[0_12px_40px_rgba(62,64,149,0.12)] ring-2 ring-primary/20"
+                      : isFilled
+                      ? "bg-white/95 border-gray-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
+                      : "bg-white/85 border-gray-200/70 hover:border-primary/40 shadow-sm"
+                  }`}
+                >
+                  {/* Top Badge & Number */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 text-primary font-mono text-xs font-extrabold flex items-center justify-center">
+                        {questionNumber}
+                      </span>
                     <span className="font-plusJakarta text-xs text-slate-400 font-bold uppercase tracking-wider">
                       {field.type === "text" && "Teks Singkat"}
                       {field.type === "textarea" && "Paragraf"}
@@ -821,7 +874,8 @@ export default function PublicDynamicFormPage() {
                 </div>
               </div>
             );
-          })}
+          });
+        })()}
 
           {/* Action Submission Card */}
           <div className="rounded-[32px] border border-white/80 bg-white/90 backdrop-blur-xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">

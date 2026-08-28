@@ -14,7 +14,7 @@ const LOCAL_STORAGE_SUBMISSIONS_KEY = "pmk_local_form_submissions";
 const DEFAULT_SEEDED_FORMS: DynamicForm[] = [
   {
     id: "form_maba_2026",
-    title: "Form Pendataan Mahasiswa Baru PMK Daniel 2026",
+    title: "Pendataan Mahasiswa Baru PMK Daniel FILKOM UB",
     slug: "pendataan-maba-2026",
     description: "Shalom Mahasiswa Baru FILKOM UB! Selamat datang di keluarga besar PMK Daniel. Silakan isi form ini untuk mempermudah komunikasi dan pendampingan kakak tingkat.",
     is_active: 1,
@@ -22,13 +22,60 @@ const DEFAULT_SEEDED_FORMS: DynamicForm[] = [
     created_at: new Date().toISOString(),
     fields_schema: [
       { id: "nama_lengkap", label: "Nama Lengkap", type: "text", placeholder: "Contoh: Jonathan Christopher", required: true },
-      { id: "nim", label: "NIM (Nomor Induk Mahasiswa)", type: "text", placeholder: "Contoh: 265150200111001", required: true },
+      { id: "nim", label: "NIM (Nomor Induk Mahasiswa)", type: "text", placeholder: "Contoh: 265150200111001", required: true, validation: { type: "number", errorMessage: "NIM harus berupa angka" } },
       { id: "program_studi", label: "Program Studi / Jurusan", type: "select", options: ["Teknik Informatika", "Sistem Informasi", "Teknologi Informasi", "Pendidikan Teknologi Informasi", "Teknik Komputer"], required: true },
-      { id: "no_whatsapp", label: "Nomor WhatsApp Aktif", type: "text", placeholder: "081234567890", required: true },
-      { id: "pilihan_divisi", label: "Minat Pelayanan Utama (Pilih 1)", type: "radio", options: ["Divisi Acara & Ibadah", "Divisi Musik & Pujian", "Divisi Multimedia & Publikasi", "Divisi Doa & Pemerhati", "Divisi Perlengkapan & Logistik"], required: true },
-      { id: "talenta_minat", label: "Talenta & Keahlian Tambahan (Boleh lebih dari 1)", type: "checkbox", options: ["Main Musik (Gitar / Keyboard / Drum / Bass)", "Vocal / Singer / WL", "Desain Grafis / Canva / Photoshop", "Fotografi / Videografi", "Operating Sound System / OBS Live Streaming"], required: false },
-      { id: "alasan_motivasi", label: "Ceritakan Motivasi / Harapan Anda di PMK Daniel", type: "textarea", placeholder: "Tuliskan cerita singkat atau harapan Anda...", required: false },
-      { id: "foto_ktm", label: "Upload Foto Diri / KTM / Bukti Penerimaan", type: "file", helpText: "Format file: JPG, PNG, atau PDF (Maksimal 10MB)", required: false }
+      { id: "no_whatsapp", label: "Nomor WhatsApp Aktif", type: "text", placeholder: "081234567890", required: true, validation: { type: "phone", errorMessage: "Nomor WhatsApp tidak valid" } },
+      { id: "foto_ktm", label: "Upload Foto Diri / KTM / Bukti Penerimaan", type: "file", helpText: "Format file: JPG, PNG, atau PDF (Maksimal 10MB)", required: false },
+      
+      // Page 5: Wadah Talenta
+      {
+        id: "sec_wadah_talenta",
+        label: "Wadah Talenta ✨",
+        type: "section",
+        helpText: "Wadah Talenta adalah ruang untuk mengembangkan kemampuan, berkarya, dan menggunakan talenta bersama dalam pelayanan PMK Daniel. ✨\n\nYuk, temukan ruang untuk mengembangkan talentamu bersama PMK Daniel!",
+        required: false
+      },
+      {
+        id: "tertarik_pelayanan",
+        label: "Apakah kamu tertarik untuk terlibat dalam pelayanan di PMK Daniel?",
+        type: "radio",
+        options: ["Iya, tertarik", "Masih mempertimbangkan", "Belum tertarik"],
+        required: true
+      },
+
+      // Page 6: Rumah Rohani & Gereja
+      {
+        id: "sec_rumah_rohani",
+        label: "Rumah Rohani & Gereja ⛪",
+        type: "section",
+        helpText: "Kami ingin mengenal sedikit tentang gereja asalmu dan apakah kamu sudah memiliki tempat beribadah selama berada di Malang.",
+        required: false
+      },
+      {
+        id: "gereja_asal",
+        label: "Apa nama gereja asalmu?",
+        type: "text",
+        placeholder: "Contoh: HKBP Bandung, GKI Serpong, GBI Makassar, dan sebagainya.",
+        helpText: "Contoh: HKBP Bandung, GKI Serpong, GBI Makassar, dan sebagainya.",
+        required: true
+      },
+      {
+        id: "gereja_malang",
+        label: "Apa nama gereja kamu selama berada di Malang?",
+        type: "text",
+        placeholder: "Contoh: GKI Bromo, HKBP Malang, GBI Suropati, dan sebagainya.",
+        helpText: "Contoh: GKI Bromo, HKBP Malang, GBI Suropati, dan sebagainya.",
+        required: true
+      },
+
+      // Page 7: Penutup & Link Grup WhatsApp
+      {
+        id: "sec_penutup",
+        label: "Makasih udah isi formulirnya teman-teman 👋",
+        type: "section",
+        helpText: "Selamat datang di keluarga Mahasiswa Kristen Universitas Brawijaya. Jangan lupa gabung ke grup ini yaa..\n\nhttps://chat.whatsapp.com/DIIWjYChs4mKiMHomkw95r?s=cl&p=a&ilr=4\n\nTuhan memberkati perjalanan studimu. Sampai bertemu di PMK Daniel! 🙌",
+        required: false
+      }
     ]
   }
 ];
