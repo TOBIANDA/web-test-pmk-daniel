@@ -21,12 +21,100 @@ const DEFAULT_SEEDED_FORMS: DynamicForm[] = [
     submission_count: 0,
     created_at: new Date().toISOString(),
     fields_schema: [
+      // Page 1: Identitas Diri
       { id: "nama_lengkap", label: "Nama Lengkap", type: "text", placeholder: "Contoh: Jonathan Christopher", required: true },
       { id: "nim", label: "NIM (Nomor Induk Mahasiswa)", type: "text", placeholder: "Contoh: 265150200111001", required: true, validation: { type: "number", errorMessage: "NIM harus berupa angka" } },
       { id: "program_studi", label: "Program Studi / Jurusan", type: "select", options: ["Teknik Informatika", "Sistem Informasi", "Teknologi Informasi", "Pendidikan Teknologi Informasi", "Teknik Komputer"], required: true },
       { id: "no_whatsapp", label: "Nomor WhatsApp Aktif", type: "text", placeholder: "081234567890", required: true, validation: { type: "phone", errorMessage: "Nomor WhatsApp tidak valid" } },
       { id: "foto_ktm", label: "Upload Foto Diri / KTM / Bukti Penerimaan", type: "file", helpText: "Format file: JPG, PNG, atau PDF (Maksimal 10MB)", required: false },
-      
+
+      // Page 2: Kelompok Tumbuh Bersama (KTB)
+      {
+        id: "sec_ktb",
+        label: "Kelompok Tumbuh Bersama (KTB)",
+        type: "section",
+        required: false
+      },
+      {
+        id: "pernah_ktb",
+        label: "Apakah sebelumnya pernah mengikuti Kelompok Tumbuh Bersama (KTB)?",
+        type: "radio",
+        options: ["Pernah", "Tidak Pernah"],
+        required: true
+      },
+      {
+        id: "ketertarikan_ktb",
+        label: "Seberapa tertarik kamu untuk mengikuti Kelompok Tumbuh Bersama (KTB) di PMK Daniel?",
+        type: "radio",
+        helpText: "Tidak perlu khawatir kalau masih belum tahu banyak tentang KTB. Jawab sesuai ketertarikanmu saat ini saja ya!",
+        options: ["Sangat Tertarik", "Tertarik", "Biasa Saja", "Tidak Tertarik"],
+        required: true
+      },
+      {
+        id: "minat_musik_awal",
+        label: "Apakah kamu memiliki minat atau kemampuan di bidang musik?",
+        type: "radio",
+        helpText: "Siapa tahu talentamu bisa berkembang dan dipakai bersama di PMK Daniel! 🎵",
+        options: ["Ya, suka banget", "Tidak"],
+        required: true
+      },
+
+      // Page 3: Musik & Kamu (Opsional)
+      {
+        id: "sec_musik",
+        label: "Musik & Kamu 🎵",
+        type: "section",
+        helpText: "Ceritakan dikit dong tentang minat musik kamu🤩",
+        required: false
+      },
+      {
+        id: "keahlian_musik",
+        label: "Keahlian musik apa yang dapat atau biasa kamu ambil?",
+        type: "checkbox",
+        options: [
+          "Gitar",
+          "Piano",
+          "Bass",
+          "Drum",
+          "Cajon",
+          "Organ",
+          "Biola",
+          "Saxophone",
+          "Lainnya"
+        ],
+        required: false
+      },
+
+      // Page 4: Olahraga & Kamu
+      {
+        id: "sec_olahraga",
+        label: "Olahraga & Kamu 🏸",
+        type: "section",
+        helpText: "Punya olahraga favorit? Siapa tahu nanti bisa olahraga bareng! 🍻",
+        required: false
+      },
+      {
+        id: "minat_olahraga",
+        label: "Olahraga apa yang kamu minati atau biasa kamu lakukan?",
+        type: "checkbox",
+        options: [
+          "Badminton",
+          "Futsal",
+          "Basket",
+          "Voli",
+          "Renang",
+          "Lari",
+          "Catur",
+          "Tenis Meja",
+          "Sepeda",
+          "Gym",
+          "Baseball",
+          "Taekwondo",
+          "Lainnya"
+        ],
+        required: true
+      },
+
       // Page 5: Wadah Talenta
       {
         id: "sec_wadah_talenta",
