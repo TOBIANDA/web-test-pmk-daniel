@@ -27,7 +27,8 @@ import {
   ShieldCheck,
   Check,
   Send,
-  HeartHandshake
+  HeartHandshake,
+  ChevronRight
 } from "lucide-react";
 
 export default function PublicDynamicFormPage() {
@@ -49,6 +50,56 @@ export default function PublicDynamicFormPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   // Reset confirmation dialog state
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
+  // Multi-step pagination state (Google Forms style)
+  const [currentPageIdx, setCurrentPageIdx] = useState(0);
+
+  // Group fields into pages based on "section" delimiters
+  interface FormPage {
+    pageIndex: number;
+    sectionHeader?: FormField;
+    fields: FormField[];
+  }
+
+  const formPages: FormPage[] = useMemo(() => {
+    if (!form?.fields_schema || form.fields_schema.length === 0) return [];
+
+    const pages: FormPage[] = [];
+    let curPage: FormPage = { pageIndex: 0, fields: [] };
+
+    for (const field of form.fields_schema) {
+      if (field.type === "section") {
+        if (curPage.fields.length > 0 || curPage.sectionHeader) {
+          pages.push(curPage);
+          curPage = { pageIndex: pages.length, sectionHeader: field, fields: [] };
+        } else {
+          curPage.sectionHeader = field;
+        }
+      } else {
+        curPage.fields.push(field);
+      }
+    }
+
+    if (curPage.fields.length > 0 || curPage.sectionHeader) {
+      pages.push(curPage);
+    }
+
+    return pages.length > 0 ? pages : [{ pageIndex: 0, fields: form.fields_schema }];
+  }, [form]);
+
+  const totalPages = formPages.length;
+  const currentPage = formPages[currentPageIdx] || { pageIndex: 0, fields: [] };
+  const isFirstPage = currentPageIdx === 0;
+  const isLastPage = currentPageIdx === totalPages - 1;
+
+  // Calculate global question number offset for current page
+  const questionOffset = useMemo(() => {
+    let count = 0;
+    for (let i = 0; i < currentPageIdx; i++) {
+      count += (formPages[i]?.fields || []).filter((f) => f.type !== "section").length;
+    }
+    return count;
+  }, [formPages, currentPageIdx]);
 
   useEffect(() => {
     if (!slug) return;
@@ -254,12 +305,70 @@ export default function PublicDynamicFormPage() {
     });
   };
 
+  const handleNextPage = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!currentPage) return;
+    setErrorMsg(null);
+
+    const newErrors: Record<string, string> = {};
+    let firstErrId: string | null = null;
+
+    for (const field of currentPage.fields) {
+      if (field.type === "section") continue;
+      const val = answers[field.id];
+
+      // Required check
+      if (field.required) {
+        if (
+          val === undefined ||
+          val === null ||
+          (typeof val === "string" && !val.trim()) ||
+          (Array.isArray(val) && val.length === 0)
+        ) {
+          newErrors[field.id] = "Pertanyaan ini wajib diisi.";
+          if (!firstErrId) firstErrId = field.id;
+          continue;
+        }
+      }
+
+      // Custom validation rule check
+      if (field.validation && val !== undefined && val !== null && val !== "") {
+        const err = validateField(field, val);
+        if (err) {
+          newErrors[field.id] = err;
+          if (!firstErrId) firstErrId = field.id;
+        }
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors((prev) => ({ ...prev, ...newErrors }));
+      setErrorMsg("Ada pertanyaan yang belum diisi atau format belum sesuai di halaman ini.");
+      if (firstErrId) {
+        setActiveFieldId(firstErrId);
+        const el = document.getElementById(`card_${firstErrId}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
+    setCurrentPageIdx((prev) => Math.min(prev + 1, totalPages - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handlePrevPage = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setErrorMsg(null);
+    setCurrentPageIdx((prev) => Math.max(prev - 1, 0));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form) return;
     setErrorMsg(null);
 
-    // Validate required fields + custom validation rules
+    // Validate required fields + custom validation rules across all pages
     const newFieldErrors: Record<string, string> = {};
     let firstErrorFieldId: string | null = null;
 
@@ -295,9 +404,16 @@ export default function PublicDynamicFormPage() {
       setFieldErrors(newFieldErrors);
       setErrorMsg(`Terdapat ${Object.keys(newFieldErrors).length} kesalahan dalam formulir. Periksa kembali jawaban Anda.`);
       if (firstErrorFieldId) {
+        // Navigate to the page containing the error
+        const targetPageIdx = formPages.findIndex((p) => p.fields.some((f) => f.id === firstErrorFieldId));
+        if (targetPageIdx !== -1) {
+          setCurrentPageIdx(targetPageIdx);
+        }
         setActiveFieldId(firstErrorFieldId);
-        const element = document.getElementById(`card_${firstErrorFieldId}`);
-        if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          const element = document.getElementById(`card_${firstErrorFieldId}`);
+          if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 150);
       }
       return;
     }
@@ -308,8 +424,8 @@ export default function PublicDynamicFormPage() {
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
-      console.error("Submit error:", err);
-      setErrorMsg(err.message || "Gagal mengirim formulir. Silakan coba lagi.");
+      console.error("Error submitting form:", err);
+      setErrorMsg(err.message || "Gagal mengirimkan formulir. Coba beberapa saat lagi.");
     } finally {
       setSubmitting(false);
     }
@@ -433,158 +549,155 @@ export default function PublicDynamicFormPage() {
           </div>
         )}
 
-        {/* Form Hero Header Card */}
-        <div className="relative rounded-[32px] overflow-hidden border border-white/90 bg-white/85 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.04)] p-6 sm:p-10">
-          {/* Top primary-to-secondary gradient stripe */}
-          <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-primary via-primary/80 to-secondary" />
+        {/* Top Header Section (Page 1: Full Hero Card, Page > 1: Compact Form Header + Section Header Card) */}
+        {isFirstPage ? (
+          <div className="relative rounded-[32px] overflow-hidden border border-white/90 bg-white/85 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.04)] p-6 sm:p-10">
+            {/* Top primary-to-secondary gradient stripe */}
+            <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-primary via-primary/80 to-secondary" />
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3.5">
-              <div className="relative w-14 h-14 rounded-2xl bg-white p-2 border border-gray-100 shadow-sm">
-                <Image
-                  src="/logo.png"
-                  alt="Logo PMK Daniel"
-                  fill
-                  className="object-contain p-1"
-                />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3.5">
+                <div className="relative w-14 h-14 rounded-2xl bg-white p-2 border border-gray-100 shadow-sm">
+                  <Image
+                    src="/logo.png"
+                    alt="Logo PMK Daniel"
+                    fill
+                    className="object-contain p-1"
+                  />
+                </div>
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-plusJakarta font-extrabold uppercase tracking-widest">
+                    <Sparkles size={11} /> PMK Daniel FILKOM UB
+                  </span>
+                  <p className="font-plusJakarta text-xs text-slate-500 font-medium mt-1">
+                    Together to be <span className="text-secondary font-bold">Better</span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-plusJakarta font-extrabold uppercase tracking-widest">
-                  <Sparkles size={11} /> PMK Daniel FILKOM UB
+
+              {form.is_active === 1 ? (
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-plusJakarta font-bold w-fit shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Menerima Tanggapan
                 </span>
-                <p className="font-plusJakarta text-xs text-slate-500 font-medium mt-1">
-                  Together to be <span className="text-secondary font-bold">Better</span>
-                </p>
-              </div>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-full text-xs font-plusJakarta font-bold w-fit shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-rose-50" />
+                  Formulir Ditutup
+                </span>
+              )}
             </div>
 
-            {form.is_active === 1 ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-plusJakarta font-bold w-fit shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Menerima Tanggapan
+            <h1 className="font-plusJakarta font-extrabold text-2xl sm:text-4xl text-slate-900 leading-tight tracking-tight mb-4">
+              {form.title}
+            </h1>
+
+            {form.description && (
+              <div className="font-plusJakarta text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-line bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-gray-100 mb-6">
+                {form.description}
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs font-plusJakarta text-slate-500">
+              <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+                <span className="text-rose-500 font-bold text-sm">*</span> Menunjukkan pertanyaan yang wajib diisi
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-full text-xs font-plusJakarta font-bold w-fit shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
-                Formulir Ditutup
+              <span className="flex items-center gap-1.5 text-slate-500">
+                <ShieldCheck size={15} className="text-emerald-600" /> Data tersimpan aman di server PMK Daniel
               </span>
+            </div>
+          </div>
+        ) : (
+          /* Subsequent Pages (Page > 1): Compact Form Header + Section Header Card */
+          <div className="flex flex-col gap-4">
+            {/* Compact Form Title Banner */}
+            <div className="relative rounded-2xl border border-white/90 bg-white/80 backdrop-blur-md px-6 py-3.5 shadow-sm flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 truncate">
+                <div className="relative w-7 h-7 rounded-lg bg-white p-1 border border-gray-100 shadow-xs shrink-0">
+                  <Image src="/logo.png" alt="Logo PMK Daniel" fill className="object-contain" />
+                </div>
+                <h2 className="font-plusJakarta font-extrabold text-sm text-slate-800 truncate">
+                  {form.title}
+                </h2>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-plusJakarta text-xs font-bold shrink-0">
+                Halaman {currentPageIdx + 1} dari {totalPages}
+              </span>
+            </div>
+
+            {/* Section Card (if this page has a sectionHeader) */}
+            {currentPage.sectionHeader && (
+              <div className="relative rounded-[28px] overflow-hidden border border-amber-200/90 bg-white/95 shadow-[0_8px_30px_rgba(245,135,50,0.08)]">
+                <div className="bg-gradient-to-r from-secondary to-amber-500 px-6 sm:px-8 py-4 flex items-center gap-2.5 text-white">
+                  <Sparkles size={18} className="shrink-0" />
+                  <h3 className="font-plusJakarta font-extrabold text-base sm:text-lg tracking-tight">
+                    {currentPage.sectionHeader.label}
+                  </h3>
+                </div>
+                {currentPage.sectionHeader.helpText && (
+                  <div className="p-6 sm:p-8 font-plusJakarta text-slate-700 text-sm sm:text-base leading-relaxed whitespace-pre-line bg-slate-50/40">
+                    {currentPage.sectionHeader.helpText.split("\n").map((line, lIdx) => {
+                      if (line.includes("https://")) {
+                        const parts = line.split(/(https:\/\/[^\s]+)/g);
+                        return (
+                          <p key={lIdx} className="my-2">
+                            {parts.map((p, pIdx) =>
+                              p.startsWith("https://") ? (
+                                <a
+                                  key={pIdx}
+                                  href={p}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:text-secondary underline font-bold break-all transition-colors inline-flex items-center gap-1"
+                                >
+                                  {p}
+                                </a>
+                              ) : (
+                                p
+                              )
+                            )}
+                          </p>
+                        );
+                      }
+                      return <p key={lIdx} className={line === "" ? "h-2" : "my-1"}>{line}</p>;
+                    })}
+                  </div>
+                )}
+              </div>
             )}
           </div>
+        )}
 
-          <h1 className="font-plusJakarta font-extrabold text-2xl sm:text-4xl text-slate-900 leading-tight tracking-tight mb-4">
-            {form.title}
-          </h1>
-
-          {form.description && (
-            <div className="font-plusJakarta text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-line bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-gray-100 mb-6">
-              {form.description}
-            </div>
-          )}
-
-          {/* Progress Bar inside Hero Card */}
-          <div className="bg-slate-50/90 rounded-2xl p-4 border border-gray-100/90 flex flex-col gap-2 mb-6">
-            <div className="flex items-center justify-between text-xs font-plusJakarta font-bold">
-              <span className="text-slate-600">Progres Pengisian Formulir</span>
-              <span className="text-primary font-extrabold">{progressStats.filled} dari {progressStats.total} pertanyaan ({progressStats.percentage}%)</span>
-            </div>
-            <div className="w-full h-2.5 bg-gray-200/70 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary via-primary/90 to-secondary rounded-full transition-all duration-500"
-                style={{ width: `${progressStats.percentage}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs font-plusJakarta text-slate-500">
-            <span className="flex items-center gap-1.5 text-slate-700 font-medium">
-              <span className="text-rose-500 font-bold text-sm">*</span> Menunjukkan pertanyaan yang wajib diisi
-            </span>
-            <span className="flex items-center gap-1.5 text-slate-500">
-              <ShieldCheck size={15} className="text-emerald-600" /> Data tersimpan aman di server PMK Daniel
-            </span>
-          </div>
-        </div>
-
-        {/* Dynamic Question Cards Form */}
+        {/* Dynamic Question Cards Form (Render Only Current Page Fields) */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {(() => {
-            let questionCounter = 0;
-            return form.fields_schema.map((field: FormField, index: number) => {
-              // Section Header Divider Card (like in Google Forms)
-              if (field.type === "section") {
-                return (
-                  <div
-                    key={field.id || `section_${index}`}
-                    className="relative rounded-[28px] overflow-hidden border border-amber-200/90 bg-white/95 shadow-[0_8px_30px_rgba(245,135,50,0.08)] mt-3"
-                  >
-                    {/* Orange Header Stripe */}
-                    <div className="bg-gradient-to-r from-secondary to-amber-500 px-6 sm:px-8 py-4 flex items-center gap-2.5 text-white">
-                      <Sparkles size={18} className="shrink-0" />
-                      <h3 className="font-plusJakarta font-extrabold text-base sm:text-lg tracking-tight">
-                        {field.label}
-                      </h3>
-                    </div>
-                    {field.helpText && (
-                      <div className="p-6 sm:p-8 font-plusJakarta text-slate-700 text-sm sm:text-base leading-relaxed whitespace-pre-line bg-slate-50/40">
-                        {field.helpText.split("\n").map((line, lIdx) => {
-                          if (line.includes("https://")) {
-                            const parts = line.split(/(https:\/\/[^\s]+)/g);
-                            return (
-                              <p key={lIdx} className="my-2">
-                                {parts.map((p, pIdx) =>
-                                  p.startsWith("https://") ? (
-                                    <a
-                                      key={pIdx}
-                                      href={p}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-primary hover:text-secondary underline font-bold break-all transition-colors inline-flex items-center gap-1"
-                                    >
-                                      {p}
-                                    </a>
-                                  ) : (
-                                    p
-                                  )
-                                )}
-                              </p>
-                            );
-                          }
-                          return <p key={lIdx} className={line === "" ? "h-2" : "my-1"}>{line}</p>;
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
+          {currentPage.fields.map((field: FormField, index: number) => {
+            const questionNumber = (questionOffset + index + 1).toString().padStart(2, "0");
+            const fieldValue = answers[field.id];
+            const fileState = fileStates[field.id];
+            const isFocused = activeFieldId === field.id;
+            const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
 
-              questionCounter++;
-              const questionNumber = questionCounter.toString().padStart(2, "0");
-              const fieldValue = answers[field.id];
-              const fileState = fileStates[field.id];
-              const isFocused = activeFieldId === field.id;
-              const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
-
-              return (
-                <div
-                  key={field.id || `field_${index}`}
-                  id={`card_${field.id}`}
-                  onClick={() => setActiveFieldId(field.id)}
-                  className={`relative rounded-[28px] p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 flex flex-col gap-4 border ${
-                    fieldErrors[field.id]
-                      ? "bg-white border-rose-300 shadow-[0_12px_40px_rgba(225,29,72,0.08)] ring-2 ring-rose-200"
-                      : isFocused
-                      ? "bg-white border-primary shadow-[0_12px_40px_rgba(62,64,149,0.12)] ring-2 ring-primary/20"
-                      : isFilled
-                      ? "bg-white/95 border-gray-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
-                      : "bg-white/85 border-gray-200/70 hover:border-primary/40 shadow-sm"
-                  }`}
-                >
-                  {/* Top Badge & Number */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 text-primary font-mono text-xs font-extrabold flex items-center justify-center">
-                        {questionNumber}
-                      </span>
+            return (
+              <div
+                key={field.id || `field_${index}`}
+                id={`card_${field.id}`}
+                onClick={() => setActiveFieldId(field.id)}
+                className={`relative rounded-[28px] p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 flex flex-col gap-4 border ${
+                  fieldErrors[field.id]
+                    ? "bg-white border-rose-300 shadow-[0_12px_40px_rgba(225,29,72,0.08)] ring-2 ring-rose-200"
+                    : isFocused
+                    ? "bg-white border-primary shadow-[0_12px_40px_rgba(62,64,149,0.12)] ring-2 ring-primary/20"
+                    : isFilled
+                    ? "bg-white/95 border-gray-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.03)]"
+                    : "bg-white/85 border-gray-200/70 hover:border-primary/40 shadow-sm"
+                }`}
+              >
+                {/* Top Badge & Number */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 text-primary font-mono text-xs font-extrabold flex items-center justify-center">
+                      {questionNumber}
+                    </span>
                     <span className="font-plusJakarta text-xs text-slate-400 font-bold uppercase tracking-wider">
                       {field.type === "text" && "Teks Singkat"}
                       {field.type === "textarea" && "Paragraf"}
@@ -874,72 +987,111 @@ export default function PublicDynamicFormPage() {
                 </div>
               </div>
             );
-          });
-        })()}
+          })}
 
-          {/* Action Submission Card */}
-          <div className="rounded-[32px] border border-white/80 bg-white/90 backdrop-blur-xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
-            <button
-              type="button"
-              onClick={() => setIsResetDialogOpen(true)}
-              className="text-slate-400 hover:text-rose-500 font-plusJakarta text-xs font-bold transition-colors py-2"
-            >
-              Kosongkan Formulir
-            </button>
-
-            {/* Shadcn Dialog for Reset Confirmation */}
-            <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-rose-600">
-                    <Trash2 size={20} />
-                    Kosongkan Formulir?
-                  </DialogTitle>
-                  <DialogDescription className="pt-2">
-                    Semua isian dan jawaban yang telah Anda ketik akan dihapus dan direset kembali ke awal. Tindakan ini tidak dapat dibatalkan.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="gap-2 sm:gap-0 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsResetDialogOpen(false)}
-                    className="px-5 py-2.5 rounded-full border border-gray-200 text-slate-700 font-plusJakarta font-semibold text-xs hover:bg-slate-100 transition-colors"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAnswers({});
-                      setFileStates({});
-                      setFieldErrors({});
-                      setIsResetDialogOpen(false);
-                    }}
-                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-plusJakarta font-bold text-xs rounded-full shadow-lg shadow-rose-600/20 transition-all"
-                  >
-                    Ya, Kosongkan
-                  </button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <button
-              type="submit"
-              disabled={submitting || form.is_active === 0}
-              className="w-full sm:w-auto px-10 h-14 bg-gradient-to-r from-primary to-secondary hover:opacity-95 text-white font-plusJakarta font-extrabold text-sm sm:text-base rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  <span>Mengirim Tanggapan...</span>
-                </>
-              ) : (
-                <>
-                  <span>Kirim Formulir</span>
-                  <Send size={18} className="group-hover:translate-x-1 transition-transform" />
-                </>
+          {/* Multi-Page Navigation Bar */}
+          <div className="rounded-[32px] border border-white/80 bg-white/90 backdrop-blur-xl p-5 sm:p-6 shadow-[0_12px_40px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {!isFirstPage && (
+                <button
+                  type="button"
+                  onClick={handlePrevPage}
+                  className="px-6 py-2.5 rounded-full border border-gray-300 bg-white text-slate-700 font-plusJakarta font-bold text-xs hover:bg-slate-100 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ArrowLeft size={14} />
+                  <span>Kembali</span>
+                </button>
               )}
-            </button>
+
+              {!isLastPage ? (
+                <button
+                  type="button"
+                  onClick={handleNextPage}
+                  className="px-8 py-2.5 rounded-full bg-secondary hover:bg-secondary/90 text-white font-plusJakarta font-extrabold text-xs shadow-md shadow-secondary/20 transition-all flex items-center gap-1.5 cursor-pointer ml-auto sm:ml-0"
+                >
+                  <span>Berikutnya</span>
+                  <ChevronRight size={15} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={submitting || form.is_active === 0}
+                  className="px-9 py-2.5 rounded-full bg-gradient-to-r from-primary to-secondary hover:opacity-95 text-white font-plusJakarta font-extrabold text-xs shadow-lg shadow-primary/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer ml-auto sm:ml-0"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      <span>Mengirim...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={15} />
+                      <span>Kirim Formulir</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-3 order-3 sm:order-2">
+                <div className="w-28 sm:w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    style={{ width: `${((currentPageIdx + 1) / totalPages) * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs font-plusJakarta font-bold text-slate-500 font-mono">
+                  Halaman {currentPageIdx + 1} dari {totalPages}
+                </span>
+              </div>
+            )}
+
+            <div className="order-2 sm:order-3">
+              <button
+                type="button"
+                onClick={() => setIsResetDialogOpen(true)}
+                className="text-slate-400 hover:text-rose-500 font-plusJakarta text-xs font-bold transition-colors py-1"
+              >
+                Kosongkan Formulir
+              </button>
+
+              <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-rose-600">
+                      <Trash2 size={20} />
+                      Kosongkan Formulir?
+                    </DialogTitle>
+                    <DialogDescription className="pt-2">
+                      Semua isian dan jawaban yang telah Anda ketik akan dihapus dan direset kembali ke awal. Tindakan ini tidak dapat dibatalkan.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsResetDialogOpen(false)}
+                      className="px-5 py-2.5 rounded-full border border-gray-200 text-slate-700 font-plusJakarta font-semibold text-xs hover:bg-slate-100 transition-colors"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAnswers({});
+                        setFileStates({});
+                        setFieldErrors({});
+                        setCurrentPageIdx(0);
+                        setIsResetDialogOpen(false);
+                      }}
+                      className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-plusJakarta font-bold text-xs rounded-full shadow-lg shadow-rose-600/20 transition-all"
+                    >
+                      Ya, Kosongkan
+                    </button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </form>
 
