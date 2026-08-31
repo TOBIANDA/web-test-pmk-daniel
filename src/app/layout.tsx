@@ -17,6 +17,13 @@ export const metadata: Metadata = {
     template: "%s | PMK Daniel FILKOM UB",
   },
   description: "Persekutuan Mahasiswa Kristen (PMK) Daniel Fakultas Ilmu Komputer Universitas Brawijaya. Menjangkau, membina, dan mengutus mahasiswa untuk menjadi saksi Kristus.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/logo.png",
+  },
   keywords: ["PMK Daniel", "FILKOM UB", "Kerohanian Kristen", "Universitas Brawijaya", "Mahasiswa Kristen UB", "PMK UB"],
   authors: [{ name: "PMK Daniel FILKOM UB" }],
   creator: "PMK Daniel FILKOM UB",
