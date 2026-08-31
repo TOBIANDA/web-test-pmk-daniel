@@ -48,7 +48,6 @@ const dataKegiatan = [
             "/images/natal2.webp",
             "/images/natal3.webp",
             "/images/natal4.webp",
-            "/images/natalpmk.webp",
         ],
         desc: "Ibadah Natal bersama untuk anggota dan pengurus PMK Daniel."
     },
