@@ -5,7 +5,8 @@ export type FormFieldType =
   | "checkbox" 
   | "select" 
   | "file" 
-  | "date";
+  | "date"
+  | "section";
 
 export type ValidationRuleType =
   | "number"

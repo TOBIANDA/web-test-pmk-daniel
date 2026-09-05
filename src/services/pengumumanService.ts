@@ -33,6 +33,20 @@ function getUploadAuthHeaders(): Record<string, string> {
     return headers;
 }
 
+export function normalizePengumumanImageUrl(url?: string): string {
+    if (!url || !url.trim()) {
+        return "/pengumuman/persekutuan-doa-1-2026.jpg";
+    }
+    // Replace blocked Cloudflare R2 default domain with Cloudflare Worker proxy endpoint
+    if (url.includes("pub-317e9a74788b4b17a1deee01aa307c7c.r2.dev")) {
+        return url.replace(
+            "https://pub-317e9a74788b4b17a1deee01aa307c7c.r2.dev",
+            "https://pmkdaniel-api.danielmemory26.workers.dev/api/upload"
+        );
+    }
+    return url;
+}
+
 const fetchPengumumanByIdInternal = async (idOrSlug: string): Promise<Pengumuman | undefined> => {
     try {
         const controller = new AbortController();
@@ -54,7 +68,7 @@ const fetchPengumumanByIdInternal = async (idOrSlug: string): Promise<Pengumuman
                     id: item.id,
                     title: item.title,
                     slug: item.slug,
-                    imageUrl: item.image_url || "/pengumuman/persekutuan-doa-1-2026.jpg",
+                    imageUrl: normalizePengumumanImageUrl(item.image_url),
                     datePublished: item.date_published,
                     description: item.content,
                     content: item.content,
@@ -102,7 +116,7 @@ export const pengumumanService = {
                         id: item.id,
                         title: item.title,
                         slug: item.slug,
-                        imageUrl: item.image_url || "/pengumuman/persekutuan-doa-1-2026.jpg",
+                        imageUrl: normalizePengumumanImageUrl(item.image_url),
                         datePublished: item.date_published,
                         description: item.content,
                         content: item.content,
@@ -238,7 +252,7 @@ export const pengumumanService = {
 
             const data = await res.json();
             if (data.success && data.data?.url) {
-                return data.data.url;
+                return normalizePengumumanImageUrl(data.data.url);
             }
             throw new Error(data.message || data.error || "Gagal mengunggah gambar ke Cloudflare R2");
         } catch (err: any) {

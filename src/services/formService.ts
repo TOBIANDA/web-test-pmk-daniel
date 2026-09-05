@@ -14,21 +14,156 @@ const LOCAL_STORAGE_SUBMISSIONS_KEY = "pmk_local_form_submissions";
 const DEFAULT_SEEDED_FORMS: DynamicForm[] = [
   {
     id: "form_maba_2026",
-    title: "Form Pendataan Mahasiswa Baru PMK Daniel 2026",
+    title: "Pendataan Mahasiswa Baru PMK Daniel FILKOM UB",
     slug: "pendataan-maba-2026",
     description: "Shalom Mahasiswa Baru FILKOM UB! Selamat datang di keluarga besar PMK Daniel. Silakan isi form ini untuk mempermudah komunikasi dan pendampingan kakak tingkat.",
     is_active: 1,
     submission_count: 0,
     created_at: new Date().toISOString(),
     fields_schema: [
+      // Page 1: Identitas Diri
       { id: "nama_lengkap", label: "Nama Lengkap", type: "text", placeholder: "Contoh: Jonathan Christopher", required: true },
-      { id: "nim", label: "NIM (Nomor Induk Mahasiswa)", type: "text", placeholder: "Contoh: 265150200111001", required: true },
+      { id: "nim", label: "NIM (Nomor Induk Mahasiswa)", type: "text", placeholder: "Contoh: 265150200111001", required: true, validation: { type: "number", errorMessage: "NIM harus berupa angka" } },
       { id: "program_studi", label: "Program Studi / Jurusan", type: "select", options: ["Teknik Informatika", "Sistem Informasi", "Teknologi Informasi", "Pendidikan Teknologi Informasi", "Teknik Komputer"], required: true },
-      { id: "no_whatsapp", label: "Nomor WhatsApp Aktif", type: "text", placeholder: "081234567890", required: true },
-      { id: "pilihan_divisi", label: "Minat Pelayanan Utama (Pilih 1)", type: "radio", options: ["Divisi Acara & Ibadah", "Divisi Musik & Pujian", "Divisi Multimedia & Publikasi", "Divisi Doa & Pemerhati", "Divisi Perlengkapan & Logistik"], required: true },
-      { id: "talenta_minat", label: "Talenta & Keahlian Tambahan (Boleh lebih dari 1)", type: "checkbox", options: ["Main Musik (Gitar / Keyboard / Drum / Bass)", "Vocal / Singer / WL", "Desain Grafis / Canva / Photoshop", "Fotografi / Videografi", "Operating Sound System / OBS Live Streaming"], required: false },
-      { id: "alasan_motivasi", label: "Ceritakan Motivasi / Harapan Anda di PMK Daniel", type: "textarea", placeholder: "Tuliskan cerita singkat atau harapan Anda...", required: false },
-      { id: "foto_ktm", label: "Upload Foto Diri / KTM / Bukti Penerimaan", type: "file", helpText: "Format file: JPG, PNG, atau PDF (Maksimal 10MB)", required: false }
+      { id: "no_whatsapp", label: "Nomor WhatsApp Aktif", type: "text", placeholder: "081234567890", required: true, validation: { type: "phone", errorMessage: "Nomor WhatsApp tidak valid" } },
+      { id: "foto_ktm", label: "Upload Foto Diri / KTM / Bukti Penerimaan", type: "file", helpText: "Format file: JPG, PNG, atau PDF (Maksimal 10MB)", required: false },
+
+      // Page 2: Kelompok Tumbuh Bersama (KTB)
+      {
+        id: "sec_ktb",
+        label: "Kelompok Tumbuh Bersama (KTB)",
+        type: "section",
+        required: false
+      },
+      {
+        id: "pernah_ktb",
+        label: "Apakah sebelumnya pernah mengikuti Kelompok Tumbuh Bersama (KTB)?",
+        type: "radio",
+        options: ["Pernah", "Tidak Pernah"],
+        required: true
+      },
+      {
+        id: "ketertarikan_ktb",
+        label: "Seberapa tertarik kamu untuk mengikuti Kelompok Tumbuh Bersama (KTB) di PMK Daniel?",
+        type: "radio",
+        helpText: "Tidak perlu khawatir kalau masih belum tahu banyak tentang KTB. Jawab sesuai ketertarikanmu saat ini saja ya!",
+        options: ["Sangat Tertarik", "Tertarik", "Biasa Saja", "Tidak Tertarik"],
+        required: true
+      },
+      {
+        id: "minat_musik_awal",
+        label: "Apakah kamu memiliki minat atau kemampuan di bidang musik?",
+        type: "radio",
+        helpText: "Siapa tahu talentamu bisa berkembang dan dipakai bersama di PMK Daniel! 🎵",
+        options: ["Ya, suka banget", "Tidak"],
+        required: true
+      },
+
+      // Page 3: Musik & Kamu (Opsional)
+      {
+        id: "sec_musik",
+        label: "Musik & Kamu 🎵",
+        type: "section",
+        helpText: "Ceritakan dikit dong tentang minat musik kamu🤩",
+        required: false
+      },
+      {
+        id: "keahlian_musik",
+        label: "Keahlian musik apa yang dapat atau biasa kamu ambil?",
+        type: "checkbox",
+        options: [
+          "Gitar",
+          "Piano",
+          "Bass",
+          "Drum",
+          "Cajon",
+          "Organ",
+          "Biola",
+          "Saxophone",
+          "Lainnya"
+        ],
+        required: false
+      },
+
+      // Page 4: Olahraga & Kamu
+      {
+        id: "sec_olahraga",
+        label: "Olahraga & Kamu 🏸",
+        type: "section",
+        helpText: "Punya olahraga favorit? Siapa tahu nanti bisa olahraga bareng! 🍻",
+        required: false
+      },
+      {
+        id: "minat_olahraga",
+        label: "Olahraga apa yang kamu minati atau biasa kamu lakukan?",
+        type: "checkbox",
+        options: [
+          "Badminton",
+          "Futsal",
+          "Basket",
+          "Voli",
+          "Renang",
+          "Lari",
+          "Catur",
+          "Tenis Meja",
+          "Sepeda",
+          "Gym",
+          "Baseball",
+          "Taekwondo",
+          "Lainnya"
+        ],
+        required: true
+      },
+
+      // Page 5: Wadah Talenta
+      {
+        id: "sec_wadah_talenta",
+        label: "Wadah Talenta ✨",
+        type: "section",
+        helpText: "Wadah Talenta adalah ruang untuk mengembangkan kemampuan, berkarya, dan menggunakan talenta bersama dalam pelayanan PMK Daniel. ✨\n\nYuk, temukan ruang untuk mengembangkan talentamu bersama PMK Daniel!",
+        required: false
+      },
+      {
+        id: "tertarik_pelayanan",
+        label: "Apakah kamu tertarik untuk terlibat dalam pelayanan di PMK Daniel?",
+        type: "radio",
+        options: ["Iya, tertarik", "Masih mempertimbangkan", "Belum tertarik"],
+        required: true
+      },
+
+      // Page 6: Rumah Rohani & Gereja
+      {
+        id: "sec_rumah_rohani",
+        label: "Rumah Rohani & Gereja ⛪",
+        type: "section",
+        helpText: "Kami ingin mengenal sedikit tentang gereja asalmu dan apakah kamu sudah memiliki tempat beribadah selama berada di Malang.",
+        required: false
+      },
+      {
+        id: "gereja_asal",
+        label: "Apa nama gereja asalmu?",
+        type: "text",
+        placeholder: "Contoh: HKBP Bandung, GKI Serpong, GBI Makassar, dan sebagainya.",
+        helpText: "Contoh: HKBP Bandung, GKI Serpong, GBI Makassar, dan sebagainya.",
+        required: true
+      },
+      {
+        id: "gereja_malang",
+        label: "Apa nama gereja kamu selama berada di Malang?",
+        type: "text",
+        placeholder: "Contoh: GKI Bromo, HKBP Malang, GBI Suropati, dan sebagainya.",
+        helpText: "Contoh: GKI Bromo, HKBP Malang, GBI Suropati, dan sebagainya.",
+        required: true
+      },
+
+      // Page 7: Penutup & Link Grup WhatsApp
+      {
+        id: "sec_penutup",
+        label: "Makasih udah isi formulirnya teman-teman 👋",
+        type: "section",
+        helpText: "Selamat datang di keluarga Mahasiswa Kristen Universitas Brawijaya. Jangan lupa gabung ke grup ini yaa..\n\nhttps://chat.whatsapp.com/DIIWjYChs4mKiMHomkw95r?s=cl&p=a&ilr=4\n\nTuhan memberkati perjalanan studimu. Sampai bertemu di PMK Daniel! 🙌",
+        required: false
+      }
     ]
   }
 ];
@@ -295,17 +430,6 @@ export const formService = {
    * Upload file attachment (Public)
    */
   async uploadAttachment(file: File): Promise<{ url: string; fileName: string }> {
-    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error("Ukuran berkas melebihi batas 10MB");
-    }
-
-    if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
-      throw new Error("Format berkas tidak diizinkan. Hanya menerima JPG, PNG, WEBP, atau PDF.");
-    }
-
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -322,11 +446,7 @@ export const formService = {
       if (res.data?.success && res.data?.data) {
         return res.data.data;
       }
-    } catch (err: any) {
-      if (err.message && err.message.includes("Format berkas")) {
-        throw err;
-      }
-    }
+    } catch (err) {}
 
     // Fallback: create an object URL or data URL preview so user is not blocked
     return {

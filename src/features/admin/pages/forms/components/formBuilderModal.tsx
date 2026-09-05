@@ -32,6 +32,7 @@ const FIELD_TYPES: { type: FormFieldType; label: string; icon: string }[] = [
   { type: "select", label: "Menu Dropdown", icon: "🔽" },
   { type: "file", label: "Upload Berkas / Foto / KTM", icon: "📎" },
   { type: "date", label: "Tanggal", icon: "📅" },
+  { type: "section", label: "Judul Bagian / Catatan (Section)", icon: "🏷️" },
 ];
 
 // Validation options per field type
@@ -60,6 +61,7 @@ const VALIDATION_OPTIONS: Record<FormFieldType, { type: ValidationRuleType; labe
   radio: [],
   select: [],
   file: [],
+  section: [],
 };
 
 export default function FormBuilderModal({
