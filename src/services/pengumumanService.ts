@@ -1,25 +1,107 @@
-import { Pengumuman } from "@/types/pengumuman";
-import { dataPengumuman } from "@/dataDummy/pengumuman";
+import { cache } from "react";
+import { Pengumuman, PengumumanInput } from "@/types/pengumuman";
+
+export const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://pmkdaniel-api.danielmemory26.workers.dev/api";
+
+function getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (typeof window !== "undefined") {
+        const token =
+            localStorage.getItem("admin_token") ||
+            localStorage.getItem("pmk_admin_token");
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+    }
+    return headers;
+}
+
+function getUploadAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
+    if (typeof window !== "undefined") {
+        const token =
+            localStorage.getItem("admin_token") ||
+            localStorage.getItem("pmk_admin_token");
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+    }
+    return headers;
+}
+
+export function normalizePengumumanImageUrl(url?: string): string {
+    if (!url || !url.trim()) {
+        return "/pengumuman/persekutuan-doa-1-2026.jpg";
+    }
+    // Replace blocked Cloudflare R2 default domain with Cloudflare Worker proxy endpoint
+    if (url.includes("pub-317e9a74788b4b17a1deee01aa307c7c.r2.dev")) {
+        return url.replace(
+            "https://pub-317e9a74788b4b17a1deee01aa307c7c.r2.dev",
+            "https://pmkdaniel-api.danielmemory26.workers.dev/api/upload"
+        );
+    }
+    return url;
+}
+
+const fetchPengumumanByIdInternal = async (idOrSlug: string): Promise<Pengumuman | undefined> => {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const url = `${API_BASE_URL}/pengumuman/${idOrSlug}`;
+
+        const res = await fetch(url, {
+            cache: "no-store",
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.data) {
+                const item = data.data;
+                return {
+                    id: item.id,
+                    title: item.title,
+                    slug: item.slug,
+                    imageUrl: normalizePengumumanImageUrl(item.image_url),
+                    datePublished: item.date_published,
+                    description: item.content,
+                    content: item.content,
+                    category: item.category,
+                    author: item.author,
+                    views: item.views,
+                    created_at: item.created_at,
+                    updated_at: item.updated_at,
+                };
+            }
+        }
+    } catch (error) {
+        console.error(`Gagal mengambil detail pengumuman (${idOrSlug}) dari API:`, error);
+    }
+
+    return undefined;
+};
 
 export const pengumumanService = {
     /**
-     * Mengambil daftar semua pengumuman dari API + sinkronisasi lokal
+     * Mengambil daftar semua pengumuman murni dari Backend API Cloudflare
      */
     async getPengumumanList(kategori?: string, search?: string): Promise<Pengumuman[]> {
-        let apiItems: Pengumuman[] = [];
-
-        // 1. Ambil dari API jika memungkinkan
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
             const params = new URLSearchParams();
             if (kategori && kategori !== "all") params.append("kategori", kategori);
-            if (search) params.append("search", search);
+            if (search && search.trim()) params.append("search", search.trim());
+            params.append("limit", "50");
 
-            const url = typeof window !== "undefined"
-                ? `/api/pengumuman?${params.toString()}`
-                : `${process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:8000"}/api/pengumuman?${params.toString()}`;
+            const url = `${API_BASE_URL}/pengumuman?${params.toString()}`;
 
             const res = await fetch(url, {
                 cache: "no-store",
@@ -29,175 +111,112 @@ export const pengumumanService = {
 
             if (res.ok) {
                 const data = await res.json();
-                if (data.success && data.data?.items) {
-                    apiItems = data.data.items.map((item: any) => ({
+                if (data.success && data.data?.items && Array.isArray(data.data.items)) {
+                    return data.data.items.map((item: any) => ({
                         id: item.id,
                         title: item.title,
-                        imageUrl: item.image_url || "/images/persekutuan.webp",
+                        slug: item.slug,
+                        imageUrl: normalizePengumumanImageUrl(item.image_url),
                         datePublished: item.date_published,
                         description: item.content,
+                        content: item.content,
+                        category: item.category,
+                        author: item.author,
+                        views: item.views,
+                        created_at: item.created_at,
+                        updated_at: item.updated_at,
                     }));
                 }
             }
         } catch (error) {
-            // Silently continue to fallback
+            console.error("Gagal mengambil data pengumuman dari API Cloudflare:", error);
         }
 
-        // 2. Gabungkan dengan data dummy jika API kosong
-        const baseItems = apiItems.length > 0 ? apiItems : dataPengumuman;
-
-        // 3. Gabungkan dengan pengumuman lokal yang baru saja dibuat di browser
-        if (typeof window !== "undefined") {
-            try {
-                const localSaved = localStorage.getItem("local_custom_pengumuman");
-                if (localSaved) {
-                    const parsed: Pengumuman[] = JSON.parse(localSaved);
-                    // Filter out duplicates by id
-                    const existingIds = new Set(baseItems.map(i => i.id));
-                    const uniqueNewItems = parsed.filter(p => !existingIds.has(p.id));
-                    return [...uniqueNewItems, ...baseItems];
-                }
-            } catch (err) {
-                console.warn("Error reading local pengumuman cache", err);
-            }
-        }
-
-        return baseItems;
+        return [];
     },
 
     /**
-     * Mengambil detail pengumuman berdasarkan ID atau Slug
+     * Mengambil detail pengumuman murni dari Backend API Cloudflare berdasarkan ID atau Slug
      */
-    async getPengumumanById(idOrSlug: string): Promise<Pengumuman | undefined> {
-        // Cek local storage dulu jika baru dibuat
-        if (typeof window !== "undefined") {
-            try {
-                const localSaved = localStorage.getItem("local_custom_pengumuman");
-                if (localSaved) {
-                    const parsed: Pengumuman[] = JSON.parse(localSaved);
-                    const found = parsed.find(p => p.id === idOrSlug);
-                    if (found) return found;
-                }
-            } catch (e) {}
-        }
-
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-            const url = typeof window !== "undefined"
-                ? `/api/pengumuman/${idOrSlug}`
-                : `${process.env.NEXT_PUBLIC_SITE_URL || "http://127.0.0.1:8000"}/api/pengumuman/${idOrSlug}`;
-
-            const res = await fetch(url, {
-                cache: "no-store",
-                signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.data) {
-                    const item = data.data;
-                    return {
-                        id: item.id,
-                        title: item.title,
-                        imageUrl: item.image_url || "/images/persekutuan.webp",
-                        datePublished: item.date_published,
-                        description: item.content,
-                    };
-                }
-            }
-        } catch (error) {}
-
-        return dataPengumuman.find(item => item.id === idOrSlug);
-    },
+    getPengumumanById: cache(fetchPengumumanByIdInternal),
 
     /**
-     * Menambahkan pengumuman baru (Admin)
+     * Menambahkan pengumuman baru (Admin - with Authorization header)
      */
-    async createPengumuman(payload: {
-        title: string;
-        category: string;
-        content: string;
-        image_url?: string;
-        date_published: string;
-        author?: string;
-    }): Promise<any> {
-        let apiResult: any = null;
-        const newId = `ann_${Date.now()}`;
+    async createPengumuman(payload: PengumumanInput): Promise<any> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-        // 1. Simpan ke local cache browser instan
-        if (typeof window !== "undefined") {
-            try {
-                const localItem: Pengumuman = {
-                    id: newId,
-                    title: payload.title,
-                    imageUrl: payload.image_url || "/images/persekutuan.webp",
-                    datePublished: payload.date_published,
-                    description: payload.content,
-                };
-                const existing = localStorage.getItem("local_custom_pengumuman");
-                const currentList: Pengumuman[] = existing ? JSON.parse(existing) : [];
-                localStorage.setItem("local_custom_pengumuman", JSON.stringify([localItem, ...currentList]));
-            } catch (e) {
-                console.warn("Failed to write local custom pengumuman", e);
-            }
-        }
-
-        // 2. Kirim ke API Backend
         try {
-            const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : "";
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-            const res = await fetch("/api/pengumuman", {
+            const res = await fetch(`${API_BASE_URL}/pengumuman`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token || ""}`,
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(payload),
                 signal: controller.signal,
             });
             clearTimeout(timeoutId);
 
-            if (res.ok) {
-                apiResult = await res.json();
+            const data = await res.json();
+            if (res.ok && data.success) {
+                return data;
             }
+            throw new Error(data.message || data.error || data.detail || "Gagal membuat pengumuman");
         } catch (err: any) {
-            console.warn("API create pengumuman warning:", err.message);
+            clearTimeout(timeoutId);
+            throw err;
         }
-
-        return apiResult || { success: true, id: newId, message: "Pengumuman berhasil diterbitkan!" };
     },
 
     /**
-     * Menghapus pengumuman (Admin)
+     * Memperbarui pengumuman (Admin - with Authorization header)
      */
-    async deletePengumuman(id: string): Promise<any> {
-        if (typeof window !== "undefined") {
-            try {
-                const existing = localStorage.getItem("local_custom_pengumuman");
-                if (existing) {
-                    const currentList: Pengumuman[] = JSON.parse(existing);
-                    const filtered = currentList.filter(p => p.id !== id);
-                    localStorage.setItem("local_custom_pengumuman", JSON.stringify(filtered));
-                }
-            } catch (e) {}
-        }
+    async updatePengumuman(id: string, payload: Partial<PengumumanInput>): Promise<any> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
 
         try {
-            const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : "";
-            const res = await fetch(`/api/pengumuman/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token || ""}`,
-                },
+            const res = await fetch(`${API_BASE_URL}/pengumuman/${id}`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(payload),
+                signal: controller.signal,
             });
-            return await res.json();
+            clearTimeout(timeoutId);
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                return data;
+            }
+            throw new Error(data.message || data.error || data.detail || "Gagal memperbarui pengumuman");
         } catch (err: any) {
-            return { success: true, message: "Pengumuman berhasil dihapus" };
+            clearTimeout(timeoutId);
+            throw err;
+        }
+    },
+
+    /**
+     * Menghapus pengumuman (Admin - with Authorization header)
+     */
+    async deletePengumuman(id: string): Promise<any> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/pengumuman/${id}`, {
+                method: "DELETE",
+                headers: getAuthHeaders(),
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                return data;
+            }
+            throw new Error(data.message || data.error || data.detail || "Gagal menghapus pengumuman");
+        } catch (err: any) {
+            clearTimeout(timeoutId);
+            throw err;
         }
     },
 
@@ -205,19 +224,27 @@ export const pengumumanService = {
      * Upload gambar ke Cloudflare R2
      */
     async uploadImage(file: File): Promise<string> {
-        const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : "";
+        const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+        const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            throw new Error("Ukuran gambar melebihi batas 5MB");
+        }
+
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
+            throw new Error("Format gambar tidak diizinkan. Hanya menerima JPG, PNG, atau WEBP.");
+        }
+
         const formData = new FormData();
         formData.append("file", file);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
 
         try {
-            const res = await fetch("/api/upload", {
+            const res = await fetch(`${API_BASE_URL}/upload`, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token || ""}`,
-                },
+                headers: getUploadAuthHeaders(),
                 body: formData,
                 signal: controller.signal,
             });
@@ -225,7 +252,7 @@ export const pengumumanService = {
 
             const data = await res.json();
             if (data.success && data.data?.url) {
-                return data.data.url;
+                return normalizePengumumanImageUrl(data.data.url);
             }
             throw new Error(data.message || data.error || "Gagal mengunggah gambar ke Cloudflare R2");
         } catch (err: any) {
