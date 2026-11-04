@@ -165,8 +165,168 @@ const DEFAULT_SEEDED_FORMS: DynamicForm[] = [
         required: false
       }
     ]
+  },
+  {
+    id: "form_oprec_pengurus_2027",
+    title: "Penerimaan Pengurus Baru 2027",
+    slug: "penerimaan-pengurus-baru-2027",
+    description: "Shalom teman-teman PMK Daniel FILKOM UB! Mari ambil bagian dalam pelayanan dan bertumbuh bersama sebagai Pengurus PMK Daniel periode 2027. Silakan lengkapi formulir pendaftaran berikut dengan sungguh-sungguh.",
+    is_active: 1,
+    submission_count: 0,
+    created_at: new Date().toISOString(),
+    fields_schema: [
+      // Page 1: Identitas & Motivasi
+      {
+        id: "nama",
+        label: "Nama",
+        type: "text",
+        placeholder: "Masukkan nama lengkap Anda",
+        required: true
+      },
+      {
+        id: "nim",
+        label: "NIM",
+        type: "text",
+        placeholder: "Contoh: 255150200111001",
+        required: true,
+        validation: { type: "number", errorMessage: "NIM harus berupa angka" }
+      },
+      {
+        id: "jurusan",
+        label: "Jurusan",
+        type: "select",
+        options: [
+          "Teknik Informatika",
+          "Sistem Informasi",
+          "Teknologi Informasi",
+          "Pendidikan Teknologi Informasi",
+          "Teknik Komputer"
+        ],
+        required: true
+      },
+      {
+        id: "angkatan",
+        label: "Angkatan",
+        type: "text",
+        placeholder: "Contoh: 2025",
+        required: true,
+        validation: { type: "number", errorMessage: "Angkatan harus berupa angka (contoh: 2025)" }
+      },
+      {
+        id: "motivasi_pengurus",
+        label: "Motivasi ingin menjadi pengurus",
+        type: "textarea",
+        placeholder: "Tuliskan motivasi kamu ingin menjadi pengurus PMK Daniel...",
+        required: true
+      },
+
+      // Page 2: Pilihan Divisi 1
+      {
+        id: "sec_pilihan_1",
+        label: "Pilihan Divisi 1",
+        type: "section",
+        helpText: "Pilih divisi utama (Pilihan 1) yang paling ingin kamu ikuti beserta alasannya.",
+        required: false
+      },
+      {
+        id: "divisi_pilihan_1",
+        label: "Divisi yang mau dipilih (Pilihan 1)",
+        type: "radio",
+        options: [
+          "Pembinaan",
+          "Pemerhati",
+          "Acara - Acara",
+          "Acara - Inventaris",
+          "Acara - Minat Bakat pelayanan",
+          "Medrel - Media",
+          "Medrel - Relasi",
+          "Medrel - teknologi"
+        ],
+        required: true
+      },
+      {
+        id: "alasan_pilihan_1",
+        label: "Alasan memilih pilihan 1",
+        type: "textarea",
+        placeholder: "Tuliskan alasan kamu memilih divisi tersebut sebagai pilihan 1...",
+        required: true
+      },
+      {
+        id: "portofolio_pilihan_1",
+        label: "Portofolio (Khusus Medrel - teknologi)",
+        type: "textarea",
+        placeholder: "Ketik deskripsi portofolio/pengalaman kamu, atau tempelkan link Google Drive (PDF/JPG/Project)...",
+        helpText: "Jika belum memiliki file/gambar portofolio, cukup ketik penjelasan pengalaman/karya kamu. Jika memiliki portofolio berupa PDF/JPG/dll, silakan upload ke Google Drive lalu tempelkan link-nya di sini.",
+        required: true,
+        condition: {
+          action: "show",
+          fieldId: "divisi_pilihan_1",
+          value: "Medrel - teknologi"
+        }
+      },
+
+      // Page 3: Pilihan Divisi 2
+      {
+        id: "sec_pilihan_2",
+        label: "Pilihan Divisi 2",
+        type: "section",
+        helpText: "Pilih divisi alternatif (Pilihan 2) beserta alasan memilih divisi tersebut.",
+        required: false
+      },
+      {
+        id: "divisi_pilihan_2",
+        label: "Divisi yang mau dipilih (Pilihan 2)",
+        type: "radio",
+        options: [
+          "Pembinaan",
+          "Pemerhati",
+          "Acara - Acara",
+          "Acara - Inventaris",
+          "Acara - Minat Bakat pelayanan",
+          "Medrel - Media",
+          "Medrel - Relasi",
+          "Medrel - teknologi"
+        ],
+        required: true,
+        condition: {
+          action: "exclude_option",
+          fieldId: "divisi_pilihan_1",
+          value: "Medrel - teknologi",
+          excludedOption: "Medrel - teknologi"
+        }
+      },
+      {
+        id: "alasan_pilihan_2",
+        label: "Alasan memilih pilihan 2",
+        type: "textarea",
+        placeholder: "Tuliskan alasan kamu memilih divisi tersebut sebagai pilihan 2...",
+        required: true
+      },
+      {
+        id: "portofolio_pilihan_2",
+        label: "Portofolio (Khusus Medrel - teknologi)",
+        type: "textarea",
+        placeholder: "Ketik deskripsi portofolio/pengalaman kamu, atau tempelkan link Google Drive (PDF/JPG/Project)...",
+        helpText: "Jika belum memiliki file/gambar portofolio, cukup ketik penjelasan pengalaman/karya kamu. Jika memiliki portofolio berupa PDF/JPG/dll, silakan upload ke Google Drive lalu tempelkan link-nya di sini.",
+        required: true,
+        condition: {
+          action: "show",
+          fieldId: "divisi_pilihan_2",
+          value: "Medrel - teknologi"
+        }
+      }
+    ]
   }
 ];
+
+function mergeSeededForms(forms: DynamicForm[]): DynamicForm[] {
+  const existingIds = new Set(forms.map((f) => f.id));
+  const existingSlugs = new Set(forms.map((f) => f.slug));
+  const missingSeeds = DEFAULT_SEEDED_FORMS.filter(
+    (seed) => !existingIds.has(seed.id) && !existingSlugs.has(seed.slug)
+  );
+  return missingSeeds.length > 0 ? [...forms, ...missingSeeds] : forms;
+}
 
 function getLocalForms(): DynamicForm[] {
   if (typeof window === "undefined") return DEFAULT_SEEDED_FORMS;
@@ -176,7 +336,12 @@ function getLocalForms(): DynamicForm[] {
       localStorage.setItem(LOCAL_STORAGE_FORMS_KEY, JSON.stringify(DEFAULT_SEEDED_FORMS));
       return DEFAULT_SEEDED_FORMS;
     }
-    return JSON.parse(raw);
+    const parsed: DynamicForm[] = JSON.parse(raw);
+    const merged = mergeSeededForms(parsed);
+    if (merged.length !== parsed.length) {
+      localStorage.setItem(LOCAL_STORAGE_FORMS_KEY, JSON.stringify(merged));
+    }
+    return merged;
   } catch (e) {
     return DEFAULT_SEEDED_FORMS;
   }
@@ -226,8 +391,9 @@ export const formService = {
     }
 
     if (apiForms.length > 0) {
-      saveLocalForms(apiForms);
-      return activeOnly ? apiForms.filter((f) => f.is_active === 1) : apiForms;
+      const merged = mergeSeededForms(apiForms);
+      saveLocalForms(merged);
+      return activeOnly ? merged.filter((f) => f.is_active === 1) : merged;
     }
 
     const localForms = getLocalForms();

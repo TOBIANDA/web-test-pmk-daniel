@@ -1,10 +1,10 @@
 export interface Pengumuman {
     id: string;
+    slug?: string;
     imageUrl: string;
     title: string;
     datePublished: string;
     description: string;
-    slug?: string;
     category?: string;
     content?: string;
     author?: string;
@@ -15,6 +15,7 @@ export interface Pengumuman {
 
 export interface PengumumanInput {
     title: string;
+    slug?: string;
     category: string;
     content: string;
     image_url?: string;

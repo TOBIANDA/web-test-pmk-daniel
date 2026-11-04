@@ -29,6 +29,15 @@ export interface FieldValidation {
   errorMessage?: string; // custom error message shown to respondent
 }
 
+export type FieldConditionAction = "show" | "exclude_option";
+
+export interface FieldCondition {
+  action: FieldConditionAction;
+  fieldId: string;          // ID of the source question to check
+  value: string;            // Trigger answer value (e.g. "Medrel - teknologi")
+  excludedOption?: string;  // Option to hide/disallow when action === "exclude_option"
+}
+
 export interface FormField {
   id: string;
   label: string;
@@ -37,7 +46,8 @@ export interface FormField {
   required?: boolean;
   options?: string[];
   helpText?: string;
-  validation?: FieldValidation; // NEW: optional validation rule
+  validation?: FieldValidation; // optional validation rule
+  condition?: FieldCondition;   // optional conditional logic
 }
 
 export interface DynamicForm {

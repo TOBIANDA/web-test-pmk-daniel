@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FormField, FormFieldType, FieldValidation, ValidationRuleType, DynamicForm, DynamicFormCreateInput } from "@/types/form";
+import { FormField, FormFieldType, FieldValidation, ValidationRuleType, FieldCondition, FieldConditionAction, DynamicForm, DynamicFormCreateInput } from "@/types/form";
 import { formService } from "@/services/formService";
 import { 
   X, 
@@ -14,7 +14,9 @@ import {
   Layers,
   Settings2,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Copy,
+  GitBranch
 } from "lucide-react";
 
 interface FormBuilderModalProps {
@@ -81,6 +83,8 @@ export default function FormBuilderModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   // Track which fields have validation panel expanded
   const [validationOpen, setValidationOpen] = useState<Record<string, boolean>>({});
+  // Track which fields have conditional logic panel expanded
+  const [conditionOpen, setConditionOpen] = useState<Record<string, boolean>>({});
 
   // Lock body scroll and prevent Lenis smooth scroll from hijacking modal scroll
   useEffect(() => {
@@ -104,12 +108,15 @@ export default function FormBuilderModal({
       setDescription(initialForm.description || "");
       setIsActive(initialForm.is_active ?? 1);
       setFields(initialForm.fields_schema || []);
-      // Expand validation panels for fields that already have validation
+      // Expand validation & condition panels for fields that already have them
       const openState: Record<string, boolean> = {};
+      const condState: Record<string, boolean> = {};
       (initialForm.fields_schema || []).forEach((f) => {
         if (f.validation) openState[f.id] = true;
+        if (f.condition) condState[f.id] = true;
       });
       setValidationOpen(openState);
+      setConditionOpen(condState);
     } else {
       setTitle("");
       setSlug("");
@@ -140,6 +147,7 @@ export default function FormBuilderModal({
         }
       ]);
       setValidationOpen({ nim: true });
+      setConditionOpen({});
     }
   }, [initialForm, isOpen]);
 
@@ -171,6 +179,31 @@ export default function FormBuilderModal({
       options: type === "radio" || type === "checkbox" || type === "select" ? ["Opsi 1", "Opsi 2"] : undefined,
     };
     setFields([...fields, newField]);
+  };
+
+  const handleDuplicateField = (index: number) => {
+    const source = fields[index];
+    if (!source) return;
+    const newId = `field_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const duplicated: FormField = {
+      ...source,
+      id: newId,
+      label: `${source.label} (Salinan)`,
+      options: source.options ? [...source.options] : undefined,
+      validation: source.validation ? { ...source.validation } : undefined,
+      condition: source.condition ? { ...source.condition } : undefined,
+    };
+    setFields((prev) => {
+      const updated = [...prev];
+      updated.splice(index + 1, 0, duplicated);
+      return updated;
+    });
+    if (duplicated.validation) {
+      setValidationOpen((prev) => ({ ...prev, [newId]: true }));
+    }
+    if (duplicated.condition) {
+      setConditionOpen((prev) => ({ ...prev, [newId]: true }));
+    }
   };
 
   const handleUpdateField = (index: number, updates: Partial<FormField>) => {
@@ -234,6 +267,48 @@ export default function FormBuilderModal({
     const field = fields[fieldIndex];
     const existing = field.validation || { type: "number" as ValidationRuleType };
     handleUpdateField(fieldIndex, { validation: { ...existing, ...updates } });
+  };
+
+  const toggleConditionPanel = (fieldId: string, fieldIndex: number) => {
+    setConditionOpen((prev) => {
+      const isCurrentlyOpen = !!prev[fieldId];
+      if (isCurrentlyOpen) {
+        setFields((prevFields) =>
+          prevFields.map((f) => (f.id === fieldId ? { ...f, condition: undefined } : f))
+        );
+      } else {
+        const candidateSources = fields.filter((f, i) => i !== fieldIndex && f.type !== "section");
+        const defaultSource = candidateSources[0];
+        const defaultVal = defaultSource?.options?.[0] || "";
+        const currentField = fields[fieldIndex];
+        setFields((prevFields) =>
+          prevFields.map((f) =>
+            f.id === fieldId
+              ? {
+                  ...f,
+                  condition: f.condition || {
+                    action: "show",
+                    fieldId: defaultSource?.id || "",
+                    value: defaultVal,
+                    excludedOption: currentField?.options?.[0] || "",
+                  },
+                }
+              : f
+          )
+        );
+      }
+      return { ...prev, [fieldId]: !isCurrentlyOpen };
+    });
+  };
+
+  const handleUpdateCondition = (fieldIndex: number, updates: Partial<FieldCondition>) => {
+    const field = fields[fieldIndex];
+    const existing: FieldCondition = field.condition || {
+      action: "show",
+      fieldId: "",
+      value: "",
+    };
+    handleUpdateField(fieldIndex, { condition: { ...existing, ...updates } });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -415,6 +490,11 @@ export default function FormBuilderModal({
               const currentValidationType = field.validation?.type || (validationOpts[0]?.type);
               const currentValidationDef = validationOpts.find(v => v.type === currentValidationType);
 
+              const isConditionPanelOpen = !!conditionOpen[field.id];
+              const candidateSourceFields = fields.filter((f, i) => i !== idx && f.type !== "section");
+              const selectedSourceField = candidateSourceFields.find(f => f.id === field.condition?.fieldId) || candidateSourceFields[0];
+              const hasFieldOptions = field.type === "radio" || field.type === "checkbox" || field.type === "select";
+
               return (
                 <div
                   key={field.id || idx}
@@ -452,11 +532,21 @@ export default function FormBuilderModal({
                       >
                         <ArrowDown size={15} />
                       </button>
+                      {/* Duplicate / Copy Question */}
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicateField(idx)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-600 hover:text-primary bg-slate-100/80 hover:bg-primary/10 rounded-lg text-xs font-bold transition-colors ml-1"
+                        title="Duplikat / Copy soal ini"
+                      >
+                        <Copy size={13} />
+                        <span>Copy Soal</span>
+                      </button>
                       {/* Delete */}
                       <button
                         type="button"
                         onClick={() => handleRemoveField(idx)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-2"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-1"
                         title="Hapus pertanyaan"
                       >
                         <Trash2 size={16} />
@@ -672,6 +762,158 @@ export default function FormBuilderModal({
                           {/* Preview hint */}
                           <p className="text-[10px] text-primary/70 font-plusJakarta">
                             💡 Validasi ini akan diterapkan pada formulir publik saat responden mengisi jawaban.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ============================================= */}
+                  {/* CONDITIONAL LOGIC PANEL (KONDISI KHUSUS) */}
+                  {/* ============================================= */}
+                  {field.type !== "section" && candidateSourceFields.length > 0 && (
+                    <div className="border-t border-gray-100 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleConditionPanel(field.id, idx)}
+                        className={`flex items-center gap-2 text-xs font-bold transition-colors ${
+                          isConditionPanelOpen
+                            ? "text-amber-600"
+                            : "text-slate-500 hover:text-amber-600"
+                        }`}
+                      >
+                        <div className={`w-9 h-5 rounded-full transition-colors relative flex items-center ${
+                          isConditionPanelOpen ? "bg-amber-500" : "bg-slate-200"
+                        }`}>
+                          <div className={`w-4 h-4 bg-white rounded-full shadow absolute transition-transform ${
+                            isConditionPanelOpen ? "translate-x-4" : "translate-x-0.5"
+                          }`} />
+                        </div>
+                        <GitBranch size={14} />
+                        Kondisi Khusus (Conditional)
+                        {isConditionPanelOpen && field.condition && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-extrabold uppercase">
+                            Aktif
+                          </span>
+                        )}
+                      </button>
+
+                      {isConditionPanelOpen && (
+                        <div className="mt-3 p-4 bg-amber-50/70 rounded-xl border border-amber-200/80 flex flex-col gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {/* Action Type */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                Aksi Kondisi
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={field.condition?.action || "show"}
+                                  onChange={(e) => {
+                                    const newAction = e.target.value as FieldConditionAction;
+                                    handleUpdateCondition(idx, {
+                                      action: newAction,
+                                      excludedOption: newAction === "exclude_option" ? (field.condition?.excludedOption || field.options?.[0] || "") : undefined,
+                                    });
+                                  }}
+                                  className="w-full h-9 pl-3 pr-8 rounded-lg border border-amber-300/80 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500 appearance-none cursor-pointer"
+                                >
+                                  <option value="show">Tampilkan soal ini jika...</option>
+                                  {hasFieldOptions && (
+                                    <option value="exclude_option">Batasi/hilangkan opsi jika...</option>
+                                  )}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                              </div>
+                            </div>
+
+                            {/* Source Field Selector */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                Pertanyaan Acuan
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={field.condition?.fieldId || selectedSourceField?.id || ""}
+                                  onChange={(e) => {
+                                    const newSourceId = e.target.value;
+                                    const newSource = candidateSourceFields.find(f => f.id === newSourceId);
+                                    handleUpdateCondition(idx, {
+                                      fieldId: newSourceId,
+                                      value: newSource?.options?.[0] || "",
+                                    });
+                                  }}
+                                  className="w-full h-9 pl-3 pr-8 rounded-lg border border-amber-300/80 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500 appearance-none cursor-pointer"
+                                >
+                                  {candidateSourceFields.map((sf) => (
+                                    <option key={sf.id} value={sf.id}>
+                                      {sf.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                              </div>
+                            </div>
+
+                            {/* Trigger Answer Value */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                Jika Jawabannya Adalah
+                              </label>
+                              {selectedSourceField?.options && selectedSourceField.options.length > 0 ? (
+                                <div className="relative">
+                                  <select
+                                    value={field.condition?.value || ""}
+                                    onChange={(e) => handleUpdateCondition(idx, { value: e.target.value })}
+                                    className="w-full h-9 pl-3 pr-8 rounded-lg border border-amber-300/80 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500 appearance-none cursor-pointer"
+                                  >
+                                    {selectedSourceField.options.map((opt, oIdx) => (
+                                      <option key={oIdx} value={opt}>
+                                        {opt}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                </div>
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={field.condition?.value || ""}
+                                  onChange={(e) => handleUpdateCondition(idx, { value: e.target.value })}
+                                  placeholder="Nilai jawaban pemicu..."
+                                  className="w-full h-9 px-3 rounded-lg border border-amber-300/80 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500"
+                                />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Excluded Option Selector (only when action === "exclude_option") */}
+                          {field.condition?.action === "exclude_option" && hasFieldOptions && (
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                                Opsi yang Dihilangkan / Tidak Boleh Dipilih di Pertanyaan Ini
+                              </label>
+                              <div className="relative max-w-sm">
+                                <select
+                                  value={field.condition?.excludedOption || field.options?.[0] || ""}
+                                  onChange={(e) => handleUpdateCondition(idx, { excludedOption: e.target.value })}
+                                  className="w-full h-9 pl-3 pr-8 rounded-lg border border-amber-300/80 bg-white font-plusJakarta text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500 appearance-none cursor-pointer"
+                                >
+                                  {(field.options || []).map((opt, oIdx) => (
+                                    <option key={oIdx} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                              </div>
+                            </div>
+                          )}
+
+                          <p className="text-[10px] text-amber-800/80 font-plusJakarta">
+                            {field.condition?.action === "exclude_option"
+                              ? `💡 Jika "${selectedSourceField?.label || "Pertanyaan Acuan"}" dijawab "${field.condition?.value || "..."}", maka opsi "${field.condition?.excludedOption || "..."}" tidak dapat dipilih pada soal ini.`
+                              : `💡 Soal ini hanya akan muncul jika "${selectedSourceField?.label || "Pertanyaan Acuan"}" dijawab "${field.condition?.value || "..."}".`}
                           </p>
                         </div>
                       )}

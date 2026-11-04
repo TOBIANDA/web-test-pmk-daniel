@@ -92,14 +92,55 @@ export default function PublicDynamicFormPage() {
   const isFirstPage = currentPageIdx === 0;
   const isLastPage = currentPageIdx === totalPages - 1;
 
-  // Calculate global question number offset for current page
+  // ============================================================
+  // CONDITIONAL LOGIC HELPERS
+  // ============================================================
+  const isFieldVisible = (field: FormField, currentAnswers: Record<string, any> = answers): boolean => {
+    if (field.type === "section") return true;
+    const cond = field.condition;
+    if (!cond || cond.action !== "show" || !cond.fieldId) return true;
+    const triggerVal = currentAnswers[cond.fieldId];
+    if (Array.isArray(triggerVal)) {
+      return triggerVal.includes(cond.value);
+    }
+    return triggerVal === cond.value;
+  };
+
+  const getAvailableOptions = (
+    field: FormField,
+    currentAnswers: Record<string, any> = answers
+  ): { options: string[]; excludedOption?: string } => {
+    const baseOptions = field.options || [];
+    const cond = field.condition;
+    if (!cond || cond.action !== "exclude_option" || !cond.fieldId) {
+      return { options: baseOptions };
+    }
+    const triggerVal = currentAnswers[cond.fieldId];
+    const isTriggered = Array.isArray(triggerVal)
+      ? triggerVal.includes(cond.value)
+      : triggerVal === cond.value;
+
+    if (!isTriggered) {
+      return { options: baseOptions };
+    }
+
+    const targetExcluded = cond.excludedOption || cond.value;
+    return {
+      options: baseOptions.filter((opt) => opt !== targetExcluded),
+      excludedOption: targetExcluded,
+    };
+  };
+
+  // Calculate global question number offset for current page (counting only visible fields)
   const questionOffset = useMemo(() => {
     let count = 0;
     for (let i = 0; i < currentPageIdx; i++) {
-      count += (formPages[i]?.fields || []).filter((f) => f.type !== "section").length;
+      count += (formPages[i]?.fields || []).filter(
+        (f) => f.type !== "section" && isFieldVisible(f, answers)
+      ).length;
     }
     return count;
-  }, [formPages, currentPageIdx]);
+  }, [formPages, currentPageIdx, answers]);
 
   useEffect(() => {
     if (!slug) return;
@@ -131,12 +172,14 @@ export default function PublicDynamicFormPage() {
     return () => { isMounted = false; };
   }, [slug]);
 
-  // Calculate progress percentage (excluding section header fields)
+  // Calculate progress percentage (excluding section header fields and hidden conditional fields)
   const progressStats = useMemo(() => {
     if (!form || !form.fields_schema || form.fields_schema.length === 0) {
       return { filled: 0, total: 0, percentage: 0 };
     }
-    const inputFields = form.fields_schema.filter((f) => f.type !== "section");
+    const inputFields = form.fields_schema.filter(
+      (f) => f.type !== "section" && isFieldVisible(f, answers)
+    );
     const total = inputFields.length;
     let filled = 0;
 
@@ -232,10 +275,27 @@ export default function PublicDynamicFormPage() {
   };
 
   const handleInputChange = (fieldId: string, value: any) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [fieldId]: value,
-    }));
+    setAnswers((prev) => {
+      const next = {
+        ...prev,
+        [fieldId]: value,
+      };
+      // If any dependent field has an excluded option that matches its current answer, clear that answer
+      if (form?.fields_schema) {
+        for (const f of form.fields_schema) {
+          if (f.condition?.action === "exclude_option" && f.condition.fieldId === fieldId) {
+            const { options } = getAvailableOptions(f, next);
+            const curVal = next[f.id];
+            if (typeof curVal === "string" && curVal && !options.includes(curVal)) {
+              delete next[f.id];
+            } else if (Array.isArray(curVal)) {
+              next[f.id] = curVal.filter((item: string) => options.includes(item));
+            }
+          }
+        }
+      }
+      return next;
+    });
     // Clear field error on change
     if (fieldErrors[fieldId]) {
       setFieldErrors((prev) => { const n = { ...prev }; delete n[fieldId]; return n; });
@@ -315,6 +375,7 @@ export default function PublicDynamicFormPage() {
 
     for (const field of currentPage.fields) {
       if (field.type === "section") continue;
+      if (!isFieldVisible(field, answers)) continue;
       const val = answers[field.id];
 
       // Required check
@@ -326,6 +387,16 @@ export default function PublicDynamicFormPage() {
           (Array.isArray(val) && val.length === 0)
         ) {
           newErrors[field.id] = "Pertanyaan ini wajib diisi.";
+          if (!firstErrId) firstErrId = field.id;
+          continue;
+        }
+      }
+
+      // Excluded option check
+      if (field.condition?.action === "exclude_option") {
+        const { options, excludedOption } = getAvailableOptions(field, answers);
+        if (typeof val === "string" && val && !options.includes(val)) {
+          newErrors[field.id] = `Opsi "${excludedOption || val}" tidak dapat dipilih karena kondisi khusus.`;
           if (!firstErrId) firstErrId = field.id;
           continue;
         }
@@ -374,6 +445,7 @@ export default function PublicDynamicFormPage() {
 
     for (const field of form.fields_schema) {
       if (field.type === "section") continue;
+      if (!isFieldVisible(field, answers)) continue;
       const val = answers[field.id];
 
       // Required check
@@ -385,6 +457,16 @@ export default function PublicDynamicFormPage() {
           (Array.isArray(val) && val.length === 0)
         ) {
           newFieldErrors[field.id] = `Pertanyaan ini wajib diisi.`;
+          if (!firstErrorFieldId) firstErrorFieldId = field.id;
+          continue;
+        }
+      }
+
+      // Excluded option check
+      if (field.condition?.action === "exclude_option") {
+        const { options, excludedOption } = getAvailableOptions(field, answers);
+        if (typeof val === "string" && val && !options.includes(val)) {
+          newFieldErrors[field.id] = `Opsi "${excludedOption || val}" tidak dapat dipilih karena kondisi khusus.`;
           if (!firstErrorFieldId) firstErrorFieldId = field.id;
           continue;
         }
@@ -670,12 +752,15 @@ export default function PublicDynamicFormPage() {
 
         {/* Dynamic Question Cards Form (Render Only Current Page Fields) */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {currentPage.fields.map((field: FormField, index: number) => {
+          {currentPage.fields
+            .filter((field: FormField) => isFieldVisible(field, answers))
+            .map((field: FormField, index: number) => {
             const questionNumber = (questionOffset + index + 1).toString().padStart(2, "0");
             const fieldValue = answers[field.id];
             const fileState = fileStates[field.id];
             const isFocused = activeFieldId === field.id;
             const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
+            const { options: availableOptions, excludedOption } = getAvailableOptions(field, answers);
 
             return (
               <div
@@ -789,45 +874,63 @@ export default function PublicDynamicFormPage() {
 
                   {/* Type 3: Radio (Single Selection Card) */}
                   {field.type === "radio" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {(field.options || []).map((opt, optIdx) => {
-                        const isSelected = fieldValue === opt;
-                        return (
-                          <label
-                            key={optIdx}
-                            className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
-                              isSelected
-                                ? "bg-primary/5 border-primary text-primary font-bold shadow-sm"
-                                : "bg-slate-50/60 border-gray-200/80 hover:border-gray-300 hover:bg-white text-slate-700"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={`radio_${field.id}`}
-                              value={opt}
-                              checked={isSelected}
-                              onChange={() => handleInputChange(field.id, opt)}
-                              required={field.required && !fieldValue}
-                              disabled={submitting || form.is_active === 0}
-                              className="hidden"
-                            />
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                              isSelected ? "border-primary bg-primary text-white" : "border-slate-400 bg-white"
-                            }`}>
-                              {isSelected && <Check size={12} strokeWidth={3.5} />}
-                            </div>
-                            <span className="font-plusJakarta text-sm leading-snug">{opt}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
+                    <>
+                      {excludedOption && (
+                        <p className="font-plusJakarta text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2 mb-3">
+                          Catatan: Opsi <strong>&quot;{excludedOption}&quot;</strong> tidak dapat dipilih karena sudah dipilih pada pertanyaan sebelumnya.
+                        </p>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {availableOptions.map((opt, optIdx) => {
+                          const isSelected = fieldValue === opt;
+                          return (
+                            <label
+                              key={optIdx}
+                              className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
+                                isSelected
+                                  ? "bg-primary/5 border-primary text-primary font-bold shadow-sm"
+                                  : "bg-slate-50/60 border-gray-200/80 hover:border-gray-300 hover:bg-white text-slate-700"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={`radio_${field.id}`}
+                                value={opt}
+                                checked={isSelected}
+                                onChange={() => handleInputChange(field.id, opt)}
+                                required={field.required && !fieldValue}
+                                disabled={submitting || form.is_active === 0}
+                                className="hidden"
+                              />
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                                isSelected ? "border-primary bg-primary text-white" : "border-slate-400 bg-white"
+                              }`}>
+                                {isSelected && <Check size={12} strokeWidth={3.5} />}
+                              </div>
+                              <span className="font-plusJakarta text-sm leading-snug">{opt}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {fieldErrors[field.id] && (
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-plusJakarta font-semibold mt-1">
+                          <AlertCircle size={13} />
+                          {fieldErrors[field.id]}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Type 4: Checkbox (Multi Selection Cards) */}
                   {field.type === "checkbox" && (
                     <>
+                      {excludedOption && (
+                        <p className="font-plusJakarta text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2 mb-3">
+                          Catatan: Opsi <strong>&quot;{excludedOption}&quot;</strong> tidak dapat dipilih karena sudah dipilih pada pertanyaan sebelumnya.
+                        </p>
+                      )}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {(field.options || []).map((opt, optIdx) => {
+                        {availableOptions.map((opt, optIdx) => {
                           const isChecked = Array.isArray(fieldValue) && fieldValue.includes(opt);
                           return (
                             <label
@@ -866,27 +969,40 @@ export default function PublicDynamicFormPage() {
 
                   {/* Type 5: Select Dropdown */}
                   {field.type === "select" && (
-                    <div className="relative">
-                      <select
-                        value={fieldValue || ""}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        required={field.required}
-                        disabled={submitting || form.is_active === 0}
-                        className="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-slate-50/70 font-plusJakarta text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all appearance-none cursor-pointer"
-                      >
-                        <option value="" disabled className="text-slate-400">
-                          -- Pilih salah satu opsi --
-                        </option>
-                        {(field.options || []).map((opt, optIdx) => (
-                          <option key={optIdx} value={opt} className="text-slate-800">
-                            {opt}
+                    <>
+                      {excludedOption && (
+                        <p className="font-plusJakarta text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2 mb-3">
+                          Catatan: Opsi <strong>&quot;{excludedOption}&quot;</strong> tidak dapat dipilih karena sudah dipilih pada pertanyaan sebelumnya.
+                        </p>
+                      )}
+                      <div className="relative">
+                        <select
+                          value={fieldValue || ""}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          required={field.required}
+                          disabled={submitting || form.is_active === 0}
+                          className="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-slate-50/70 font-plusJakarta text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all appearance-none cursor-pointer"
+                        >
+                          <option value="" disabled className="text-slate-400">
+                            -- Pilih salah satu opsi --
                           </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                        ▼
+                          {availableOptions.map((opt, optIdx) => (
+                            <option key={optIdx} value={opt} className="text-slate-800">
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                          ▼
+                        </div>
                       </div>
-                    </div>
+                      {fieldErrors[field.id] && (
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-plusJakarta font-semibold mt-1">
+                          <AlertCircle size={13} />
+                          {fieldErrors[field.id]}
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Type 6: Date Picker */}
