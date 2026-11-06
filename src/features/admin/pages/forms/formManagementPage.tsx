@@ -28,6 +28,7 @@ export default function FormManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [copiedRekapSlug, setCopiedRekapSlug] = useState<string | null>(null);
 
   // Modals state
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -70,6 +71,24 @@ export default function FormManagementPage() {
     }
     setCopiedSlug(slug);
     setTimeout(() => setCopiedSlug(null), 2500);
+  };
+
+  const handleCopyRekapLink = (slug: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/rekap/${slug}`;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).catch(() => {
+          prompt("Salin tautan rekap realtime berikut:", url);
+        });
+      } else {
+        prompt("Salin tautan rekap realtime berikut:", url);
+      }
+    } catch (e) {
+      prompt("Salin tautan rekap realtime berikut:", url);
+    }
+    setCopiedRekapSlug(slug);
+    setTimeout(() => setCopiedRekapSlug(null), 2500);
   };
 
   const handleToggleStatus = async (form: DynamicForm) => {
@@ -355,6 +374,38 @@ export default function FormManagementPage() {
                       <ExternalLink size={13} />
                       <span>Buka Form</span>
                     </Link>
+
+                    {/* Rekap Realtime Divisi */}
+                    <div className="flex items-center gap-1.5 ml-auto sm:ml-2">
+                      <Link
+                        href={`/rekap/${form.slug}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 rounded-xl text-xs font-bold font-plusJakarta transition-colors"
+                        title="Buka Halaman Rekap Realtime (Bisa dishare ke Divisi/Panitia)"
+                      >
+                        <FileSpreadsheet size={13} />
+                        <span>Rekap Divisi</span>
+                        <ExternalLink size={11} className="opacity-70" />
+                      </Link>
+
+                      <button
+                        onClick={() => handleCopyRekapLink(form.slug)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 rounded-xl text-xs font-bold font-plusJakarta transition-colors"
+                        title="Salin Link Rekap Realtime untuk Panitia"
+                      >
+                        {copiedRekapSlug === form.slug ? (
+                          <>
+                            <Check size={12} className="text-emerald-700" />
+                            <span className="text-[11px]">Tersalin!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} />
+                            <span className="text-[11px]">Salin Rekap</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
